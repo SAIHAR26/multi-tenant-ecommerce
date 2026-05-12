@@ -1,12 +1,7 @@
-import './App.css'
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
-  return (
-    <div>
-      <h1>Multi Tenant Ecommerce</h1>
-      <p>Frontend Started Successfully 🚀</p>
-    </div>
-  )
+  return <AppRoutes />;
 }
 
-export default App
+export default App;
