@@ -1,16 +1,24 @@
+import "./Navbar.css";
+
 function Navbar() {
   return (
-    <nav>
-      <h1>V SHOP</h1>
+    <header className="navbar">
+      <a className="navbar__logo" href="/">
+        <span className="navbar__logo-mark">V</span>
+        <span className="navbar__logo-text">SHOP</span>
+      </a>
 
-      <ul>
-        <li>Home</li>
-        <li>Collections</li>
-        <li>Reviews</li>
-        <li>Connect</li>
-        <li>Login</li>
-      </ul>
-    </nav>
+      <nav className="navbar__links" aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <a href="#collections">Collections</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#connect">Connect</a>
+      </nav>
+
+      <a className="navbar__login" href="/login">
+        Signup / Login
+      </a>
+    </header>
   );
 }
 
