@@ -1,0 +1,275 @@
+import { useMemo, useState } from "react";
+import ProductCard from "../../components/customer/ProductCard";
+import { categoryTabs, priceRanges, products } from "./customerData";
+
+const brands = [
+  "Nike",
+  "Puma",
+  "Adidas",
+  "Apple",
+  "Sony",
+  "Samsung",
+  "Zara",
+  "Ray-Ban",
+  "H&M",
+  "Mango",
+  "Levi's",
+  "Canon",
+  "JBL",
+  "Asus",
+  "Penguin",
+  "Harper",
+  "Tommy Hilfiger",
+  "Swarovski",
+  "Dior",
+  "Google",
+];
+const ratingFilters = [4, 3];
+const discountFilters = [10, 25, 50];
+
+function CustomerDashboard() {
+  const [activeCategory, setActiveCategory] = useState("Trending");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priceFilter, setPriceFilter] = useState("All");
+  const [ratingFilter, setRatingFilter] = useState(0);
+  const [discountFilter, setDiscountFilter] = useState(0);
+  const [brandFilter, setBrandFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("Most Popular");
+
+  const filteredProducts = useMemo(() => {
+    const selectedPriceRange = priceRanges.find((range) => range.label === priceFilter);
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return products
+      .filter((product) => {
+        const matchesCategory =
+          activeCategory === "Trending"
+            ? product.isTrending
+            : activeCategory === "New Arrivals"
+              ? product.isNew
+              : product.category === activeCategory;
+        const matchesSearch = [product.name, product.brand, product.vendor, product.category]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedSearch);
+        const matchesPrice = selectedPriceRange
+          ? product.price >= selectedPriceRange.min && product.price <= selectedPriceRange.max
+          : true;
+        const matchesRating = ratingFilter ? product.rating >= ratingFilter : true;
+        const matchesDiscount = discountFilter ? product.discountPercent >= discountFilter : true;
+        const matchesBrand = brandFilter === "All" ? true : product.brand === brandFilter;
+
+        return matchesCategory && matchesSearch && matchesPrice && matchesRating && matchesDiscount && matchesBrand;
+      })
+      .sort((first, second) => {
+        if (sortBy === "Price Low to High") return first.price - second.price;
+        if (sortBy === "Price High to Low") return second.price - first.price;
+        if (sortBy === "Best Rated") return second.rating - first.rating;
+        if (sortBy === "Newest") return Number(second.isNew) - Number(first.isNew);
+        if (sortBy === "Trending") return Number(second.isTrending) - Number(first.isTrending);
+        return second.popularity - first.popularity;
+      });
+  }, [activeCategory, brandFilter, discountFilter, priceFilter, ratingFilter, searchTerm, sortBy]);
+
+  const featuredProducts = products.filter((product) => product.isTrending).slice(0, 4);
+  const recentlyViewed = products.slice(8, 12);
+  const recommended = products.filter((product) => product.rating >= 4.6).slice(0, 4);
+
+  return (
+    <div className="customer-page marketplace-home">
+      {/* Hero section for the premium ecommerce campaign. */}
+      <section className="marketplace-hero">
+        <div className="marketplace-hero__content">
+          <p className="customer-eyebrow">Festival Sale live now</p>
+          <h1>Luxury marketplace drops, curated for every cart.</h1>
+          <p>
+            Explore premium fashion, electronics, books, shoes, accessories, and daily deals from verified V SHOP
+            vendors.
+          </p>
+          <div className="marketplace-hero__actions">
+            <button className="customer-primary-button" type="button">Shop Now</button>
+            <span>Up to 50% off on flash picks</span>
+          </div>
+        </div>
+
+        <div className="marketplace-hero__deal">
+          <span>Featured Offer</span>
+          <strong>Premium Collection</strong>
+          <p>Extra 15% off on luxe accessories and red-tag sneakers tonight.</p>
+        </div>
+      </section>
+
+      {/* Cinematic offer banners keep the page feeling like a real marketplace. */}
+      <section className="offer-banner-grid" aria-label="Special shopping offers">
+        {["Festival Sale", "Limited Offer", "Premium Collection", "Flash Sale"].map((offer, index) => (
+          <article className="offer-banner" key={offer}>
+            <span>0{index + 1}</span>
+            <h2>{offer}</h2>
+            <p>{index % 2 === 0 ? "Red hot vendor deals" : "Members-only luxury prices"}</p>
+          </article>
+        ))}
+      </section>
+
+      {/* Category tabs change the product feed immediately. */}
+      <section className="category-strip" aria-label="Shop by category">
+        {categoryTabs.map((category) => (
+          <button
+            className={`category-pill ${activeCategory === category ? "category-pill--active" : ""}`}
+            key={category}
+            type="button"
+            onClick={() => setActiveCategory(category)}
+          >
+            {category}
+          </button>
+        ))}
+      </section>
+
+      <section className="marketplace-layout">
+        <aside className="filter-panel" aria-label="Product filters">
+          <div className="filter-panel__header">
+            <p className="customer-eyebrow">Filters</p>
+            <button
+              className="filter-reset"
+              type="button"
+              onClick={() => {
+                setPriceFilter("All");
+                setRatingFilter(0);
+                setDiscountFilter(0);
+                setBrandFilter("All");
+              }}
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="filter-group">
+            <h3>Price Range</h3>
+            {["All", ...priceRanges.map((range) => range.label)].map((range) => (
+              <button
+                className={priceFilter === range ? "filter-choice filter-choice--active" : "filter-choice"}
+                key={range}
+                type="button"
+                onClick={() => setPriceFilter(range)}
+              >
+                {range}
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-group">
+            <h3>Rating</h3>
+            {ratingFilters.map((rating) => (
+              <button
+                className={ratingFilter === rating ? "filter-choice filter-choice--active" : "filter-choice"}
+                key={rating}
+                type="button"
+                onClick={() => setRatingFilter(rating)}
+              >
+                {rating} star and above
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-group">
+            <h3>Discount</h3>
+            {discountFilters.map((discount) => (
+              <button
+                className={discountFilter === discount ? "filter-choice filter-choice--active" : "filter-choice"}
+                key={discount}
+                type="button"
+                onClick={() => setDiscountFilter(discount)}
+              >
+                {discount}% Off
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-group">
+            <h3>Brand</h3>
+            <select value={brandFilter} onChange={(event) => setBrandFilter(event.target.value)}>
+              <option>All</option>
+              {brands.map((brand) => (
+                <option key={brand}>{brand}</option>
+              ))}
+            </select>
+          </div>
+        </aside>
+
+        <div className="product-browsing">
+          {/* Search and sorting control the grid in real time. */}
+          <div className="browse-toolbar">
+            <label className="marketplace-search" htmlFor="marketplace-search">
+              <span>Search</span>
+              <input
+                id="marketplace-search"
+                type="search"
+                placeholder="Search products, brands, vendors..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </label>
+
+            <label className="sort-control" htmlFor="sort-products">
+              <span>Sort</span>
+              <select id="sort-products" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                <option>Most Popular</option>
+                <option>Trending</option>
+                <option>Best Rated</option>
+                <option>Newest</option>
+                <option>Price Low to High</option>
+                <option>Price High to Low</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="browse-summary">
+            <div>
+              <p className="customer-eyebrow">{activeCategory}</p>
+              <h2>{filteredProducts.length} premium products found</h2>
+            </div>
+            <span>Live filters active</span>
+          </div>
+
+          <div className="marketplace-product-grid">
+            {filteredProducts.map((product) => (
+              <ProductCard product={product} key={product.id} />
+            ))}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="empty-browse-state">
+              <h2>No products matched these filters.</h2>
+              <p>Try a wider price range, another brand, or a different category.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <ProductLane title="Trending Products" products={featuredProducts} />
+      <ProductLane title="Most Popular" products={products.slice(0, 4)} />
+      <ProductLane title="Recently Viewed" products={recentlyViewed} />
+      <ProductLane title="Recommended For You" products={recommended} />
+    </div>
+  );
+}
+
+function ProductLane({ title, products }) {
+  return (
+    <section className="product-lane">
+      <div className="customer-panel__header">
+        <div>
+          <p className="customer-eyebrow">V SHOP picks</p>
+          <h2>{title}</h2>
+        </div>
+        <button className="customer-secondary-button" type="button">View all</button>
+      </div>
+      <div className="marketplace-product-grid marketplace-product-grid--lane">
+        {products.map((product) => (
+          <ProductCard product={product} key={`${title}-${product.id}`} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default CustomerDashboard;
