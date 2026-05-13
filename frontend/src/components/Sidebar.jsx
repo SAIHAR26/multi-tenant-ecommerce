@@ -1,13 +1,19 @@
 function Sidebar() {
   return (
-    <div>
-      <h2>Dashboard</h2>
+    <div style={{
+      width: "220px",
+      height: "100vh",
+      background: "#111827",
+      color: "white",
+      padding: "20px"
+    }}>
+      <h2>V SHOP</h2>
 
-      <ul>
+      <ul style={{ listStyle: "none", padding: 0 }}>
+        <li>Dashboard</li>
+        <li>Users</li>
         <li>Products</li>
         <li>Orders</li>
-        <li>Analytics</li>
-        <li>Settings</li>
       </ul>
     </div>
   );
