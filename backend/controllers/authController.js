@@ -1,12 +1,18 @@
-const registerUser = (req, res) => {
-  res.send("Register User API");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const registerUser = async (req, res) => {
+  res.json({
+    message: "User Registered"
+  });
 };
 
-const loginUser = (req, res) => {
-  res.send("Login User API");
+const loginUser = async (req, res) => {
+  res.json({
+    message: "User Logged In"
+  });
 };
 
 module.exports = {
   registerUser,
-  loginUser,
+  loginUser
 };
