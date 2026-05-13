@@ -1,13 +1,15 @@
+import { NavLink } from "react-router-dom";
+
 const sidebarItems = [
-  { label: "Dashboard", icon: "DB", active: true },
-  { label: "Products", icon: "PR" },
-  { label: "Add Product", icon: "AP" },
-  { label: "Orders", icon: "OR" },
-  { label: "Reviews", icon: "RW" },
-  { label: "Revenue", icon: "RV" },
-  { label: "Analytics", icon: "AN" },
-  { label: "Settings", icon: "ST" },
-  { label: "Logout", icon: "LO" },
+  { label: "Dashboard", icon: "DB", to: "/vendor", end: true },
+  { label: "Products", icon: "PR", to: "/vendor/products" },
+  { label: "Add Product", icon: "AP", to: "/vendor/add-product" },
+  { label: "Orders", icon: "OR", to: "/vendor/orders" },
+  { label: "Reviews", icon: "RW", to: "/vendor/reviews" },
+  { label: "Revenue", icon: "RV", to: "/vendor/revenue" },
+  { label: "Analytics", icon: "AN", to: "/vendor/analytics" },
+  { label: "Settings", icon: "ST", to: "/vendor/settings" },
+  { label: "Logout", icon: "LO", to: "/login" },
 ];
 
 function VendorSidebar() {
@@ -23,14 +25,17 @@ function VendorSidebar() {
 
       <nav className="vendor-sidebar-nav" aria-label="Vendor dashboard">
         {sidebarItems.map((item) => (
-          <button
-            type="button"
+          <NavLink
             key={item.label}
-            className={`vendor-sidebar-link ${item.active ? "is-active" : ""}`}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              `vendor-sidebar-link ${isActive ? "is-active" : ""}`
+            }
           >
             <span className="vendor-sidebar-icon">{item.icon}</span>
             {item.label}
-          </button>
+          </NavLink>
         ))}
       </nav>
     </aside>
