@@ -2,8 +2,13 @@ const express = require("express");
 
 const router = express.Router();
 
-const { addReview } = require("../controllers/reviewController");
+const {
+  getReviews,
+  addReview,
+} = require("../controllers/reviewController");
 
-router.post("/add", addReview);
+router.get("/", getReviews);
+
+router.post("/", addReview);
 
 module.exports = router;
