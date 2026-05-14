@@ -1,6 +1,40 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login, saveSession } from "../api/auth";
 import "./Auth.css";
 
 function Login() {
+  const navigate = useNavigate();
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const payload = Object.fromEntries(formData.entries());
+
+    setIsSubmitting(true);
+    setStatus({ type: "", message: "" });
+
+    try {
+      const session = await login(payload);
+      saveSession(session);
+
+      const destinationByRole = {
+        admin: "/admin",
+        customer: "/customer",
+        vendor: "/vendor",
+      };
+
+      navigate(destinationByRole[session.user.role] || "/");
+    } catch (error) {
+      setStatus({ type: "error", message: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="auth-page auth-page--split">
       <section className="auth-brand">
@@ -16,7 +50,7 @@ function Login() {
       </section>
 
       <section className="auth-panel">
-        <form className="auth-card">
+        <form className="auth-card" onSubmit={handleSubmit}>
           <div className="auth-card__header">
             <p className="auth-eyebrow">Welcome back</p>
             <h2>Login to your account</h2>
@@ -25,17 +59,17 @@ function Login() {
 
           <label className="auth-field">
             <span>Email</span>
-            <input type="email" placeholder="you@example.com" />
+            <input name="email" type="email" placeholder="you@example.com" required />
           </label>
 
           <label className="auth-field">
             <span>Password</span>
-            <input type="password" placeholder="Enter your password" />
+            <input name="password" type="password" placeholder="Enter your password" required />
           </label>
 
           <label className="auth-field">
             <span>Role</span>
-            <select defaultValue="customer">
+            <select defaultValue="customer" name="role">
               <option value="customer">Customer</option>
               <option value="vendor">Vendor</option>
               <option value="admin">Admin</option>
@@ -50,8 +84,12 @@ function Login() {
             <a href="#forgot">Forgot password?</a>
           </div>
 
-          <button className="auth-button" type="button">
-            Login
+          {status.message ? (
+            <p className={`auth-message auth-message--${status.type}`}>{status.message}</p>
+          ) : null}
+
+          <button className="auth-button" disabled={isSubmitting} type="submit">
+            {isSubmitting ? "Logging in..." : "Login"}
           </button>
 
           <p className="auth-switch">

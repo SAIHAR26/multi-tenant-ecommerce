@@ -1,9 +1,3 @@
-function CustomerDashboard() {
-  return (
-    <div>
-      <h1>Customer Dashboard</h1>
-    </div>
-  );
-}
+import CustomerDashboard from "./customer/CustomerDashboard";
 
 export default CustomerDashboard;
