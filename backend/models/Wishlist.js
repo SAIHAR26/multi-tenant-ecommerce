@@ -6,10 +6,13 @@ type: mongoose.Schema.Types.ObjectId,
 ref: "User",
 required: true,
 },
-savedProducts: {
-type: type: mongoose.Schema.Types.ObjectId,
+
+savedProducts: [{
+type: mongoose.Schema.Types.ObjectId,
+ref: "Product",
 required: true,
-},
+}],
+
 }, {
 timestamps: true
 });

@@ -9,7 +9,7 @@ required: true,
 storeName: {
 type: String,
 required: true,
-},
+}, 
 storeDescription: {
 type: String,
 required: true,
