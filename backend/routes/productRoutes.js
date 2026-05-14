@@ -7,8 +7,25 @@ const {
   addProduct,
 } = require("../controllers/productController");
 
-router.get("/", getProducts);
 
-router.post("/add", addProduct);
+// auth middleware
+const protect = require(
+  "../middlewares/authMiddleware"
+);
+
+
+// Routes
+
+router.get(
+  "/",
+  protect,
+  getProducts
+);
+
+router.post(
+  "/add",
+  protect,
+  addProduct
+);
 
 module.exports = router;
