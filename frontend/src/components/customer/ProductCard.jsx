@@ -1,4 +1,4 @@
-function ProductCard({ product }) {
+function ProductCard({ product, onQuickView }) {
   const formattedPrice = new Intl.NumberFormat("en-IN").format(product.price);
 
   return (
@@ -21,7 +21,9 @@ function ProductCard({ product }) {
           <span>{product.rating} star</span>
         </div>
         <div className="customer-product-card__actions">
-          <button className="customer-secondary-button" type="button">Quick View</button>
+          <button className="customer-secondary-button" type="button" onClick={() => onQuickView?.(product)}>
+            Quick View
+          </button>
           <button className="customer-primary-button" type="button">Add to Cart</button>
         </div>
       </div>
