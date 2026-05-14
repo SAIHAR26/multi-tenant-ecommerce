@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { register, saveSession } from "../api/auth";
 import "./Auth.css";
 
 const categories = [
@@ -14,8 +16,34 @@ const categories = [
 ];
 
 function Register() {
+  const navigate = useNavigate();
   const [role, setRole] = useState("customer");
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isCustomer = role === "customer";
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const payload = {
+      ...Object.fromEntries(formData.entries()),
+      role,
+    };
+
+    setIsSubmitting(true);
+    setStatus({ type: "", message: "" });
+
+    try {
+      const session = await register(payload);
+      saveSession(session);
+      navigate(session.user.role === "vendor" ? "/vendor" : "/customer");
+    } catch (error) {
+      setStatus({ type: "error", message: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main className="auth-page auth-page--register">
@@ -54,7 +82,7 @@ function Register() {
           </button>
         </div>
 
-        <form className="auth-card signup-form">
+        <form className="auth-card signup-form" onSubmit={handleSubmit}>
           <div className="auth-card__header">
             <p className="auth-eyebrow">
               {isCustomer ? "Customer signup" : "Vendor signup"}
@@ -64,8 +92,12 @@ function Register() {
 
           {isCustomer ? <CustomerFields /> : <VendorFields />}
 
-          <button className="auth-button" type="button">
-            Create Account
+          {status.message ? (
+            <p className={`auth-message auth-message--${status.type}`}>{status.message}</p>
+          ) : null}
+
+          <button className="auth-button" disabled={isSubmitting} type="submit">
+            {isSubmitting ? "Creating account..." : "Create Account"}
           </button>
 
           <p className="auth-switch">
@@ -82,37 +114,43 @@ function CustomerFields() {
     <div className="auth-grid">
       <label className="auth-field auth-field--wide">
         <span>Full Name</span>
-        <input type="text" placeholder="Enter your full name" />
+        <input name="name" type="text" placeholder="Enter your full name" required />
       </label>
 
       <label className="auth-field">
         <span>Email</span>
-        <input type="email" placeholder="you@example.com" />
+        <input name="email" type="email" placeholder="you@example.com" required />
       </label>
 
       <label className="auth-field">
         <span>Phone Number</span>
-        <input type="tel" placeholder="+91 98765 43210" />
+        <input name="phone" type="tel" placeholder="+91 98765 43210" />
       </label>
 
       <label className="auth-field">
         <span>Location</span>
-        <input type="text" placeholder="City, State" />
+        <input name="location" type="text" placeholder="City, State" />
       </label>
 
       <label className="auth-field">
         <span>Age</span>
-        <input type="number" placeholder="21" />
+        <input name="age" type="number" placeholder="21" />
       </label>
 
       <label className="auth-field">
         <span>Password</span>
-        <input type="password" placeholder="Create password" />
+        <input name="password" type="password" placeholder="Create password" required minLength="6" />
       </label>
 
       <label className="auth-field">
         <span>Confirm Password</span>
-        <input type="password" placeholder="Confirm password" />
+        <input
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm password"
+          required
+          minLength="6"
+        />
       </label>
     </div>
   );
@@ -123,27 +161,27 @@ function VendorFields() {
     <div className="auth-grid">
       <label className="auth-field">
         <span>Store Name</span>
-        <input type="text" placeholder="Your store name" />
+        <input name="storeName" type="text" placeholder="Your store name" required />
       </label>
 
       <label className="auth-field">
         <span>Owner Name</span>
-        <input type="text" placeholder="Store owner name" />
+        <input name="name" type="text" placeholder="Store owner name" required />
       </label>
 
       <label className="auth-field">
         <span>Email</span>
-        <input type="email" placeholder="vendor@example.com" />
+        <input name="email" type="email" placeholder="vendor@example.com" required />
       </label>
 
       <label className="auth-field">
         <span>Phone Number</span>
-        <input type="tel" placeholder="+91 98765 43210" />
+        <input name="phone" type="tel" placeholder="+91 98765 43210" />
       </label>
 
       <label className="auth-field">
         <span>Store Category</span>
-        <select defaultValue="">
+        <select defaultValue="" name="storeCategory" required>
           <option value="" disabled>
             Select category
           </option>
@@ -157,22 +195,28 @@ function VendorFields() {
 
       <label className="auth-field">
         <span>Shop Location</span>
-        <input type="text" placeholder="City, State" />
+        <input name="location" type="text" placeholder="City, State" />
       </label>
 
       <label className="auth-field auth-field--wide">
         <span>Bank Details</span>
-        <input type="text" placeholder="Account holder, account number, IFSC" />
+        <input name="bankDetails" type="text" placeholder="Account holder, account number, IFSC" />
       </label>
 
       <label className="auth-field">
         <span>Password</span>
-        <input type="password" placeholder="Create password" />
+        <input name="password" type="password" placeholder="Create password" required minLength="6" />
       </label>
 
       <label className="auth-field">
         <span>Confirm Password</span>
-        <input type="password" placeholder="Confirm password" />
+        <input
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm password"
+          required
+          minLength="6"
+        />
       </label>
     </div>
   );
