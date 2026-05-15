@@ -1,6 +1,6 @@
 function LoadingSpinner() {
   return (
-    <div style={{ padding: "20px", textAlign: "center" }}>
+    <div>
       <h2>Loading...</h2>
     </div>
   );
