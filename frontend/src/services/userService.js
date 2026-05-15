@@ -1,11 +1,12 @@
-const userService = {
-  getProfile: async () => {
-    console.log("Get user profile");
-  },
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  updateProfile: async (data) => {
-    console.log("Update profile", data);
-  },
+export const getUsers = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/users`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch users");
+  }
+
+  return response.json();
 };
-
-export default userService;

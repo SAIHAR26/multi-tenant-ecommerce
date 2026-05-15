@@ -1,19 +1,12 @@
-const productService = {
-  getProducts: async () => {
-    console.log("Fetch products");
-  },
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  addProduct: async (data) => {
-    console.log("Add product", data);
-  },
+export const getProducts = async () => {
+  const response = await fetch(`${API_BASE_URL}/api/products`);
 
-  updateProduct: async (id, data) => {
-    console.log("Update product", id, data);
-  },
+  if (!response.ok) {
+    throw new Error("Failed to fetch products");
+  }
 
-  deleteProduct: async (id) => {
-    console.log("Delete product", id);
-  },
+  return response.json();
 };
-
-export default productService;
