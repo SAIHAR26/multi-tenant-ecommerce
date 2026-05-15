@@ -1,32 +1,40 @@
-import { useNavigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
 
-function AdminDashboard() {
+import Login from "../pages/Login";
+import AdminDashboard from "../pages/AdminDashboard";
 
-  const navigate = useNavigate();
+import ProtectedRoute from "../components/ProtectedRoute";
 
-  const handleLogout = () => {
-
-    localStorage.removeItem("token");
-
-    localStorage.removeItem("role");
-
-    localStorage.removeItem("user");
-
-    navigate("/login");
-
-  };
+function AppRoutes() {
 
   return (
-    <div>
 
-      <h1>Admin Dashboard</h1>
+    <BrowserRouter>
 
-      <button onClick={handleLogout}>
-        Logout
-      </button>
+      <Routes>
 
-    </div>
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+      </Routes>
+
+    </BrowserRouter>
   );
 }
 
-export default AdminDashboard;
+export default AppRoutes;

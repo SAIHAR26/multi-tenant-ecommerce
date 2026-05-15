@@ -7,24 +7,28 @@ const {
   addProduct,
 } = require("../controllers/productController");
 
+// Middlewares
+const authMiddleware = require("../middlewares/authMiddleware");
 
-// auth middleware
-const protect = require(
-  "../middlewares/authMiddleware"
-);
-
+const {
+  adminOnly,
+  vendorOnly,
+} = require("../middlewares/roleMiddleware");
 
 // Routes
 
+// Get products
 router.get(
   "/",
-  protect,
+  authMiddleware,
   getProducts
 );
 
+// Add product - Vendor only
 router.post(
   "/add",
-  protect,
+  authMiddleware,
+  vendorOnly,
   addProduct
 );
 

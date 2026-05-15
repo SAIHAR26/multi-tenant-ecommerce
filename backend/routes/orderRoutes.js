@@ -4,6 +4,20 @@ const router = express.Router();
 
 const { placeOrder } = require("../controllers/orderController");
 
-router.post("/place", placeOrder);
+// Middlewares
+const authMiddleware = require("../middlewares/authMiddleware");
+
+const {
+  customerOnly,
+  adminOnly,
+} = require("../middlewares/roleMiddleware");
+
+// Customer only can place order
+router.post(
+  "/place",
+  authMiddleware,
+  customerOnly,
+  placeOrder
+);
 
 module.exports = router;

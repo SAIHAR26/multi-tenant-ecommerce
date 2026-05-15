@@ -11,54 +11,62 @@ function Login() {
   const [role, setRole] =
     useState("customer");
   const handleLogin = async () => {
-    try {
-      const response =
-        await axios.post(
-          "http://localhost:5000/api/auth/login",
-          {
-            email,
-            password,
-            role,
-          }
-        );
-      // Save token
-      localStorage.setItem(
-        "token",
-        response.data.token
-      );
-      localStorage.setItem(
-        "role",
-        response.data.user.role
-      );
-      localStorage.setItem(
-        "user",
-        JSON.stringify(
-          response.data.user
-        )
-      );
-      alert("Login Successful");
-      if (
-        response.data.user.role ===
-        "admin"
-      ) {
-        navigate("/admin");
+
+  try {
+
+    const response = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      {
+        email,
+        password,
+        role,
       }
-      else if (
-        response.data.user.role ===
-        "vendor"
-      ) {
-        navigate("/vendor");
-      }
-      else {
-        navigate("/customer");
-      }
-    } catch (error) {
-      alert(
-        error.response?.data?.message ||
-        "Login Failed"
-      );
+    );
+
+    const data = response.data;
+
+    // Store in localStorage
+    localStorage.setItem(
+      "token",
+      data.token
+    );
+
+    localStorage.setItem(
+      "role",
+      data.user.role
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(data.user)
+    );
+
+    alert("Login Successful");
+
+    // Role based navigation
+    if (data.user.role === "admin") {
+      navigate("/admin");
     }
-  };
+
+    else if (data.user.role === "vendor") {
+      navigate("/vendor");
+    }
+
+    else {
+      navigate("/customer");
+    }
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert(
+      error.response?.data?.message ||
+      "Login Failed"
+    );
+
+  }
+};
   return (
     <main className="auth-page auth-page--split">
       <section className="auth-brand">

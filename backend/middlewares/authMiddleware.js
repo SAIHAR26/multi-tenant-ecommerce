@@ -1,41 +1,40 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-const protect = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
+    const authHeader = req.headers.authorization;
 
-    // Authorization header read
-    const authHeader =
-      req.headers.authorization;
-
-    // Header lekapothe
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
-        message: "No token provided",
+        success: false,
+        message: "Unauthorized"
       });
     }
 
-    // Bearer token split
-    const token =
-      authHeader.split(" ")[1];
+    const token = authHeader.split(" ")[1];
 
-    // JWT verify
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // decoded user info save
-    req.user = decoded;
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    req.user = user;
 
     next();
 
   } catch (error) {
-
     return res.status(401).json({
-      message: "Invalid token",
+      success: false,
+      message: "Invalid token"
     });
-
   }
 };
 
-module.exports = protect;
+export default authMiddleware;
