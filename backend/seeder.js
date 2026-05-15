@@ -6,13 +6,14 @@ const Order = require("./models/Order");
 const Review = require("./models/Review");
 const Store = require("./models/Store");
 
-mongoose.connect("mongodb://127.0.0.1:27017/vshop")
-.then(() => {
-  console.log("MongoDB Connected");
-})
-.catch((err) => {
-  console.log(err);
-});
+mongoose
+  .connect("mongodb://127.0.0.1:27017/vshop")
+  .then(() => {
+    console.log("MongoDB Connected");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
 const seedData = async () => {
   try {
@@ -30,13 +31,13 @@ const seedData = async () => {
         name: "FashionHub",
         email: "fashionhub@gmail.com",
         password: "123456",
-        role: "VENDOR",
+        role: "vendor",
       },
       {
         name: "UrbanWear",
         email: "urbanwear@gmail.com",
         password: "123456",
-        role: "VENDOR",
+        role: "vendor",
       },
     ]);
 
@@ -46,13 +47,13 @@ const seedData = async () => {
         name: "Rahul",
         email: "rahul@gmail.com",
         password: "123456",
-        role: "CUSTOMER",
+        role: "customer",
       },
       {
         name: "Sneha",
         email: "sneha@gmail.com",
         password: "123456",
-        role: "CUSTOMER",
+        role: "customer",
       },
     ]);
 
@@ -74,7 +75,7 @@ const seedData = async () => {
       },
     ]);
 
-    // PRODUCTS (UPDATED FOR STEP 5)
+    // PRODUCTS
     const products = await Product.insertMany([
       {
         storeId: stores[0]._id,
@@ -142,7 +143,7 @@ const seedData = async () => {
       },
     ]);
 
-    console.log("Sample Data Inserted");
+    console.log("Sample Data Inserted Successfully");
     process.exit();
   } catch (error) {
     console.log(error);
