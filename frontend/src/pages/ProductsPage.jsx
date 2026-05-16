@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../services/productService";
-import LoadingSpinner from "../components/common/LoadingSpinner";
 import EmptyState from "../components/common/EmptyState";
 
 function ProductsPage() {
@@ -23,14 +22,12 @@ function ProductsPage() {
     fetchProducts();
   }, []);
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  if (error) {
-    return <EmptyState message={error} />;
-  }
-
+   if (loading) {
+  return <h2>Loading products...</h2>;
+}
+if (error) {
+  return <h2>{error}</h2>;
+}
   if (products.length === 0) {
     return <EmptyState message="No products found" />;
   }
