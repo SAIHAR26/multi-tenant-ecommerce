@@ -4,6 +4,7 @@ const navItems = [
   { label: "Dashboard", icon: "D", path: "/customer", end: true },
   { label: "Wishlist", icon: "W", path: "/customer/wishlist" },
   { label: "Cart", icon: "C", path: "/customer/cart" },
+  { label: "Checkout", icon: "CK", path: "/customer/checkout" },
   { label: "Orders", icon: "O", path: "/customer/orders" },
   { label: "Tracking", icon: "T", path: "/customer/tracking" },
   { label: "Recommendations", icon: "R", path: "/customer/recommendations" },
