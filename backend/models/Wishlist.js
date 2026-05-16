@@ -1,33 +1,19 @@
 const mongoose = require("mongoose");
 
-const wishlistSchema = new mongoose.Schema({
-userId: {
-type: mongoose.Schema.Types.ObjectId,
-ref: "User",
-required: true,
-},
-
-savedProducts: [{
-type: mongoose.Schema.Types.ObjectId,
-ref: "Product",
-required: true,
-}],
-
-}, {
-timestamps: true
-});
-=======
 const wishlistSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
+
     savedProducts: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
+        required: true,
       },
     ],
   },

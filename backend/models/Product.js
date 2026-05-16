@@ -6,47 +6,58 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
       required: true,
+      index: true,
     },
 
     vendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
     name: {
       type: String,
       required: true,
+      trim: true,
     },
 
     description: {
       type: String,
       required: true,
+      trim: true,
     },
 
     price: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     stock: {
       type: Number,
       default: 0,
+      min: 0,
     },
 
     category: {
       type: String,
       required: true,
+      trim: true,
+      index: true,
     },
 
     brand: {
       type: String,
       required: true,
+      trim: true,
     },
 
     discount: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 100,
     },
 
     images: {
@@ -67,6 +78,13 @@ const productSchema = new mongoose.Schema(
     rating: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 5,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {
