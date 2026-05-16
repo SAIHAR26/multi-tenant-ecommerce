@@ -1,4 +1,15 @@
+import { getSavedUser } from "../../api/auth";
+
 function CustomerNavbar() {
+  const user = getSavedUser();
+  const customerName = user?.name || "Customer";
+  const initials = customerName
+    .split(" ")
+    .map((namePart) => namePart[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <header className="customer-navbar">
       <label className="customer-search" htmlFor="customer-search">
@@ -20,12 +31,9 @@ function CustomerNavbar() {
         </button>
 
         <div className="customer-profile-chip" aria-label="Customer profile">
-          <img
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80"
-            alt="Customer profile"
-          />
+          <span className="customer-profile-chip__avatar">{initials}</span>
           <div>
-            <strong>Anaya Rao</strong>
+            <strong>{customerName}</strong>
             <span>Gold member</span>
           </div>
         </div>
