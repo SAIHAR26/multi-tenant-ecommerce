@@ -17,16 +17,32 @@ function ProductCard({ product }) {
     <>
       <article className="customer-product-card">
         <div className="customer-product-card__image">
-          <img src={product.image} alt={product.name} />
-          <span>{product.discountPercent}% off</span>
-          <button className="wishlist-action" type="button" aria-label={`Add ${product.name} to wishlist`}>
+          <button
+            className="customer-product-card__image-button"
+            type="button"
+            onClick={() => navigate(`/customer/product/${product.id}`)}
+          >
+            <img src={product.image} alt={product.name} />
+            <span>{product.discountPercent}% off</span>
+          </button>
+          <button
+            className="wishlist-action"
+            type="button"
+            aria-label={`Add ${product.name} to wishlist`}
+          >
             Heart
           </button>
         </div>
 
         <div className="customer-product-card__body">
           <div>
-            <h3>{product.name}</h3>
+            <button
+              className="customer-product-card__title"
+              type="button"
+              onClick={() => navigate(`/customer/product/${product.id}`)}
+            >
+              {product.name}
+            </button>
             <p>{product.brand}</p>
           </div>
           <div className="customer-product-card__meta">

@@ -243,11 +243,34 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
-.customer-profile-chip img {
+.customer-profile-chip img,
+.customer-profile-chip__avatar {
   width: 36px;
   height: 36px;
   border-radius: 13px;
+}
+
+.customer-profile-chip img {
   object-fit: cover;
+}
+
+.customer-profile-chip__avatar,
+.customer-profile-large__avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #ffffff;
+  font-weight: 900;
+  background: linear-gradient(135deg, #d21f2b, #111111);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.customer-profile-chip .customer-profile-chip__avatar,
+.customer-profile-large .customer-profile-large__avatar {
+  display: grid;
+  margin: 0;
+  line-height: 1;
+  text-align: center;
 }
 
 .customer-profile-chip strong,
@@ -357,10 +380,15 @@
 }
 
 .customer-profile-preview img,
-.customer-profile-large img {
+.customer-profile-large img,
+.customer-profile-large__avatar {
   width: 58px;
   height: 58px;
   border-radius: 18px;
+}
+
+.customer-profile-preview img,
+.customer-profile-large img {
   object-fit: cover;
 }
 
@@ -508,6 +536,20 @@
   cursor: pointer;
 }
 
+.customer-product-card__image .customer-product-card__image-button {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.customer-product-card__image .wishlist-action {
+  z-index: 2;
+}
+
 .customer-product-card__body {
   display: grid;
   gap: 14px;
@@ -515,6 +557,7 @@
 }
 
 .customer-product-card h3,
+.customer-product-card__title,
 .customer-order-card h3,
 .recommendation-card h3,
 .wishlist-card h3,
@@ -522,6 +565,21 @@
   margin: 0;
   color: #ffffff;
   font-size: 1rem;
+}
+
+.customer-product-card__title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.customer-product-card__title:hover {
+  color: #ff3b46;
 }
 
 .customer-product-card p,
@@ -735,10 +793,15 @@
   min-height: 220px;
 }
 
-.customer-profile-large img {
+.customer-profile-large img,
+.customer-profile-large__avatar {
   width: 92px;
   height: 92px;
   border-radius: 28px;
+}
+
+.customer-profile-large__avatar {
+  font-size: 1.7rem;
 }
 
 .customer-profile-large h2 {

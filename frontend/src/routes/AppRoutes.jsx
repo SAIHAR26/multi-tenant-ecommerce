@@ -42,6 +42,7 @@ import ProfilePage from "../pages/customer/ProfilePage";
 import CustomerSettingsPage from "../pages/customer/SettingsPage";
 import CheckoutPage from "../pages/customer/CheckoutPage";
 import OrderSuccessPage from "../pages/customer/OrderSuccessPage";
+import ProductDetails from "../pages/customer/ProductDetails";
 
 function AppRoutes() {
   return (
@@ -88,6 +89,7 @@ function AppRoutes() {
           <Route path="orders" element={<CustomerOrdersPage />} />
           <Route path="tracking" element={<TrackingPage />} />
           <Route path="recommendations" element={<RecommendationsPage />} />
+          <Route path="product/:id" element={<ProductDetails />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<CustomerSettingsPage />} />
         </Route>
