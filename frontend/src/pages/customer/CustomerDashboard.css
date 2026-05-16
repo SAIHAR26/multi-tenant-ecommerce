@@ -568,6 +568,12 @@
   box-shadow: 0 24px 58px rgba(255, 46, 58, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
+.cart-checkout-link {
+  display: inline-grid;
+  place-items: center;
+  text-decoration: none;
+}
+
 .customer-secondary-button,
 .customer-pill {
   min-height: 38px;

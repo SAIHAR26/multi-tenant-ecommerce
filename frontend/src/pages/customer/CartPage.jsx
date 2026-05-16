@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { products } from "./customerData";
 
 function CartPage() {
@@ -9,7 +10,7 @@ function CartPage() {
           <h1>Your selected products.</h1>
           <p>Review premium picks, apply offers, and continue to a secure V SHOP checkout.</p>
         </div>
-        <button className="customer-primary-button" type="button">Checkout</button>
+        <Link className="customer-primary-button cart-checkout-link" to="/customer/checkout">Checkout</Link>
       </section>
 
       <section className="customer-content-grid">
