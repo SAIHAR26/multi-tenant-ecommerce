@@ -1,34 +1,40 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getSavedUser } from "../../api/auth";
 import { products } from "./customerData";
 import "./CheckoutPage.css";
 
-const paymentMethods = ["UPI", "Credit Card", "Debit Card", "Cash on Delivery"];
+const paymentMethods = ["UPI", "Credit Card", "Debit Card", "Cash On Delivery"];
 
-const initialAddress = {
-  fullName: "",
+const createInitialAddress = () => ({
+  fullName: getSavedUser()?.name || "",
   phone: "",
-  houseNo: "",
-  street: "",
+  address: "",
   city: "",
   state: "",
   pincode: "",
   country: "India",
-};
+});
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const [address, setAddress] = useState(initialAddress);
+  const [address, setAddress] = useState(createInitialAddress);
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [coupon, setCoupon] = useState("");
   const [isAddressSaved, setIsAddressSaved] = useState(false);
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [orderItems] = useState(() =>
     products.slice(0, 2).map((product, index) => ({
       ...product,
       quantity: index + 1,
     }))
   );
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => setIsLoading(false), 350);
+
+    return () => window.clearTimeout(timerId);
+  }, []);
 
   const totals = useMemo(() => {
     const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -116,18 +122,12 @@ function CheckoutPage() {
                 required
               />
               <CheckoutField
-                label="House / Flat No"
-                name="houseNo"
-                value={address.houseNo}
+                label="Address"
+                name="address"
+                value={address.address}
                 onChange={handleAddressChange}
                 required
-              />
-              <CheckoutField
-                label="Street"
-                name="street"
-                value={address.street}
-                onChange={handleAddressChange}
-                required
+                wide
               />
               <CheckoutField label="City" name="city" value={address.city} onChange={handleAddressChange} required />
               <CheckoutField
@@ -242,9 +242,9 @@ function CheckoutPage() {
   );
 }
 
-function CheckoutField({ label, name, type = "text", ...props }) {
+function CheckoutField({ label, name, type = "text", wide = false, ...props }) {
   return (
-    <label className="checkout-field">
+    <label className={wide ? "checkout-field checkout-field--wide" : "checkout-field"}>
       <span>{label}</span>
       <input name={name} type={type} placeholder={label} {...props} />
     </label>

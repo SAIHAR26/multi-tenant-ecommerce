@@ -536,6 +536,20 @@
   cursor: pointer;
 }
 
+.customer-product-card__image .customer-product-card__image-button {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.customer-product-card__image .wishlist-action {
+  z-index: 2;
+}
+
 .customer-product-card__body {
   display: grid;
   gap: 14px;
@@ -543,6 +557,7 @@
 }
 
 .customer-product-card h3,
+.customer-product-card__title,
 .customer-order-card h3,
 .recommendation-card h3,
 .wishlist-card h3,
@@ -550,6 +565,21 @@
   margin: 0;
   color: #ffffff;
   font-size: 1rem;
+}
+
+.customer-product-card__title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.customer-product-card__title:hover {
+  color: #ff3b46;
 }
 
 .customer-product-card p,
