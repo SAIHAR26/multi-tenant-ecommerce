@@ -150,6 +150,37 @@ const vendors = [
   },
 ];
 
+const customers = [
+  {
+    name: "Aadhya Sharma",
+    email: "aadhya.customer@vshop.com",
+    phone: "9000000001",
+    location: "Hyderabad",
+    age: 22,
+  },
+  {
+    name: "Rohan Mehta",
+    email: "rohan.customer@vshop.com",
+    phone: "9000000002",
+    location: "Mumbai",
+    age: 26,
+  },
+  {
+    name: "Sneha Reddy",
+    email: "sneha.customer@vshop.com",
+    phone: "9000000003",
+    location: "Bengaluru",
+    age: 24,
+  },
+  {
+    name: "Vikram Singh",
+    email: "vikram.customer@vshop.com",
+    phone: "9000000004",
+    location: "Delhi",
+    age: 29,
+  },
+];
+
 const seedSampleData = async () => {
   if (!process.env.MONGO_URI) {
     throw new Error("MONGO_URI is missing in backend/.env");
@@ -161,12 +192,14 @@ const seedSampleData = async () => {
 
   const vendorEmails = vendors.map((vendor) => vendor.email);
   const vendorNames = vendors.map((vendor) => vendor.storeName);
+  const customerEmails = customers.map((customer) => customer.email);
 
   await Product.deleteMany({
     name: { $in: vendors.flatMap((vendor) => vendor.products.map((product) => product.name)) },
   });
   await Store.deleteMany({ storeName: { $in: vendorNames } });
   await User.deleteMany({ email: { $in: vendorEmails } });
+  await User.deleteMany({ email: { $in: customerEmails } });
 
   for (const vendor of vendors) {
     const user = await User.create({
@@ -197,7 +230,17 @@ const seedSampleData = async () => {
     );
   }
 
-  console.log(`Seeded ${vendors.length} vendors, ${vendors.length} stores, and ${vendors.reduce((total, vendor) => total + vendor.products.length, 0)} products.`);
+  for (const customer of customers) {
+    await User.create({
+      ...customer,
+      password: "Password123",
+      role: "customer",
+    });
+  }
+
+  console.log(
+    `Seeded ${vendors.length} vendors, ${customers.length} customers, ${vendors.length} stores, and ${vendors.reduce((total, vendor) => total + vendor.products.length, 0)} products.`
+  );
 };
 
 seedSampleData()
