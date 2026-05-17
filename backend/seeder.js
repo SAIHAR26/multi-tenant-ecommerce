@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
+
 // MODELS
 const User = require("./models/User");
 const Product = require("./models/Product");
@@ -9,12 +10,6 @@ const Store = require("./models/Store");
 const Cart = require("./models/Cart");
 const Wishlist = require("./models/Wishlist");
 const Payment = require("./models/Payment");
-
-// DB CONNECT
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log(err));
 
 const seedData = async () => {
   try {
@@ -32,14 +27,34 @@ const seedData = async () => {
       Payment.deleteMany(),
     ]);
 
-    console.log("Old Data Deleted");
+    console.log("Old Ecommerce Data Deleted");
 
     // USERS
     const users = await User.insertMany([
-      { name: "FashionHub", email: "fashionhub@gmail.com", password: "123456", role: "vendor" },
-      { name: "UrbanWear", email: "urbanwear@gmail.com", password: "123456", role: "vendor" },
-      { name: "Rahul", email: "rahul@gmail.com", password: "123456", role: "customer" },
-      { name: "Sneha", email: "sneha@gmail.com", password: "123456", role: "customer" },
+      {
+        name: "FashionHub",
+        email: "fashionhub@gmail.com",
+        password: "123456",
+        role: "vendor",
+      },
+      {
+        name: "UrbanWear",
+        email: "urbanwear@gmail.com",
+        password: "123456",
+        role: "vendor",
+      },
+      {
+        name: "Rahul",
+        email: "rahul@gmail.com",
+        password: "123456",
+        role: "customer",
+      },
+      {
+        name: "Sneha",
+        email: "sneha@gmail.com",
+        password: "123456",
+        role: "customer",
+      },
     ]);
 
     const vendor1 = users[0];
@@ -119,7 +134,7 @@ const seedData = async () => {
       },
     ]);
 
-    // CART (FIXED STRUCTURE)
+    // CART
     await Cart.insertMany([
       {
         userId: customer1._id,
@@ -153,7 +168,7 @@ const seedData = async () => {
       },
     ]);
 
-    // ORDERS (FIXED STRUCTURE)
+    // ORDERS
     const orders = await Order.insertMany([
       {
         userId: customer1._id,
@@ -172,7 +187,7 @@ const seedData = async () => {
 
     const order1 = orders[0];
 
-    // PAYMENTS (FIXED ENUM SAFE)
+    // PAYMENTS
     await Payment.insertMany([
       {
         orderId: order1._id,
@@ -182,7 +197,7 @@ const seedData = async () => {
       },
     ]);
 
-    console.log("Seed Completed Successfully 🚀");
+    console.log("Ecommerce Workflow Seed Completed Successfully 🚀");
     process.exit();
   } catch (error) {
     console.log("Seed Error:", error);
@@ -190,4 +205,11 @@ const seedData = async () => {
   }
 };
 
-seedData();
+// DB CONNECT
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB Connected");
+    seedData();
+  })
+  .catch((err) => console.log(err));
