@@ -32,7 +32,7 @@ function CustomerDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const productBrowsingRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState("Trending");
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const searchTerm = searchParams.get("search") || "";
   const [priceFilter, setPriceFilter] = useState("All");
   const [ratingFilter, setRatingFilter] = useState(0);
   const [discountFilter, setDiscountFilter] = useState(0);
@@ -41,19 +41,13 @@ function CustomerDashboard() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
-    const querySearchTerm = searchParams.get("search") || "";
-
-    setSearchTerm(querySearchTerm);
-
-    if (querySearchTerm) {
+    if (searchTerm) {
       productBrowsingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [searchParams]);
+  }, [searchTerm]);
 
   const handleSearchChange = (event) => {
     const nextSearchTerm = event.target.value;
-
-    setSearchTerm(nextSearchTerm);
 
     const nextSearchParams = new URLSearchParams(searchParams);
 
