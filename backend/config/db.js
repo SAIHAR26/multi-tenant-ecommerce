@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+MONGO_URI=mongodb+srv://lasyapaladugula_db_user:lasya1226@cluster0.36hjtsn.mongodb.net/vshop?retryWrites=true&w=majority&appName=Cluster0
 
 const getMongoOptions = () => ({
   dbName: process.env.MONGO_DB_NAME || "vshop",
@@ -43,4 +43,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = connectDB;
+JWT_SECRET=mysecretkey
