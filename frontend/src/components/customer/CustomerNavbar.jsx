@@ -1,8 +1,12 @@
 import { getSavedUser } from "../../api/auth";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function CustomerNavbar() {
+  const navigate = useNavigate();
   const user = getSavedUser();
   const customerName = user?.name || "Customer";
+  const [searchValue, setSearchValue] = useState("");
   const initials = customerName
     .split(" ")
     .map((namePart) => namePart[0])
@@ -10,12 +14,31 @@ function CustomerNavbar() {
     .slice(0, 2)
     .toUpperCase();
 
+  const handleSearch = (event) => {
+    event.preventDefault();
+
+    const query = searchValue.trim();
+
+    navigate(query ? `/customer?search=${encodeURIComponent(query)}` : "/customer");
+  };
+
   return (
     <header className="customer-navbar">
-      <label className="customer-search" htmlFor="customer-search">
-        <span>Search</span>
-        <input id="customer-search" type="search" placeholder="Search luxury products, vendors, orders..." />
-      </label>
+      <form className="customer-search" onSubmit={handleSearch} role="search">
+        <label htmlFor="customer-search">
+          Search
+        </label>
+        <input
+          id="customer-search"
+          type="search"
+          placeholder="Search luxury products, vendors, orders..."
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.target.value)}
+        />
+        <button className="customer-search__button" type="submit">
+          Search
+        </button>
+      </form>
 
       <div className="customer-navbar__actions">
         <button className="customer-icon-button" type="button" aria-label="Open wishlist">

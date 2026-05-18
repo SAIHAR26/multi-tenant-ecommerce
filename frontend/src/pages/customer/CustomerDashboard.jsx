@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
 import { categoryTabs, priceRanges, products } from "./customerData";
 
@@ -28,14 +29,42 @@ const ratingFilters = [4, 3];
 const discountFilters = [10, 25, 50];
 
 function CustomerDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const productBrowsingRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState("Trending");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [priceFilter, setPriceFilter] = useState("All");
   const [ratingFilter, setRatingFilter] = useState(0);
   const [discountFilter, setDiscountFilter] = useState(0);
   const [brandFilter, setBrandFilter] = useState("All");
   const [sortBy, setSortBy] = useState("Most Popular");
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    const querySearchTerm = searchParams.get("search") || "";
+
+    setSearchTerm(querySearchTerm);
+
+    if (querySearchTerm) {
+      productBrowsingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [searchParams]);
+
+  const handleSearchChange = (event) => {
+    const nextSearchTerm = event.target.value;
+
+    setSearchTerm(nextSearchTerm);
+
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (nextSearchTerm.trim()) {
+      nextSearchParams.set("search", nextSearchTerm);
+    } else {
+      nextSearchParams.delete("search");
+    }
+
+    setSearchParams(nextSearchParams, { replace: true });
+  };
 
   const filteredProducts = useMemo(() => {
     const selectedPriceRange = priceRanges.find((range) => range.label === priceFilter);
@@ -44,7 +73,9 @@ function CustomerDashboard() {
     return products
       .filter((product) => {
         const matchesCategory =
-          activeCategory === "Trending"
+          normalizedSearch
+            ? true
+            : activeCategory === "Trending"
             ? product.isTrending
             : activeCategory === "New Arrivals"
               ? product.isNew
@@ -196,7 +227,7 @@ function CustomerDashboard() {
           </div>
         </aside>
 
-        <div className="product-browsing">
+        <div className="product-browsing" ref={productBrowsingRef}>
           {/* Search and sorting control the grid in real time. */}
           <div className="browse-toolbar">
             <label className="marketplace-search" htmlFor="marketplace-search">
@@ -206,7 +237,7 @@ function CustomerDashboard() {
                 type="search"
                 placeholder="Search products, brands, vendors..."
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={handleSearchChange}
               />
             </label>
 
