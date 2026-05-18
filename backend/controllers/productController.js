@@ -1,6 +1,7 @@
 const Product = require("../models/Product");
 require("../models/Store");
 
+// GET ALL PRODUCTS
 const getProducts = async (req, res) => {
   try {
     const { category, search, storeId } = req.query;
@@ -36,6 +37,27 @@ const getProducts = async (req, res) => {
   }
 };
 
+// GET SINGLE PRODUCT
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json(product);
+
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to fetch product.",
+    });
+  }
+};
+
+// CREATE PRODUCT
 const addProduct = async (req, res) => {
   try {
     const product = await Product.create(req.body);
@@ -49,6 +71,7 @@ const addProduct = async (req, res) => {
   }
 };
 
+// UPDATE PRODUCT
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(
@@ -75,6 +98,7 @@ const updateProduct = async (req, res) => {
   }
 };
 
+// DELETE PRODUCT
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
@@ -98,6 +122,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
   getProducts,
+  getProductById,
   addProduct,
   updateProduct,
   deleteProduct,
