@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../services/productService";
 import EmptyState from "../components/common/EmptyState";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -9,25 +10,37 @@ function ProductsPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-     try {
-  const data = await getProducts();
-  setProducts(data);
-   } catch {
-         setError("Failed to load products");
-   } finally {
+      try {
+        const data = await getProducts();
+
+        setProducts(
+          Array.isArray(data?.products)
+            ? data.products
+            : Array.isArray(data)
+            ? data
+            : []
+        );
+      } catch {
+        setError("Failed to load products");
+      } finally {
         setLoading(false);
-   }
+      }
     };
 
     fetchProducts();
   }, []);
 
-   if (loading) {
-  return <h2>Loading products...</h2>;
-}
-if (error) {
-  return <h2>{error}</h2>;
-}
+  // Loading State
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  // Error State
+  if (error) {
+    return <h2>{error}</h2>;
+  }
+
+  // Empty State
   if (products.length === 0) {
     return <EmptyState message="No products found" />;
   }
@@ -39,7 +52,7 @@ if (error) {
       {products.map((product) => (
         <div key={product._id}>
           <h3>{product.name}</h3>
-          <p>{product.price}</p>
+          <p>₹{product.price}</p>
         </div>
       ))}
     </div>
