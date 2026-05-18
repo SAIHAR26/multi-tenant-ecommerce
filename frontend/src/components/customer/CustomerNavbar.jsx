@@ -1,10 +1,44 @@
+import { getSavedUser } from "../../api/auth";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 function CustomerNavbar() {
+  const navigate = useNavigate();
+  const user = getSavedUser();
+  const customerName = user?.name || "Customer";
+  const [searchValue, setSearchValue] = useState("");
+  const initials = customerName
+    .split(" ")
+    .map((namePart) => namePart[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+
+    const query = searchValue.trim();
+
+    navigate(query ? `/customer?search=${encodeURIComponent(query)}` : "/customer");
+  };
+
   return (
     <header className="customer-navbar">
-      <label className="customer-search" htmlFor="customer-search">
-        <span>Search</span>
-        <input id="customer-search" type="search" placeholder="Search luxury products, vendors, orders..." />
-      </label>
+      <form className="customer-search" onSubmit={handleSearch} role="search">
+        <label htmlFor="customer-search">
+          Search
+        </label>
+        <input
+          id="customer-search"
+          type="search"
+          placeholder="Search luxury products, vendors, orders..."
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.target.value)}
+        />
+        <button className="customer-search__button" type="submit">
+          Search
+        </button>
+      </form>
 
       <div className="customer-navbar__actions">
         <button className="customer-icon-button" type="button" aria-label="Open wishlist">
@@ -20,12 +54,9 @@ function CustomerNavbar() {
         </button>
 
         <div className="customer-profile-chip" aria-label="Customer profile">
-          <img
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80"
-            alt="Customer profile"
-          />
+          <span className="customer-profile-chip__avatar">{initials}</span>
           <div>
-            <strong>Anaya Rao</strong>
+            <strong>{customerName}</strong>
             <span>Gold member</span>
           </div>
         </div>

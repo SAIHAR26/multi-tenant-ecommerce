@@ -1,4 +1,16 @@
+import { getSavedUser } from "../../api/auth";
+
 function ProfilePage() {
+  const user = getSavedUser();
+  const customerName = user?.name || "Customer";
+  const customerEmail = user?.email || "customer@example.com";
+  const initials = customerName
+    .split(" ")
+    .map((namePart) => namePart[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="customer-page">
       <section className="customer-hero customer-hero--compact">
@@ -13,11 +25,11 @@ function ProfilePage() {
       <section className="customer-content-grid">
         <article className="customer-panel">
           <div className="customer-profile-large">
-            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80" alt="Anaya Rao" />
+            <span className="customer-profile-large__avatar">{initials}</span>
             <div>
               <p className="customer-eyebrow">Gold member</p>
-              <h2>Anaya Rao</h2>
-              <span>anaya.rao@example.com</span>
+              <h2>{customerName}</h2>
+              <span>{customerEmail}</span>
             </div>
           </div>
         </article>

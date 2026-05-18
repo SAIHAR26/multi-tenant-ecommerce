@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, saveSession } from "../api/auth";
+import AuthPasswordField from "../components/AuthPasswordField";
 import "./Auth.css";
 
 function Login() {
@@ -62,10 +63,12 @@ function Login() {
             <input name="email" type="email" placeholder="you@example.com" required />
           </label>
 
-          <label className="auth-field">
-            <span>Password</span>
-            <input name="password" type="password" placeholder="Enter your password" required />
-          </label>
+          <AuthPasswordField
+            autoComplete="current-password"
+            label="Password"
+            name="password"
+            placeholder="Enter your password"
+          />
 
           <label className="auth-field">
             <span>Role</span>

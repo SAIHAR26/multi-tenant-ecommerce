@@ -1,8 +1,12 @@
 import { orders, trackingSteps } from "./customerData";
+import { getSavedUser } from "../../api/auth";
 
 const activeStep = 3;
 
 function TrackingPage() {
+  const user = getSavedUser();
+  const customerName = user?.name || "Customer";
+
   return (
     <div className="customer-page">
       <section className="customer-hero customer-hero--compact">
@@ -39,7 +43,7 @@ function TrackingPage() {
         <article className="customer-panel">
           <div className="customer-panel__header"><div><p className="customer-eyebrow">Delivery address</p><h2>Saved address</h2></div></div>
           <div className="address-card">
-            <h3>Anaya Rao</h3>
+            <h3>{customerName}</h3>
             <p>Indiranagar, Bengaluru, Karnataka 560038</p>
             <span>Express delivery enabled</span>
           </div>

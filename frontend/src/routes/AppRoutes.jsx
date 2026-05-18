@@ -40,6 +40,9 @@ import TrackingPage from "../pages/customer/TrackingPage";
 import RecommendationsPage from "../pages/customer/RecommendationsPage";
 import ProfilePage from "../pages/customer/ProfilePage";
 import CustomerSettingsPage from "../pages/customer/SettingsPage";
+import CheckoutPage from "../pages/customer/CheckoutPage";
+import OrderSuccessPage from "../pages/customer/OrderSuccessPage";
+import ProductDetails from "../pages/customer/ProductDetails";
 
 function AppRoutes() {
   return (
@@ -81,9 +84,12 @@ function AppRoutes() {
           <Route index element={<CustomerDashboard />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="order-success" element={<OrderSuccessPage />} />
           <Route path="orders" element={<CustomerOrdersPage />} />
           <Route path="tracking" element={<TrackingPage />} />
           <Route path="recommendations" element={<RecommendationsPage />} />
+          <Route path="product/:id" element={<ProductDetails />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<CustomerSettingsPage />} />
         </Route>

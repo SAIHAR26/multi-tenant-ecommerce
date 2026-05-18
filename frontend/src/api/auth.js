@@ -26,3 +26,18 @@ export const saveSession = ({ token, user }) => {
   localStorage.setItem("vshopToken", token);
   localStorage.setItem("vshopUser", JSON.stringify(user));
 };
+
+export const getSavedUser = () => {
+  const savedUser = localStorage.getItem("vshopUser");
+
+  if (!savedUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(savedUser);
+  } catch {
+    localStorage.removeItem("vshopUser");
+    return null;
+  }
+};
