@@ -1,6 +1,7 @@
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
+const connectDB = require("../config/db");
 const User = require("../models/User");
 const Store = require("../models/Store");
 const Product = require("../models/Product");
@@ -181,24 +182,25 @@ const customers = [
   },
 ];
 
-const seedSampleData = async () => {
-  if (!process.env.MONGO_URI) {
-    throw new Error("MONGO_URI is missing in backend/.env");
-  }
+const legacySampleData = {
+  productNames: ["Formal Shirt", "Sneakers"],
+  storeNames: ["Fashion Hub", "Urban Wear"],
+  userEmails: ["fashionhub@gmail.com", "urbanwear@gmail.com"],
+};
 
-  await mongoose.connect(process.env.MONGO_URI, {
-    dbName: process.env.MONGO_DB_NAME || "vshop",
-  });
+const seedSampleData = async () => {
+  await connectDB();
 
   const vendorEmails = vendors.map((vendor) => vendor.email);
   const vendorNames = vendors.map((vendor) => vendor.storeName);
   const customerEmails = customers.map((customer) => customer.email);
+  const productNames = vendors.flatMap((vendor) => vendor.products.map((product) => product.name));
 
   await Product.deleteMany({
-    name: { $in: vendors.flatMap((vendor) => vendor.products.map((product) => product.name)) },
+    name: { $in: [...productNames, ...legacySampleData.productNames] },
   });
-  await Store.deleteMany({ storeName: { $in: vendorNames } });
-  await User.deleteMany({ email: { $in: vendorEmails } });
+  await Store.deleteMany({ storeName: { $in: [...vendorNames, ...legacySampleData.storeNames] } });
+  await User.deleteMany({ email: { $in: [...vendorEmails, ...legacySampleData.userEmails] } });
   await User.deleteMany({ email: { $in: customerEmails } });
 
   for (const vendor of vendors) {
