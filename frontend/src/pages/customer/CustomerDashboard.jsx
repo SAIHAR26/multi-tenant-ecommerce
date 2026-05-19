@@ -46,16 +46,10 @@ function CustomerDashboard() {
     }
   }, [searchTerm]);
 
-  const handleSearchChange = (event) => {
-    const nextSearchTerm = event.target.value;
-
+  const clearSearch = () => {
     const nextSearchParams = new URLSearchParams(searchParams);
 
-    if (nextSearchTerm.trim()) {
-      nextSearchParams.set("search", nextSearchTerm);
-    } else {
-      nextSearchParams.delete("search");
-    }
+    nextSearchParams.delete("search");
 
     setSearchParams(nextSearchParams, { replace: true });
   };
@@ -222,18 +216,20 @@ function CustomerDashboard() {
         </aside>
 
         <div className="product-browsing" ref={productBrowsingRef}>
-          {/* Search and sorting control the grid in real time. */}
+          {/* Top navbar search controls the query; this toolbar keeps browsing context and sort nearby. */}
           <div className="browse-toolbar">
-            <label className="marketplace-search" htmlFor="marketplace-search">
-              <span>Search</span>
-              <input
-                id="marketplace-search"
-                type="search"
-                placeholder="Search products, brands, vendors..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-            </label>
+            <div className="browse-context">
+              <div>
+                <span>{searchTerm ? "Search results" : "Showing now"}</span>
+                <strong>{searchTerm ? searchTerm : activeCategory}</strong>
+              </div>
+              <p>{filteredProducts.length} products</p>
+              {searchTerm ? (
+                <button className="filter-reset" type="button" onClick={clearSearch}>
+                  Clear
+                </button>
+              ) : null}
+            </div>
 
             <label className="sort-control" htmlFor="sort-products">
               <span>Sort</span>

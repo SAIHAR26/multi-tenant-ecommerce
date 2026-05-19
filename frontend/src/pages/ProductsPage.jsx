@@ -20,8 +20,8 @@ function ProductsPage() {
             ? data
             : []
         );
-      } catch {
-        setError("Failed to load products");
+      } catch (error) {
+        setError(error.message || "Products could not be loaded.");
       } finally {
         setLoading(false);
       }
