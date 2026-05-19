@@ -1,15 +1,23 @@
+import { apiRequest } from "../api/client";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "http://localhost:5000";
 
 export const getOrders = async () => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/orders`
-  );
+  try {
+    return await apiRequest(
+      "/api/orders",
+      {},
+      "Orders could not be loaded."
+    );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch orders");
+  } catch (error) {
+    console.error(
+      "Order fetch error:",
+      error
+    );
+
+    throw error;
   }
-
-  return response.json();
 };

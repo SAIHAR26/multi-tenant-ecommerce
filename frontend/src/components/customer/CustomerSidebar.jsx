@@ -7,6 +7,7 @@ const navItems = [
   { label: "Checkout", icon: "CK", path: "/customer/checkout" },
   { label: "Orders", icon: "O", path: "/customer/orders" },
   { label: "Tracking", icon: "T", path: "/customer/tracking" },
+  { label: "Notifications", icon: "N", path: "/customer/notifications" },
   { label: "Recommendations", icon: "R", path: "/customer/recommendations" },
   { label: "Profile", icon: "P", path: "/customer/profile" },
   { label: "Settings", icon: "S", path: "/customer/settings" },
