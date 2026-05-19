@@ -1,7 +1,24 @@
-MONGO_URI=mongodb+srv://lasyapaladugula_db_user:lasya1226@cluster0.36hjtsn.mongodb.net/vshop?retryWrites=true&w=majority&appName=Cluster0
+import mongoose from "mongoose";
 
-MONGO_DB_NAME=vshop
+const connectDB = async () => {
 
-PORT=5000
+    try {
 
-JWT_SECRET=mysecretkey
+        const conn = await mongoose.connect(process.env.MONGO_URI, {
+            dbName: process.env.MONGO_DB_NAME || "vshop",
+            family: 4,
+        });
+
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+    } catch (error) {
+
+        console.error(`Error: ${error.message}`);
+
+        process.exit(1);
+
+    }
+
+};
+
+export default connectDB;
