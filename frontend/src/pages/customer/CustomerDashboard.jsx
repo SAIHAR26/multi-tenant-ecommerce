@@ -1,15 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
-import { categoryTabs, priceRanges, products } from "./customerData";
+import { categoryTabs, priceRanges, products as fallbackProducts } from "./customerData";
+import { getProducts } from "../../services/productService";
 
-const brands = [...new Set(products.map((product) => product.brand))].sort();
 const ratingFilters = [4, 3];
 const discountFilters = [10, 25, 50];
+
+const normalizeProduct = (product) => ({
+  ...product,
+  id: product.id || product._id,
+  _id: product._id || product.id,
+  image: product.image || product.images?.[0] || "https://via.placeholder.com/300",
+  discountPercent: product.discountPercent ?? product.discount ?? 0,
+  isTrending: product.isTrending ?? Number(product.rating || 0) >= 4.5,
+  isNew: product.isNew ?? false,
+  popularity: product.popularity ?? product.rating ?? 0,
+  vendor: product.vendor?.name || product.vendor || product.storeId?.storeName || "V SHOP",
+});
 
 function CustomerDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const productBrowsingRef = useRef(null);
+  const [products, setProducts] = useState(fallbackProducts.map(normalizeProduct));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("Trending");
   const searchTerm = searchParams.get("search") || "";
   const [priceFilter, setPriceFilter] = useState("All");
@@ -17,6 +32,42 @@ function CustomerDashboard() {
   const [discountFilter, setDiscountFilter] = useState(0);
   const [brandFilter, setBrandFilter] = useState("All");
   const [sortBy, setSortBy] = useState("Most Popular");
+
+  const brands = useMemo(
+    () => [...new Set(products.map((product) => product.brand).filter(Boolean))].sort(),
+    [products]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getProducts()
+      .then((data) => {
+        if (!isMounted) return;
+
+        const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+
+        if (productsArray.length > 0) {
+          setProducts(productsArray.map(normalizeProduct));
+        }
+
+        setError("");
+      })
+      .catch((requestError) => {
+        if (isMounted) {
+          setError(requestError.message || "Using offline products.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (searchTerm) {
@@ -65,7 +116,7 @@ function CustomerDashboard() {
         if (sortBy === "Trending") return Number(second.isTrending) - Number(first.isTrending);
         return second.popularity - first.popularity;
       });
-  }, [activeCategory, brandFilter, discountFilter, priceFilter, ratingFilter, searchTerm, sortBy]);
+  }, [activeCategory, brandFilter, discountFilter, priceFilter, products, ratingFilter, searchTerm, sortBy]);
 
   return (
     <div className="customer-page marketplace-home">
@@ -217,21 +268,23 @@ function CustomerDashboard() {
               <p className="customer-eyebrow">{activeCategory}</p>
               <h2>{filteredProducts.length} premium products found</h2>
             </div>
-            <span>Live filters active</span>
+            <span>{loading ? "Loading products..." : "Live filters active"}</span>
           </div>
+
+          {error ? <p className="customer-inline-alert">{error}</p> : null}
 
           <div className="marketplace-product-grid">
             {filteredProducts.map((product) => (
-              <ProductCard product={product} key={product.id} />
+              <ProductCard product={product} allProducts={products} key={product._id || product.id} />
             ))}
           </div>
 
-          {filteredProducts.length === 0 && (
+          {!loading && filteredProducts.length === 0 ? (
             <div className="empty-browse-state">
               <h2>No products matched these filters.</h2>
               <p>Try a wider price range, another brand, or a different category.</p>
             </div>
-          )}
+          ) : null}
         </div>
       </section>
     </div>
