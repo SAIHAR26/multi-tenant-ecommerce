@@ -1,12 +1,18 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000";
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5000";
 
-export const getUsers = async () => {
-  const response = await fetch(`${API_BASE_URL}/api/users`);
+export const getUserProfile =
+  async () => {
+    const response = await fetch(
+      `${API_BASE_URL}/api/users/profile`
+    );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch users");
-  }
+    if (!response.ok) {
+      throw new Error(
+        "Failed to fetch profile"
+      );
+    }
 
-  return response.json();
-};
+    return response.json();
+  };

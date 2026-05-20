@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
-import { categoryTabs, priceRanges, products } from "./customerData";
+import {
+  categoryTabs,
+  priceRanges,
+  products,
+} from "./customerData";
 
 function CustomerDashboard() {
   const [searchParams] = useSearchParams();
@@ -12,7 +16,9 @@ function CustomerDashboard() {
     useState("Trending");
 
   const [searchTerm, setSearchTerm] =
-    useState("");
+    useState(
+      searchParams.get("search") || ""
+    );
 
   const [priceFilter, setPriceFilter] =
     useState("All");
@@ -23,6 +29,7 @@ function CustomerDashboard() {
   useEffect(() => {
     const querySearchTerm =
       searchParams.get("search") || "";
+
     if (querySearchTerm) {
       productBrowsingRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -34,7 +41,8 @@ function CustomerDashboard() {
   const filteredProducts = useMemo(() => {
     const selectedPriceRange =
       priceRanges.find(
-        (range) => range.label === priceFilter
+        (range) =>
+          range.label === priceFilter
       );
 
     return products
@@ -112,6 +120,11 @@ function CustomerDashboard() {
           <button
             key={category}
             type="button"
+            className={
+              activeCategory === category
+                ? "active-category"
+                : ""
+            }
             onClick={() =>
               setActiveCategory(category)
             }
@@ -181,16 +194,29 @@ function CustomerDashboard() {
           </select>
         </div>
 
-        <div className="marketplace-product-grid">
-          {filteredProducts.map(
-            (product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
-            )
-          )}
-        </div>
+        {filteredProducts.length > 0 ? (
+          <div className="marketplace-product-grid">
+            {filteredProducts.map(
+              (product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                />
+              )
+            )}
+          </div>
+        ) : (
+          <div className="empty-products">
+            <h2>
+              No products found
+            </h2>
+
+            <p>
+              Try another search or
+              filter.
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

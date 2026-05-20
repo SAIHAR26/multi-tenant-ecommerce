@@ -2,7 +2,11 @@ import AdminOverview from "./admin/AdminOverview";
 import "./AdminDashboard.css";
 
 function AdminDashboard() {
-  return <AdminOverview />;
+  return (
+    <div className="admin-dashboard-wrapper">
+      <AdminOverview />
+    </div>
+  );
 }
 
 export default AdminDashboard;
