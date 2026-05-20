@@ -1,416 +1,264 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
-import { categoryTabs, priceRanges, products } from "./customerData";
+import { categoryTabs, priceRanges } from "./customerData";
+import { getProducts } from "../../services/productService";
+
+const ratingFilters = [1, 2, 3, 4, 5];
+const discountFilters = [10, 20, 30, 40, 50];
+const brands = ["Nike", "Adidas", "Puma", "Zara"];
 
 function CustomerDashboard() {
-const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const productBrowsingRef = useRef(null);
 
-const productBrowsingRef = useRef(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-const [activeCategory, setActiveCategory] =
-  useState("Trending");
+  const [activeCategory, setActiveCategory] = useState("Trending");
+  const searchTerm = searchParams.get("search") || "";
 
-const searchTerm =
-  searchParams.get("search") || "";
+  const [priceFilter, setPriceFilter] = useState("All");
+  const [ratingFilter, setRatingFilter] = useState(0);
+  const [discountFilter, setDiscountFilter] = useState(0);
+  const [brandFilter, setBrandFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("Most Popular");
 
-const [priceFilter, setPriceFilter] =
-  useState("All");
+  // ✅ FETCH FROM SERVICE
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-const [ratingFilter, setRatingFilter] =
-  useState(0);
+        const data = await getProducts();
 
-const [discountFilter, setDiscountFilter] =
-  useState(0);
+        const productsArray = Array.isArray(data?.products)
+          ? data.products
+          : Array.isArray(data)
+          ? data
+          : [];
 
-const [brandFilter, setBrandFilter] =
-  useState("All");
+        setProducts(productsArray);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-const [sortBy, setSortBy] =
-  useState("Most Popular");
+    fetchProducts();
+  }, []);
 
-const [selectedProduct, setSelectedProduct] =
-  useState(null);
+  // ✅ SCROLL ON SEARCH
+  useEffect(() => {
+    if (searchTerm) {
+      productBrowsingRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [searchTerm]);
 
-useEffect(() => {
-  if (searchTerm) {
-    productBrowsingRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
-}, [searchTerm]);
+  const clearSearch = () => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete("search");
+    setSearchParams(nextSearchParams, { replace: true });
+  };
 
-const clearSearch = () => {
-  const nextSearchParams =
-    new URLSearchParams(searchParams);
-
-  nextSearchParams.delete("search");
-
-  setSearchParams(
-    nextSearchParams,
-    { replace: true }
-  );
-};
+  // ✅ FILTER + SORT
   const filteredProducts = useMemo(() => {
-    const selectedPriceRange =
-      priceRanges.find(
-        (range) => range.label === priceFilter
-      );
+    const selectedPriceRange = priceRanges.find(
+      (range) => range.label === priceFilter
+    );
 
     return products
       .filter((product) => {
         const matchesCategory =
           activeCategory === "Trending"
-            ? product.isTrending
-            : product.category ===
-              activeCategory;
+            ? product?.isTrending
+            : product?.category === activeCategory;
 
-        const matchesSearch = [
-          product.name,
-          product.brand,
-          product.vendor,
-        ]
+        const matchesSearch = [product?.name, product?.brand]
           .join(" ")
           .toLowerCase()
-          .includes(
-            searchTerm.toLowerCase()
-          );
+          .includes(searchTerm.toLowerCase());
 
-        const matchesPrice =
-          selectedPriceRange
-            ? product.price >=
-                selectedPriceRange.min &&
-              product.price <=
-                selectedPriceRange.max
-            : true;
+        const matchesPrice = selectedPriceRange
+          ? product?.price >= selectedPriceRange.min &&
+            product?.price <= selectedPriceRange.max
+          : true;
+
+        const matchesRating =
+          ratingFilter === 0 || product?.rating >= ratingFilter;
+
+        const matchesDiscount =
+          discountFilter === 0 || product?.discount >= discountFilter;
+
+        const matchesBrand =
+          brandFilter === "All" || product?.brand === brandFilter;
 
         return (
           matchesCategory &&
           matchesSearch &&
-          matchesPrice
+          matchesPrice &&
+          matchesRating &&
+          matchesDiscount &&
+          matchesBrand
         );
       })
       .sort((a, b) => {
-        if (
-          sortBy ===
-          "Price Low to High"
-        ) {
-          return a.price - b.price;
-        }
-
-        if (
-          sortBy ===
-          "Price High to Low"
-        ) {
-          return b.price - a.price;
-        }
-
-        return (
-          b.popularity - a.popularity
-        );
+        if (sortBy === "Price Low to High") return a.price - b.price;
+        if (sortBy === "Price High to Low") return b.price - a.price;
+        return (b.popularity || 0) - (a.popularity || 0);
       });
   }, [
+    products,
     activeCategory,
     searchTerm,
     priceFilter,
+    ratingFilter,
+    discountFilter,
+    brandFilter,
     sortBy,
   ]);
 
   return (
     <div className="customer-page">
+      {/* HERO */}
       <section className="marketplace-hero">
         <h1>V SHOP Marketplace</h1>
-
-        <p>
-          Explore premium products
-          from verified vendors.
-        </p>
+        <p>Explore premium products from verified vendors.</p>
       </section>
 
+      {/* CATEGORY */}
       <section className="category-strip">
         {categoryTabs.map((category) => (
-          <button
-            key={category}
-            type="button"
-            onClick={() =>
-              setActiveCategory(category)
-            }
-          >
+          <button key={category} onClick={() => setActiveCategory(category)}>
             {category}
           </button>
         ))}
       </section>
 
-<section className="marketplace-layout">
-  <aside className="filter-panel" aria-label="Product filters">
-    <div className="filter-panel__header">
-      <p className="customer-eyebrow">Filters</p>
+      {/* MAIN */}
+      <section className="marketplace-layout">
+        {/* FILTERS */}
+        <aside className="filter-panel">
+          <div className="filter-panel__header">
+            <p>Filters</p>
+            <button
+              onClick={() => {
+                setPriceFilter("All");
+                setRatingFilter(0);
+                setDiscountFilter(0);
+                setBrandFilter("All");
+              }}
+            >
+              Reset
+            </button>
+          </div>
 
-      <button
-        className="filter-reset"
-        type="button"
-        onClick={() => {
-          setPriceFilter("All");
-          setRatingFilter(0);
-          setDiscountFilter(0);
-          setBrandFilter("All");
-        }}
-      >
-        Reset
-      </button>
-    </div>
-
-    <div className="filter-group">
-      <h3>Price Range</h3>
-
-      {["All", ...priceRanges.map((range) => range.label)].map((range) => (
-        <button
-          key={range}
-          type="button"
-          className={
-            priceFilter === range
-              ? "filter-choice filter-choice--active"
-              : "filter-choice"
-          }
-          onClick={() => setPriceFilter(range)}
-        >
-          {range}
-        </button>
-      ))}
-    </div>
-
-    <div className="filter-group">
-      <h3>Rating</h3>
-
-      {ratingFilters.map((rating) => (
-        <button
-          key={rating}
-          type="button"
-          className={
-            ratingFilter === rating
-              ? "filter-choice filter-choice--active"
-              : "filter-choice"
-          }
-          onClick={() => setRatingFilter(rating)}
-        >
-          {rating} star and above
-        </button>
-      ))}
-    </div>
-
-    <div className="filter-group">
-      <h3>Discount</h3>
-
-      {discountFilters.map((discount) => (
-        <button
-          key={discount}
-          type="button"
-          className={
-            discountFilter === discount
-              ? "filter-choice filter-choice--active"
-              : "filter-choice"
-          }
-          onClick={() => setDiscountFilter(discount)}
-        >
-          {discount}% Off
-        </button>
-      ))}
-    </div>
-
-    <div className="filter-group">
-      <h3>Brand</h3>
-
-      <select
-        value={brandFilter}
-        onChange={(event) =>
-          setBrandFilter(event.target.value)
-        }
-      >
-        <option>All</option>
-
-        {brands.map((brand) => (
-          <option key={brand}>
-            {brand}
-          </option>
-        ))}
-      </select>
-    </div>
-  </aside>
-
-  <div
-    className="product-browsing"
-    ref={productBrowsingRef}
-  >
-    <div className="browse-toolbar">
-      <div className="browse-context">
-        <div>
-          <span>
-            {searchTerm
-              ? "Search results"
-              : "Showing now"}
-          </span>
-
-          <strong>
-            {searchTerm
-              ? searchTerm
-              : activeCategory}
-          </strong>
-        </div>
-
-        <p>
-          {filteredProducts.length}
-          {" "}products
-        </p>
-
-        {searchTerm ? (
-          <button
-            className="filter-reset"
-            type="button"
-            onClick={clearSearch}
-          >
-            Clear
-          </button>
-        ) : null}
-      </div>
-
-      <label
-        className="sort-control"
-        htmlFor="sort-products"
-      >
-        <span>Sort</span>
-
-        <select
-          id="sort-products"
-          value={sortBy}
-          onChange={(event) =>
-            setSortBy(event.target.value)
-          }
-        >
-          <option>Most Popular</option>
-          <option>Trending</option>
-          <option>Best Rated</option>
-          <option>Newest</option>
-          <option>Price Low to High</option>
-          <option>Price High to Low</option>
-        </select>
-      </label>
-    </div>
-
-    <div className="browse-summary">
-      <div>
-        <p className="customer-eyebrow">
-          {activeCategory}
-        </p>
-
-        <h2>
-          {filteredProducts.length}
-          {" "}premium products found
-        </h2>
-      </div>
-
-      <span>
-        Live filters active
-      </span>
-    </div>
-
-    <div className="marketplace-product-grid">
-      {filteredProducts.map(
-        (product) => (
-          <ProductCard
-            product={product}
-            key={product.id}
-            onQuickView={
-              setSelectedProduct
-            }
-          />
-        )
-      )}
-    </div>
-
-    {filteredProducts.length === 0 && (
-      <div className="empty-browse-state">
-        <h2>
-          No products matched
-          these filters.
-        </h2>
-
-        <p>
-          Try another category,
-          brand or price range.
-        </p>
-      </div>
-    )}
-  </div>
-</section>
-      <section
-        className="product-browsing"
-        ref={productBrowsingRef}
-      >
-        <div className="browse-toolbar">
-          <input
-            type="search"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(event) =>
-              setSearchTerm(
-                event.target.value
-              )
-            }
-          />
-
-          <select
-            value={priceFilter}
-            onChange={(event) =>
-              setPriceFilter(
-                event.target.value
-              )
-            }
-          >
-            <option value="All">
-              All Prices
-            </option>
-
-            {priceRanges.map((range) => (
-              <option
-                key={range.label}
-                value={range.label}
+          {/* PRICE */}
+          <div className="filter-group">
+            <h3>Price</h3>
+            {["All", ...priceRanges.map((r) => r.label)].map((range) => (
+              <button
+                key={range}
+                className={priceFilter === range ? "active" : ""}
+                onClick={() => setPriceFilter(range)}
               >
-                {range.label}
-              </option>
+                {range}
+              </button>
             ))}
-          </select>
+          </div>
 
-          <select
-            value={sortBy}
-            onChange={(event) =>
-              setSortBy(
-                event.target.value
-              )
-            }
-          >
-            <option>
-              Most Popular
-            </option>
+          {/* RATING */}
+          <div className="filter-group">
+            <h3>Rating</h3>
+            {ratingFilters.map((r) => (
+              <button
+                key={r}
+                className={ratingFilter === r ? "active" : ""}
+                onClick={() => setRatingFilter(r)}
+              >
+                {r}+ stars
+              </button>
+            ))}
+          </div>
 
-            <option>
-              Price Low to High
-            </option>
+          {/* DISCOUNT */}
+          <div className="filter-group">
+            <h3>Discount</h3>
+            {discountFilters.map((d) => (
+              <button
+                key={d}
+                className={discountFilter === d ? "active" : ""}
+                onClick={() => setDiscountFilter(d)}
+              >
+                {d}%+
+              </button>
+            ))}
+          </div>
 
-            <option>
-              Price High to Low
-            </option>
-          </select>
-        </div>
+          {/* BRAND */}
+          <div className="filter-group">
+            <h3>Brand</h3>
+            <select
+              value={brandFilter}
+              onChange={(e) => setBrandFilter(e.target.value)}
+            >
+              <option>All</option>
+              {brands.map((b) => (
+                <option key={b}>{b}</option>
+              ))}
+            </select>
+          </div>
+        </aside>
 
-        <div className="marketplace-product-grid">
-          {filteredProducts.map(
-            (product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
-            )
+        {/* PRODUCTS */}
+        <div className="product-browsing" ref={productBrowsingRef}>
+          <div className="browse-toolbar">
+            <div>
+              <strong>
+                {searchTerm ? searchTerm : activeCategory}
+              </strong>
+              <p>{filteredProducts.length} products</p>
+            </div>
+
+            {searchTerm && (
+              <button onClick={clearSearch}>Clear</button>
+            )}
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option>Most Popular</option>
+              <option>Price Low to High</option>
+              <option>Price High to Low</option>
+            </select>
+          </div>
+
+          {/* STATES */}
+          {loading && <p>Loading products...</p>}
+          {error && <p>{error}</p>}
+
+          {!loading && !error && (
+            <div className="marketplace-product-grid">
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product?._id}
+                    product={product}
+                    allProducts={products}
+                  />
+                ))
+              ) : (
+                <p>No products found for selected filters</p>
+              )}
+            </div>
           )}
         </div>
       </section>
