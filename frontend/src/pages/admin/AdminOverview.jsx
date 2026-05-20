@@ -1,7 +1,10 @@
+import { useState } from "react";
 import ActivityPanel from "./ActivityPanel";
 import DashboardCard from "./DashboardCard";
 import OrdersTable from "./OrdersTable";
 import Button from "../../components/common/Button";
+import { getAdminReport } from "../../services/reportService";
+import { downloadAdminReportPdf } from "../../utils/reportPdf";
 
 const stats = [
   {
@@ -62,6 +65,24 @@ const vendors = [
 ];
 
 function AdminOverview() {
+  const [reportStatus, setReportStatus] = useState({ type: "", message: "" });
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+
+  const handleGenerateReport = async () => {
+    setIsGeneratingReport(true);
+    setReportStatus({ type: "", message: "" });
+
+    try {
+      const report = await getAdminReport();
+      downloadAdminReportPdf(report);
+      setReportStatus({ type: "success", message: "Report downloaded" });
+    } catch (error) {
+      setReportStatus({ type: "error", message: error.message || "Unable to generate report" });
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+
   return (
     <div className="admin-page">
       {/* Hero Section */}
@@ -79,8 +100,16 @@ function AdminOverview() {
 
         <Button
           className="hero-action"
-          text="Generate Report"
+          disabled={isGeneratingReport}
+          onClick={handleGenerateReport}
+          text={isGeneratingReport ? "Generating report..." : "Generate Report"}
         />
+
+        {reportStatus.message ? (
+          <span className={`admin-action-status admin-action-status--${reportStatus.type}`}>
+            {reportStatus.message}
+          </span>
+        ) : null}
       </section>
 
       {/* Statistics */}

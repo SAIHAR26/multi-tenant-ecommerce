@@ -8,13 +8,19 @@ const isSrvDnsError = (error) =>
   error.message?.includes("querySrv") ||
   ["ECONNREFUSED", "ENOTFOUND", "ETIMEOUT", "ESERVFAIL"].includes(error.code);
 
-const connectDB = async () => {
+const connectDB = async ({ exitOnFailure = true } = {}) => {
   const primaryUri = process.env.MONGO_URI;
   const directUri = process.env.MONGO_URI_DIRECT;
 
   if (!primaryUri) {
-    console.error("MongoDB connection error: MONGO_URI is missing in backend/.env");
-    process.exit(1);
+    const error = new Error("MongoDB connection error: MONGO_URI is missing in backend/.env");
+    console.error(error.message);
+
+    if (exitOnFailure) {
+      process.exit(1);
+    }
+
+    throw error;
   }
 
   try {
@@ -34,12 +40,22 @@ const connectDB = async () => {
         return;
       } catch (directError) {
         console.error("MongoDB direct connection error:", directError.message);
-        process.exit(1);
+
+        if (exitOnFailure) {
+          process.exit(1);
+        }
+
+        throw directError;
       }
     }
 
     console.error("MongoDB connection error:", error.message);
-    process.exit(1);
+
+    if (exitOnFailure) {
+      process.exit(1);
+    }
+
+    throw error;
   }
 };
 
