@@ -1,21 +1,17 @@
-const API_URL = "http://localhost:5000/api/products";
+import { apiRequest } from "../api/client";
 
 export const getProducts = async () => {
-  const response = await fetch(API_URL);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  return response.json();
+  return apiRequest(
+    "/api/products",
+    {},
+    "Products could not be loaded."
+  );
 };
 
 export const getProductById = async (id) => {
-  const response = await fetch(`${API_URL}/${id}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch product");
-  }
-
-  return response.json();
+  return apiRequest(
+    `/api/products/${id}`,
+    {},
+    "Product could not be loaded."
+  );
 };

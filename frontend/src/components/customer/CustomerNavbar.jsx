@@ -1,6 +1,6 @@
-import { getSavedUser } from "../../api/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getSavedUser } from "../../api/auth";
 
 function CustomerNavbar() {
   const navigate = useNavigate();
@@ -41,25 +41,49 @@ function CustomerNavbar() {
       </form>
 
       <div className="customer-navbar__actions">
-        <button className="customer-icon-button" type="button" aria-label="Open wishlist">
+        <button
+          className="customer-icon-button"
+          type="button"
+          aria-label="Open wishlist"
+          title="Wishlist"
+          onClick={() => navigate("/customer/wishlist")}
+        >
           W
         </button>
-        <button className="customer-icon-button" type="button" aria-label="Open cart">
+        <button
+          className="customer-icon-button"
+          type="button"
+          aria-label="Open cart"
+          title="Cart"
+          onClick={() => navigate("/customer/cart")}
+        >
           C
           <span className="customer-badge">3</span>
         </button>
-        <button className="customer-icon-button" type="button" aria-label="Open notifications">
+        <button
+          className="customer-icon-button"
+          type="button"
+          aria-label="Open notifications"
+          title="Notifications"
+          onClick={() => navigate("/customer/notifications")}
+        >
           N
           <span className="customer-dot" />
         </button>
 
-        <div className="customer-profile-chip" aria-label="Customer profile">
+        <button
+          className="customer-profile-chip"
+          type="button"
+          aria-label="Open customer profile"
+          title="Profile"
+          onClick={() => navigate("/customer/profile")}
+        >
           <span className="customer-profile-chip__avatar">{initials}</span>
           <div>
             <strong>{customerName}</strong>
             <span>Gold member</span>
           </div>
-        </div>
+        </button>
       </div>
     </header>
   );
