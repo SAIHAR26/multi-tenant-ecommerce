@@ -228,6 +228,8 @@ const seedSampleData = async () => {
       vendor.products.map((product) => ({
         ...product,
         storeId: store._id,
+        vendor: user._id,
+        brand: vendor.storeName,
       }))
     );
   }

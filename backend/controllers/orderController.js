@@ -1,114 +1,82 @@
+const Notification = require("../models/Notification");
 const Order = require("../models/Order");
 
-
-// GET ALL ORDERS
-
 const getOrders = async (req, res) => {
-
   try {
-
     const orders = await Order.find()
-      .populate("userId", "name email");
+      .populate("userId", "name email")
+      .populate("products.productId", "name price")
+      .sort({ createdAt: -1 });
 
     res.status(200).json(orders);
-
   } catch (error) {
-
     res.status(500).json({
-      message: error.message,
+      message: error.message || "Failed to fetch orders.",
     });
-
   }
-
 };
-
-
-// CREATE ORDER
 
 const createOrder = async (req, res) => {
-
   try {
+    const order = await Order.create(req.body);
 
-    const newOrder = new Order(req.body);
-
-    const savedOrder = await newOrder.save();
-
-    res.status(201).json(savedOrder);
-
-  } catch (error) {
-
-    res.status(500).json({
-      message: error.message,
+    await Notification.create({
+      title: "New order received",
+      message: `Order ${order._id} was created for Rs ${order.totalAmount}.`,
+      type: "order",
     });
 
+    res.status(201).json(order);
+  } catch (error) {
+    res.status(400).json({
+      message: error.message || "Failed to create order.",
+    });
   }
-
 };
 
-
-// GET ORDER BY ID
-
 const getOrderById = async (req, res) => {
-
   try {
-
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id)
+      .populate("userId", "name email")
+      .populate("products.productId", "name price");
 
     if (!order) {
-
       return res.status(404).json({
-        message: "Order not found",
+        message: "Order not found.",
       });
-
     }
 
     res.status(200).json(order);
-
   } catch (error) {
-
     res.status(500).json({
-      message: error.message,
+      message: error.message || "Failed to fetch order.",
     });
-
   }
-
 };
 
-
-// DELETE ORDER
-
 const deleteOrder = async (req, res) => {
-
   try {
-
     const deletedOrder = await Order.findByIdAndDelete(req.params.id);
 
     if (!deletedOrder) {
-
       return res.status(404).json({
-        message: "Order not found",
+        message: "Order not found.",
       });
-
     }
 
     res.status(200).json({
-      message: "Order deleted successfully",
+      message: "Order deleted successfully.",
     });
-
   } catch (error) {
-
     res.status(500).json({
-      message: error.message,
+      message: error.message || "Failed to delete order.",
     });
-
   }
-
 };
 
-
 module.exports = {
-  getOrders,
   createOrder,
-  getOrderById,
   deleteOrder,
+  getOrderById,
+  getOrders,
 };
