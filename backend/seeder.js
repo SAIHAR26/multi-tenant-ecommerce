@@ -183,17 +183,41 @@ const seedData = async () => {
         deliveryAddress: "Hyderabad",
         paymentStatus: "PENDING",
       },
+      {
+        userId: customer2._id,
+        products: [
+          {
+            productId: product2._id,
+            quantity: 2,
+          },
+        ],
+        totalAmount: 3998,
+        status: "DELIVERED",
+        deliveryAddress: "Bangalore",
+        paymentStatus: "PAID",
+      },
     ]);
 
     const order1 = orders[0];
+    const order2 = orders[1];
 
-    // PAYMENTS
+    // PAYMENTS (FIXED ENUM ISSUE)
     await Payment.insertMany([
       {
+        userId: customer1._id,
         orderId: order1._id,
         method: "COD",
         status: "PENDING",
         transactionId: "",
+        amount: 999,
+      },
+      {
+        userId: customer2._id,
+        orderId: order2._id,
+        method: "NETBANKING",   // ✅ FIXED (UPI removed)
+        status: "SUCCESS",     // ✅ FIXED (PAID removed)
+        transactionId: "TXN123456",
+        amount: 3998,
       },
     ]);
 

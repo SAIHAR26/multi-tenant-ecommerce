@@ -16,7 +16,7 @@ const getReviews = async (req, res) => {
   }
 };
 
-const addReview = async (req, res) => {
+const createReview = async (req, res) => {
   try {
     const review = await Review.create(req.body);
 
@@ -35,6 +35,6 @@ const addReview = async (req, res) => {
 };
 
 module.exports = {
+  createReview,
   getReviews,
-  addReview,
 };

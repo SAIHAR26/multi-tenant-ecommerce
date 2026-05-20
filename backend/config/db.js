@@ -29,9 +29,7 @@ const connectDB = async ({ exitOnFailure = true } = {}) => {
     console.log(`MongoDB Connected: ${connection.connection.name}`);
   } catch (error) {
     if (primaryUri.startsWith("mongodb+srv://") && directUri && isSrvDnsError(error)) {
-      console.warn(
-        "MongoDB SRV DNS lookup failed. Retrying with MONGO_URI_DIRECT fallback..."
-      );
+      console.warn("MongoDB SRV DNS lookup failed. Retrying with MONGO_URI_DIRECT fallback...");
 
       try {
         const connection = await mongoose.connect(directUri, getMongoOptions());

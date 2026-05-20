@@ -19,13 +19,13 @@ app.get("/api/health", (req, res) => {
 });
 
 const authRoutes = require("./routes/authRoutes");
-const productRoutes = require("./routes/productRoutes");
-const userRoutes = require("./routes/userRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const productRoutes = require("./routes/productRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const storeRoutes = require("./routes/storeRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
-const reportRoutes = require("./routes/reportRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
