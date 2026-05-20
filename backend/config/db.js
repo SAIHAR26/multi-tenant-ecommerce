@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const getMongoOptions = () => ({
   dbName: process.env.MONGO_DB_NAME || "vshop",
 });
@@ -16,11 +14,3 @@ const connectDB = async () => {
     );
 
     console.log("MongoDB Connected");
-
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
-  }
-};
-
-module.exports = connectDB;
