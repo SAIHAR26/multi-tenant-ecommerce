@@ -1,21 +1,10 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import { apiRequest } from "./client";
 
 const requestAuth = async (path, payload) => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/${path}`, {
+  return apiRequest(`/api/auth/${path}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(payload),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Authentication request failed.");
-  }
-
-  return data;
+  }, "Authentication request could not be completed.");
 };
 
 export const login = (payload) => requestAuth("login", payload);
@@ -25,4 +14,19 @@ export const register = (payload) => requestAuth("register", payload);
 export const saveSession = ({ token, user }) => {
   localStorage.setItem("vshopToken", token);
   localStorage.setItem("vshopUser", JSON.stringify(user));
+};
+
+export const getSavedUser = () => {
+  const savedUser = localStorage.getItem("vshopUser");
+
+  if (!savedUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(savedUser);
+  } catch {
+    localStorage.removeItem("vshopUser");
+    return null;
+  }
 };

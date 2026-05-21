@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { register, saveSession } from "../api/auth";
+import AuthPasswordField from "../components/AuthPasswordField";
 import "./Auth.css";
 
 const categories = [
@@ -137,21 +138,21 @@ function CustomerFields() {
         <input name="age" type="number" placeholder="21" />
       </label>
 
-      <label className="auth-field">
-        <span>Password</span>
-        <input name="password" type="password" placeholder="Create password" required minLength="6" />
-      </label>
+      <AuthPasswordField
+        autoComplete="new-password"
+        label="Password"
+        minLength="6"
+        name="password"
+        placeholder="Create password"
+      />
 
-      <label className="auth-field">
-        <span>Confirm Password</span>
-        <input
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm password"
-          required
-          minLength="6"
-        />
-      </label>
+      <AuthPasswordField
+        autoComplete="new-password"
+        label="Confirm Password"
+        minLength="6"
+        name="confirmPassword"
+        placeholder="Confirm password"
+      />
     </div>
   );
 }
@@ -203,21 +204,21 @@ function VendorFields() {
         <input name="bankDetails" type="text" placeholder="Account holder, account number, IFSC" />
       </label>
 
-      <label className="auth-field">
-        <span>Password</span>
-        <input name="password" type="password" placeholder="Create password" required minLength="6" />
-      </label>
+      <AuthPasswordField
+        autoComplete="new-password"
+        label="Password"
+        minLength="6"
+        name="password"
+        placeholder="Create password"
+      />
 
-      <label className="auth-field">
-        <span>Confirm Password</span>
-        <input
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm password"
-          required
-          minLength="6"
-        />
-      </label>
+      <AuthPasswordField
+        autoComplete="new-password"
+        label="Confirm Password"
+        minLength="6"
+        name="confirmPassword"
+        placeholder="Confirm password"
+      />
     </div>
   );
 }

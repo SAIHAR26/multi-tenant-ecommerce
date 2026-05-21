@@ -1,54 +1,293 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
-import { categoryTabs, priceRanges, products } from "./customerData";
+import { categoryTabs, priceRanges, products as fallbackProducts } from "./customerData";
+import { getProducts } from "../../services/productService";
 
-const brands = [
-  "Nike",
-  "Puma",
-  "Adidas",
-  "Apple",
-  "Sony",
-  "Samsung",
-  "Zara",
-  "Ray-Ban",
-  "H&M",
-  "Mango",
-  "Levi's",
-  "Canon",
-  "JBL",
-  "Asus",
-  "Penguin",
-  "Harper",
-  "Tommy Hilfiger",
-  "Swarovski",
-  "Dior",
-  "Google",
-];
+const ratingFilters = [1, 2, 3, 4, 5];
+const discountFilters = [10, 20, 30, 40, 50];
 const ratingFilters = [4, 3];
 const discountFilters = [10, 25, 50];
 
+const normalizeProduct = (product) => ({
+  ...product,
+  id: product.id || product._id,
+  _id: product._id || product.id,
+  image: product.image || product.images?.[0] || "https://via.placeholder.com/300",
+  discountPercent: product.discountPercent ?? product.discount ?? 0,
+  isTrending: product.isTrending ?? Number(product.rating || 0) >= 4.5,
+  isNew: product.isNew ?? false,
+  popularity: product.popularity ?? product.rating ?? 0,
+  vendor: product.vendor?.name || product.vendor || product.storeId?.storeName || "V SHOP",
+});
+
 function CustomerDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const productBrowsingRef = useRef(null);
+  const [products, setProducts] = useState(fallbackProducts.map(normalizeProduct));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [activeCategory, setActiveCategory] =
+    useState("Trending");
+
+  const searchTerm =
+    searchParams.get("search") || "";
+
+  const [priceFilter, setPriceFilter] =
+    useState("All");
+
+  const [ratingFilter, setRatingFilter] =
+    useState(0);
+
+  const [discountFilter, setDiscountFilter] =
+    useState(0);
+
+  const [brandFilter, setBrandFilter] =
+    useState("All");
+
+  const [sortBy, setSortBy] =
+    useState("Most Popular");
+
+  // FETCH PRODUCTS
   const [activeCategory, setActiveCategory] = useState("Trending");
-  const [searchTerm, setSearchTerm] = useState("");
+  const searchTerm = searchParams.get("search") || "";
   const [priceFilter, setPriceFilter] = useState("All");
   const [ratingFilter, setRatingFilter] = useState(0);
   const [discountFilter, setDiscountFilter] = useState(0);
   const [brandFilter, setBrandFilter] = useState("All");
   const [sortBy, setSortBy] = useState("Most Popular");
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
+  const brands = useMemo(
+    () => [...new Set(products.map((product) => product.brand).filter(Boolean))].sort(),
+    [products]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getProducts()
+      .then((data) => {
+        if (!isMounted) return;
+
+        const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+
+        if (productsArray.length > 0) {
+          setProducts(productsArray.map(normalizeProduct));
+        }
+
+        setError("");
+      })
+      .catch((requestError) => {
+        if (isMounted) {
+          setError(requestError.message || "Using offline products.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+        const data = await getProducts();
+
+        console.log("API PRODUCTS:", data);
+
+        const productsArray = Array.isArray(
+          data?.products
+        )
+          ? data.products
+          : Array.isArray(data)
+          ? data
+          : [];
+
+        console.log(
+          "FINAL PRODUCTS ARRAY:",
+          productsArray
+        );
+
+        setProducts(productsArray);
+      } catch (err) {
+        console.error(
+          "PRODUCT FETCH ERROR:",
+          err
+        );
+
+        setError("Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // SCROLL TO PRODUCTS WHEN SEARCHING
+  useEffect(() => {
+    if (searchTerm) {
+      productBrowsingRef.current?.scrollIntoView(
+        {
+          behavior: "smooth",
+          block: "start",
+        }
+      );
+  useEffect(() => {
+    if (searchTerm) {
+      productBrowsingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [searchTerm]);
+
+  // CLEAR SEARCH
+  const clearSearch = () => {
+    const nextSearchParams =
+      new URLSearchParams(searchParams);
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    nextSearchParams.delete("search");
+
+    setSearchParams(nextSearchParams, {
+      replace: true,
+    });
+  };
+
+  // DYNAMIC BRANDS
+  const brands = useMemo(() => {
+    const uniqueBrands = [
+      ...new Set(
+        products
+          .map((product) => product?.brand)
+          .filter(Boolean)
+      ),
+    ];
+
+    return uniqueBrands;
+  }, [products]);
+
+  // FILTER + SORT PRODUCTS
+  const filteredProducts = useMemo(() => {
+    const selectedPriceRange =
+      priceRanges.find(
+        (range) =>
+          range.label === priceFilter
+      );
+
+    return products
+      .filter((product) => {
+        // SAFE VALUES
+        const productName =
+          product?.name
+            ?.toString()
+            .toLowerCase() || "";
+
+        const productBrand =
+          product?.brand
+            ?.toString()
+            .toLowerCase() || "";
+
+        const productCategory =
+          product?.category
+            ?.toString()
+            .toLowerCase() || "";
+
+        const productPrice =
+          Number(product?.price) || 0;
+
+        const productRating =
+          Number(product?.rating) || 0;
+
+        const productDiscount =
+          Number(product?.discount) || 0;
+
+        // CATEGORY
+        const matchesCategory =
+          activeCategory === "Trending"
+            ? true
+            : productCategory ===
+              activeCategory.toLowerCase();
+
+        // SEARCH
+        const matchesSearch =
+          productName.includes(
+            searchTerm.toLowerCase()
+          ) ||
+          productBrand.includes(
+            searchTerm.toLowerCase()
+          );
+
+        // PRICE
+        const matchesPrice =
+          selectedPriceRange
+            ? productPrice >=
+                selectedPriceRange.min &&
+              productPrice <=
+                selectedPriceRange.max
+            : true;
+
+        // RATING
+        const matchesRating =
+          ratingFilter === 0 ||
+          productRating >= ratingFilter;
+
+        // DISCOUNT
+        const matchesDiscount =
+          discountFilter === 0 ||
+          productDiscount >=
+            discountFilter;
+
+        // BRAND
+        const matchesBrand =
+          brandFilter === "All"
+            ? true
+            : productBrand ===
+              brandFilter.toLowerCase();
+
+        return (
+          matchesCategory &&
+          matchesSearch &&
+          matchesPrice &&
+          matchesRating &&
+          matchesDiscount &&
+          matchesBrand
+        );
+      })
+      .sort((a, b) => {
+        const priceA =
+          Number(a?.price) || 0;
+
+        const priceB =
+          Number(b?.price) || 0;
+
+        if (
+          sortBy ===
+          "Price Low to High"
+        ) {
+          return priceA - priceB;
+        }
+
+        if (
+          sortBy ===
+          "Price High to Low"
+        ) {
+          return priceB - priceA;
+        }
+
+        return (
+          (Number(b?.popularity) || 0) -
+          (Number(a?.popularity) || 0)
+        );
   const filteredProducts = useMemo(() => {
     const selectedPriceRange = priceRanges.find((range) => range.label === priceFilter);
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return products
       .filter((product) => {
-        const matchesCategory =
-          activeCategory === "Trending"
-            ? product.isTrending
-            : activeCategory === "New Arrivals"
-              ? product.isNew
-              : product.category === activeCategory;
+        const matchesCategory = normalizedSearch
+          ? true
+          : activeCategory === "Trending"
+          ? product.isTrending
+          : activeCategory === "New Arrivals"
+          ? product.isNew
+          : product.category === activeCategory;
         const matchesSearch = [product.name, product.brand, product.vendor, product.category]
           .join(" ")
           .toLowerCase()
@@ -70,16 +309,32 @@ function CustomerDashboard() {
         if (sortBy === "Trending") return Number(second.isTrending) - Number(first.isTrending);
         return second.popularity - first.popularity;
       });
-  }, [activeCategory, brandFilter, discountFilter, priceFilter, ratingFilter, searchTerm, sortBy]);
-
-  const featuredProducts = products.filter((product) => product.isTrending).slice(0, 4);
-  const recentlyViewed = products.slice(8, 12);
-  const recommended = products.filter((product) => product.rating >= 4.6).slice(0, 4);
+  }, [activeCategory, brandFilter, discountFilter, priceFilter, products, ratingFilter, searchTerm, sortBy]);
 
   return (
     <div className="customer-page marketplace-home">
-      {/* Hero section for the premium ecommerce campaign. */}
       <section className="marketplace-hero">
+        <h1>V SHOP Marketplace</h1>
+
+        <p>
+          Explore premium products from
+          verified vendors.
+        </p>
+      </section>
+
+      {/* CATEGORY STRIP */}
+      <section className="category-strip">
+        {categoryTabs.map((category) => (
+          <button
+            key={category}
+            className={
+              activeCategory === category
+                ? "active"
+                : ""
+            }
+            onClick={() =>
+              setActiveCategory(category)
+            }
         <div className="marketplace-hero__content">
           <p className="customer-eyebrow">Festival Sale live now</p>
           <h1>Luxury marketplace drops, curated for every cart.</h1>
@@ -100,7 +355,6 @@ function CustomerDashboard() {
         </div>
       </section>
 
-      {/* Cinematic offer banners keep the page feeling like a real marketplace. */}
       <section className="offer-banner-grid" aria-label="Special shopping offers">
         {["Festival Sale", "Limited Offer", "Premium Collection", "Flash Sale"].map((offer, index) => (
           <article className="offer-banner" key={offer}>
@@ -111,7 +365,6 @@ function CustomerDashboard() {
         ))}
       </section>
 
-      {/* Category tabs change the product feed immediately. */}
       <section className="category-strip" aria-label="Shop by category">
         {categoryTabs.map((category) => (
           <button
@@ -124,6 +377,13 @@ function CustomerDashboard() {
           </button>
         ))}
       </section>
+
+      {/* MAIN LAYOUT */}
+      <section className="marketplace-layout">
+        {/* FILTER PANEL */}
+        <aside className="filter-panel">
+          <div className="filter-panel__header">
+            <p>Filters</p>
 
       <section className="marketplace-layout">
         <aside className="filter-panel" aria-label="Product filters">
@@ -143,12 +403,30 @@ function CustomerDashboard() {
             </button>
           </div>
 
+          {/* PRICE FILTER */}
+          <div className="filter-group">
+            <h3>Price</h3>
+
+            {[
+              "All",
+              ...priceRanges.map(
+                (r) => r.label
+              ),
+            ].map((range) => (
           <div className="filter-group">
             <h3>Price Range</h3>
             {["All", ...priceRanges.map((range) => range.label)].map((range) => (
               <button
                 className={priceFilter === range ? "filter-choice filter-choice--active" : "filter-choice"}
                 key={range}
+                className={
+                  priceFilter === range
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setPriceFilter(range)
+                }
                 type="button"
                 onClick={() => setPriceFilter(range)}
               >
@@ -157,6 +435,83 @@ function CustomerDashboard() {
             ))}
           </div>
 
+          {/* RATING FILTER */}
+          <div className="filter-group">
+            <h3>Rating</h3>
+
+            {ratingFilters.map(
+              (rating) => (
+                <button
+                  key={rating}
+                  className={
+                    ratingFilter ===
+                    rating
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() =>
+                    setRatingFilter(
+                      rating
+                    )
+                  }
+                >
+                  {rating}+ stars
+                </button>
+              )
+            )}
+          </div>
+
+          {/* DISCOUNT FILTER */}
+          <div className="filter-group">
+            <h3>Discount</h3>
+
+            {discountFilters.map(
+              (discount) => (
+                <button
+                  key={discount}
+                  className={
+                    discountFilter ===
+                    discount
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() =>
+                    setDiscountFilter(
+                      discount
+                    )
+                  }
+                >
+                  {discount}%+
+                </button>
+              )
+            )}
+          </div>
+
+          {/* BRAND FILTER */}
+          <div className="filter-group">
+            <h3>Brand</h3>
+
+            <select
+              name="brandFilter"
+              id="brandFilter"
+              value={brandFilter}
+              onChange={(e) =>
+                setBrandFilter(
+                  e.target.value
+                )
+              }
+            >
+              <option value="All">
+                All
+              </option>
+
+              {brands.map((brand) => (
+                <option
+                  key={brand}
+                  value={brand}
+                >
+                  {brand}
+                </option>
           <div className="filter-group">
             <h3>Rating</h3>
             {ratingFilters.map((rating) => (
@@ -196,19 +551,140 @@ function CustomerDashboard() {
           </div>
         </aside>
 
-        <div className="product-browsing">
-          {/* Search and sorting control the grid in real time. */}
+        {/* PRODUCT SECTION */}
+        <div
+          className="product-browsing"
+          ref={productBrowsingRef}
+        >
+          {/* TOOLBAR */}
           <div className="browse-toolbar">
-            <label className="marketplace-search" htmlFor="marketplace-search">
-              <span>Search</span>
-              <input
-                id="marketplace-search"
-                type="search"
-                placeholder="Search products, brands, vendors..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-            </label>
+            <div>
+              <strong>
+                {searchTerm
+                  ? searchTerm
+                  : activeCategory}
+              </strong>
+
+              <p>
+                {
+                  filteredProducts.length
+                }{" "}
+                products
+              </p>
+            </div>
+
+            {searchTerm && (
+              <button
+                onClick={clearSearch}
+              >
+                Clear
+              </button>
+            )}
+
+            <select
+              name="sortBy"
+              id="sortBy"
+              value={sortBy}
+              onChange={(e) =>
+                setSortBy(
+                  e.target.value
+                )
+              }
+            >
+              <option>
+                Most Popular
+              </option>
+
+              <option>
+                Price Low to High
+              </option>
+
+              <option>
+                Price High to Low
+              </option>
+            </select>
+          </div>
+
+          {/* LOADING */}
+          {loading && (
+            <p>Loading products...</p>
+          )}
+
+          {/* ERROR */}
+          {!loading && error && (
+            <p>{error}</p>
+          )}
+
+          {/* PRODUCTS GRID */}
+          {!loading && !error && (
+            <>
+              {filteredProducts.length >
+              0 ? (
+                <div className="marketplace-product-grid">
+                  {filteredProducts.map(
+                    (product) => (
+                      <ProductCard
+                        key={
+                          product?._id ||
+                          product?.id
+                        }
+                        product={{
+                          ...product,
+                          image:
+                            product?.image ||
+                            "https://dummyimage.com/300x300/cccccc/000000&text=Product",
+                        }}
+                        allProducts={
+                          products
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              ) : (
+                <div className="empty-products">
+                  <h3>
+                    No products found
+                  </h3>
+
+                  <p>
+                    Current Category:{" "}
+                    {activeCategory}
+                  </p>
+
+                  <p>
+                    Available Products:{" "}
+                    {products.length}
+                  </p>
+
+                  <p>
+                    Search Term:{" "}
+                    {searchTerm || "None"}
+                  </p>
+
+                  <p>
+                    Try changing
+                    category or
+                    resetting filters.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        <div className="product-browsing" ref={productBrowsingRef}>
+          <div className="browse-toolbar">
+            <div className="browse-context">
+              <div>
+                <span>{searchTerm ? "Search results" : "Showing now"}</span>
+                <strong>{searchTerm ? searchTerm : activeCategory}</strong>
+              </div>
+              <p>{filteredProducts.length} products</p>
+              {searchTerm ? (
+                <button className="filter-reset" type="button" onClick={clearSearch}>
+                  Clear
+                </button>
+              ) : null}
+            </div>
 
             <label className="sort-control" htmlFor="sort-products">
               <span>Sort</span>
@@ -228,230 +704,27 @@ function CustomerDashboard() {
               <p className="customer-eyebrow">{activeCategory}</p>
               <h2>{filteredProducts.length} premium products found</h2>
             </div>
-            <span>Live filters active</span>
+            <span>{loading ? "Loading products..." : "Live filters active"}</span>
           </div>
+
+          {error ? <p className="customer-inline-alert">{error}</p> : null}
 
           <div className="marketplace-product-grid">
             {filteredProducts.map((product) => (
-              <ProductCard product={product} key={product.id} onQuickView={setSelectedProduct} />
+              <ProductCard product={product} allProducts={products} key={product._id || product.id} />
             ))}
           </div>
 
-          {filteredProducts.length === 0 && (
+          {!loading && filteredProducts.length === 0 ? (
             <div className="empty-browse-state">
               <h2>No products matched these filters.</h2>
               <p>Try a wider price range, another brand, or a different category.</p>
             </div>
-          )}
-        </div>
-      </section>
-
-      <ProductLane title="Trending Products" products={featuredProducts} onQuickView={setSelectedProduct} />
-      <ProductLane title="Most Popular" products={products.slice(0, 4)} onQuickView={setSelectedProduct} />
-      <ProductLane title="Recently Viewed" products={recentlyViewed} onQuickView={setSelectedProduct} />
-      <ProductLane title="Recommended For You" products={recommended} onQuickView={setSelectedProduct} />
-
-      {selectedProduct ? (
-        <ProductQuickView
-          product={selectedProduct}
-          products={products}
-          onClose={() => setSelectedProduct(null)}
-          onSelectProduct={setSelectedProduct}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-function ProductLane({ title, products, onQuickView }) {
-  return (
-    <section className="product-lane">
-      <div className="customer-panel__header">
-        <div>
-          <p className="customer-eyebrow">V SHOP picks</p>
-          <h2>{title}</h2>
-        </div>
-        <button className="customer-secondary-button" type="button">View all</button>
-      </div>
-      <div className="marketplace-product-grid marketplace-product-grid--lane">
-        {products.map((product) => (
-          <ProductCard product={product} key={`${title}-${product.id}`} onQuickView={onQuickView} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ProductQuickView({ product, products, onClose, onSelectProduct }) {
-  const [quantity, setQuantity] = useState(1);
-  const productDetails = getProductDetails(product);
-  const reviews = getProductReviews(product);
-  const suggestedProducts = getSuggestedProducts(product, products);
-  const formattedPrice = new Intl.NumberFormat("en-IN").format(product.price);
-  const stockStatus = productDetails.stock > 10 ? "In stock" : productDetails.stock > 0 ? "Low stock" : "Sold out";
-
-  return (
-    <div className="quick-view-backdrop" role="presentation" onMouseDown={onClose}>
-      <section
-        className="quick-view"
-        aria-label={`${product.name} quick view`}
-        role="dialog"
-        aria-modal="true"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <button className="quick-view__close" type="button" aria-label="Close quick view" onClick={onClose}>
-          X
-        </button>
-
-        <div className="quick-view__media">
-          <img src={product.image} alt={product.name} />
-          <div className="quick-view__thumbs" aria-label="Product images">
-            {productDetails.images.map((image, index) => (
-              <img src={image} alt={`${product.name} view ${index + 1}`} key={`${product.id}-image-${index}`} />
-            ))}
-          </div>
-        </div>
-
-        <div className="quick-view__content">
-          <div className="quick-view__header">
-            <p className="customer-eyebrow">{product.category}</p>
-            <h2>{product.name}</h2>
-            <p>{productDetails.description}</p>
-          </div>
-
-          <div className="quick-view__price-row">
-            <strong>Rs {formattedPrice}</strong>
-            <span>{product.discountPercent}% off</span>
-            <span>{product.rating} star rating</span>
-          </div>
-
-          <div className="quick-view__vendor">
-            <div>
-              <span>Vendor</span>
-              <strong>{product.vendor}</strong>
-            </div>
-            <p>{productDetails.vendorDetails}</p>
-          </div>
-
-          <div className="quick-view__buy-box">
-            <div>
-              <span>Availability</span>
-              <strong className={productDetails.stock > 0 ? "stock-ok" : "stock-empty"}>{stockStatus}</strong>
-              <small>{productDetails.stock} units available</small>
-            </div>
-
-            <label className="quantity-control">
-              <span>Quantity</span>
-              <div>
-                <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>
-                  -
-                </button>
-                <input type="number" min="1" max={productDetails.stock} value={quantity} readOnly />
-                <button
-                  type="button"
-                  onClick={() => setQuantity((value) => Math.min(productDetails.stock, value + 1))}
-                >
-                  +
-                </button>
-              </div>
-            </label>
-          </div>
-
-          <div className="quick-view__actions">
-            <button className="customer-primary-button" type="button" disabled={productDetails.stock === 0}>
-              Add {quantity} to Cart
-            </button>
-            <button className="customer-secondary-button" type="button">Save to Wishlist</button>
-          </div>
-
-          <div className="quick-view__reviews">
-            <div className="quick-view__section-title">
-              <h3>Ratings and Reviews</h3>
-              <span>{reviews.length} product reviews</span>
-            </div>
-            {reviews.map((review) => (
-              <article className="quick-view__review" key={`${product.id}-${review.author}`}>
-                <div>
-                  <strong>{review.author}</strong>
-                  <span>{review.rating} star</span>
-                </div>
-                <p>{review.comment}</p>
-              </article>
-            ))}
-          </div>
-
-          <div className="quick-view__suggested">
-            <div className="quick-view__section-title">
-              <h3>Suggested Products</h3>
-              <span>Similar {product.category.toLowerCase()} picks</span>
-            </div>
-            <div className="quick-view__suggested-grid">
-              {suggestedProducts.map((suggestion) => (
-                <button
-                  className="quick-view__suggestion"
-                  type="button"
-                  key={suggestion.id}
-                  onClick={() => {
-                    setQuantity(1);
-                    onSelectProduct(suggestion);
-                  }}
-                >
-                  <img src={suggestion.image} alt={suggestion.name} />
-                  <span>{suggestion.brand}</span>
-                  <strong>{suggestion.name}</strong>
-                </button>
-              ))}
-            </div>
-          </div>
+          ) : null}
         </div>
       </section>
     </div>
   );
-}
-
-function getProductDetails(product) {
-  const stock = ((product.id * 7) % 34) + 3;
-  const images = [product.image, ...productsByCategory(product.category).slice(0, 2).map((item) => item.image)];
-
-  return {
-    stock,
-    images,
-    description: `${product.name} from ${product.brand} is a premium ${product.category.toLowerCase()} pick by ${product.vendor}, selected for everyday comfort, polished styling, and reliable quality.`,
-    vendorDetails: `${product.vendor} is a verified V SHOP seller with fast dispatch, protected payments, and category-specialist support.`,
-  };
-}
-
-function getProductReviews(product) {
-  const reviewTemplates = [
-    `The ${product.category.toLowerCase()} quality feels premium and the finish matches the product photos.`,
-    `Bought this from ${product.vendor}; packaging was neat and delivery updates were clear.`,
-    `Good value for the price. I liked the ${product.brand} styling and would consider similar products.`,
-  ];
-
-  return reviewTemplates.map((comment, index) => ({
-    author: ["Anaya R.", "Karthik M.", "Meera S."][index],
-    rating: Math.max(4, Number((product.rating - index * 0.2).toFixed(1))),
-    comment,
-  }));
-}
-
-function getSuggestedProducts(product, allProducts) {
-  return allProducts
-    .filter((item) => item.id !== product.id)
-    .map((item) => ({
-      ...item,
-      relevance:
-        (item.category === product.category ? 4 : 0) +
-        (item.vendor === product.vendor ? 3 : 0) +
-        (item.brand === product.brand ? 2 : 0) +
-        item.rating / 10,
-    }))
-    .sort((first, second) => second.relevance - first.relevance || second.rating - first.rating)
-    .slice(0, 4);
-}
-
-function productsByCategory(category) {
-  return products.filter((product) => product.category === category);
 }
 
 export default CustomerDashboard;

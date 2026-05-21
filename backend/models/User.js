@@ -38,6 +38,39 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    location: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    age: {
+      type: Number,
+      min: 0,
+    },
+
+    store: {
+      storeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Store",
+      },
+      name: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      category: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      bankDetails: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+    },
+
     avatar: {
       type: String,
       default: "",
@@ -46,6 +79,24 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+      index: true,
+    },
+
+    rejectionReason: {
+      type: String,
+      trim: true,
+      default: "",
     },
 
     lastLogin: {
