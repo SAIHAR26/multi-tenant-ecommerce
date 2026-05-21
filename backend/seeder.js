@@ -389,5 +389,4 @@ mongoose
     console.log("MongoDB Connected");
     seedData();
   })
-  
   .catch((err) => console.log(err));
