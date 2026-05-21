@@ -1,6 +1,6 @@
 function EmptyState({ message }) {
   return (
-    <div style={{ padding: "20px", textAlign: "center" }}>
+    <div>
       <h2>{message}</h2>
     </div>
   );

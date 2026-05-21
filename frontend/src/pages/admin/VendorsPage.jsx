@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const vendors = [
   { name: "Urban Vault", owner: "Arjun Rao", status: "Live", products: 128, revenue: "₹18.4L" },
   { name: "Luxe Lane", owner: "Meera Shah", status: "Review", products: 76, revenue: "₹12.9L" },
@@ -6,6 +8,8 @@ const vendors = [
 ];
 
 function VendorsPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="admin-page">
       <section className="dashboard-hero dashboard-hero--compact">
@@ -14,7 +18,9 @@ function VendorsPage() {
           <h1>Manage marketplace vendors.</h1>
           <p>Review onboarding, monitor store health, and keep premium sellers ready for customers.</p>
         </div>
-        <button className="hero-action" type="button">Approve Vendor</button>
+        <button className="hero-action" type="button" onClick={() => navigate("/admin/vendor-approvals")}>
+          Approve Vendor
+        </button>
       </section>
 
       <section className="stats-grid">

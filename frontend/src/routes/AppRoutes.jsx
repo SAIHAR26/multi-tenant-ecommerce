@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import Home from "../pages/Home";
 import Login from "../pages/Login";
@@ -9,6 +10,7 @@ import AdminLayout from "../layouts/AdminLayout";
 
 import AdminOverview from "../pages/admin/AdminOverview";
 import VendorsPage from "../pages/admin/VendorsPage";
+import VendorApprovalCenter from "../pages/admin/VendorApprovalCenter";
 import CustomersPage from "../pages/admin/CustomersPage";
 import ProductsPage from "../pages/admin/ProductsPage";
 import OrdersPage from "../pages/admin/OrdersPage";
@@ -16,6 +18,7 @@ import AnalyticsPage from "../pages/admin/AnalyticsPage";
 import ReviewsPage from "../pages/admin/ReviewsPage";
 import PaymentsPage from "../pages/admin/PaymentsPage";
 import SettingsPage from "../pages/admin/SettingsPage";
+import AdminNotificationsPage from "../pages/admin/NotificationsPage";
 
 /* ================= VENDOR ================= */
 import VendorLayout from "../layouts/VendorLayout";
@@ -37,9 +40,34 @@ import WishlistPage from "../pages/customer/WishlistPage";
 import CartPage from "../pages/customer/CartPage";
 import CustomerOrdersPage from "../pages/customer/OrdersPage";
 import TrackingPage from "../pages/customer/TrackingPage";
+import NotificationsPage from "../pages/customer/NotificationsPage";
 import RecommendationsPage from "../pages/customer/RecommendationsPage";
 import ProfilePage from "../pages/customer/ProfilePage";
 import CustomerSettingsPage from "../pages/customer/SettingsPage";
+import CheckoutPage from "../pages/customer/CheckoutPage";
+import OrderSuccessPage from "../pages/customer/OrderSuccessPage";
+import ProductDetails from "../pages/customer/ProductDetails";
+
+const parseSavedUser = (savedUser) => {
+  try {
+    return JSON.parse(savedUser);
+  } catch {
+    return null;
+  }
+};
+
+function AdminProtectedRoute({ children }) {
+  const savedUser = localStorage.getItem("vshopUser");
+  const token = localStorage.getItem("vshopToken");
+
+  if (!token || !savedUser) {
+    return <Navigate replace to="/login" />;
+  }
+
+  const user = parseSavedUser(savedUser);
+
+  return user?.role === "admin" ? children : <Navigate replace to="/login" />;
+}
 
 function AppRoutes() {
   return (
@@ -55,12 +83,21 @@ function AppRoutes() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminOverview />} />
           <Route path="vendors" element={<VendorsPage />} />
+          <Route
+            path="vendor-approvals"
+            element={
+              <AdminProtectedRoute>
+                <VendorApprovalCenter />
+              </AdminProtectedRoute>
+            }
+          />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
+          <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
@@ -81,9 +118,13 @@ function AppRoutes() {
           <Route index element={<CustomerDashboard />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="cart" element={<CartPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="order-success" element={<OrderSuccessPage />} />
           <Route path="orders" element={<CustomerOrdersPage />} />
           <Route path="tracking" element={<TrackingPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
           <Route path="recommendations" element={<RecommendationsPage />} />
+          <Route path="product/:id" element={<ProductDetails />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<CustomerSettingsPage />} />
         </Route>

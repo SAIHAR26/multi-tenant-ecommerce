@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const Notification = require("../models/Notification");
+const Store = require("../models/Store");
 const User = require("../models/User");
 
 const createToken = (userId) =>
@@ -14,6 +16,10 @@ const sendAuthResponse = (res, statusCode, user) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      phone: user.phone,
+      location: user.location,
+      age: user.age,
+      store: user.store,
     },
   });
 };
@@ -34,8 +40,8 @@ const registerUser = async (req, res) => {
       bankDetails,
     } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password are required." });
+    if (!name || !email || !password || !confirmPassword) {
+      return res.status(400).json({ message: "Name, email, password, and confirm password are required." });
     }
 
     if (password !== confirmPassword) {
@@ -44,6 +50,10 @@ const registerUser = async (req, res) => {
 
     if (!["customer", "vendor"].includes(role)) {
       return res.status(400).json({ message: "Invalid registration role." });
+    }
+
+    if (role === "vendor" && (!storeName || !storeCategory)) {
+      return res.status(400).json({ message: "Store name and category are required for vendor registration." });
     }
 
     const existingUser = await User.findOne({ email });
@@ -69,6 +79,25 @@ const registerUser = async (req, res) => {
             }
           : undefined,
     });
+
+    if (role === "vendor") {
+      const store = await Store.create({
+        vendorId: user._id,
+        storeName,
+        storeCategory,
+        storeDescription: `${storeName} on V SHOP`,
+        location,
+      });
+
+      user.store.storeId = store._id;
+      await user.save();
+
+      await Notification.create({
+        title: "New vendor registration",
+        message: `${storeName} registered and is ready for admin review.`,
+        type: "vendor",
+      });
+    }
 
     sendAuthResponse(res, 201, user);
   } catch (error) {
