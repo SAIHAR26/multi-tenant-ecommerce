@@ -40,9 +40,13 @@ function RecommendationsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchRecommendations();
-  }, []);
+ useEffect(() => {
+  const loadRecommendations = async () => {
+    await fetchRecommendations();
+  };
+
+  loadRecommendations();
+}, []);
 
   if (loading) {
     return (
