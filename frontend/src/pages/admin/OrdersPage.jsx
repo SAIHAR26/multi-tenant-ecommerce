@@ -1,4 +1,5 @@
 import OrdersTable from "./OrdersTable";
+import { useNavigate } from "react-router-dom";
 
 const transactions = [
   { id: "TXN-9812", method: "UPI", status: "Paid", amount: "₹20,584" },
@@ -7,6 +8,8 @@ const transactions = [
 ];
 
 function OrdersPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="admin-page">
       <section className="dashboard-hero dashboard-hero--compact">
@@ -15,7 +18,9 @@ function OrdersPage() {
           <h1>Monitor every marketplace order.</h1>
           <p>Review order flow, fulfillment status, and recent transaction activity in one place.</p>
         </div>
-        <button className="hero-action" type="button">Export Orders</button>
+        <button className="hero-action" type="button" onClick={() => navigate("/admin/export-orders")}>
+          Export Orders
+        </button>
       </section>
 
       <section className="stats-grid">

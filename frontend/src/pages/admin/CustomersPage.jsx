@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const customers = [
   { name: "Anaya Rao", segment: "VIP", orders: 18, value: "₹2.4L", status: "Live" },
   { name: "Rohan Mehta", segment: "Repeat", orders: 11, value: "₹98K", status: "Live" },
@@ -6,6 +8,8 @@ const customers = [
 ];
 
 function CustomersPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="admin-page">
       <section className="dashboard-hero dashboard-hero--compact">
@@ -14,7 +18,9 @@ function CustomersPage() {
           <h1>Understand premium shoppers.</h1>
           <p>Track segments, purchase value, retention signals, and high-intent customer activity.</p>
         </div>
-        <button className="hero-action" type="button">Create Segment</button>
+        <button className="hero-action" type="button" onClick={() => navigate("/admin/customer-segments")}>
+          Create Segment
+        </button>
       </section>
 
       <section className="stats-grid">

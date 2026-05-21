@@ -12,6 +12,9 @@ import AdminOverview from "../pages/admin/AdminOverview";
 import VendorsPage from "../pages/admin/VendorsPage";
 import VendorApprovalCenter from "../pages/admin/VendorApprovalCenter";
 import CustomersPage from "../pages/admin/CustomersPage";
+import CreateSegmentPage from "../pages/admin/CreateSegmentPage";
+import AddProductCenter from "../pages/admin/AddProductCenter";
+import ExportOrdersCenter from "../pages/admin/ExportOrdersCenter";
 import ProductsPage from "../pages/admin/ProductsPage";
 import OrdersPage from "../pages/admin/OrdersPage";
 import AnalyticsPage from "../pages/admin/AnalyticsPage";
@@ -92,8 +95,12 @@ function AppRoutes() {
             }
           />
           <Route path="customers" element={<CustomersPage />} />
+          <Route path="customer-segments" element={<CreateSegmentPage />} />
+          <Route path="customer-segments/:segmentId" element={<CreateSegmentPage />} />
           <Route path="products" element={<ProductsPage />} />
+          <Route path="add-product" element={<AddProductCenter />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route path="export-orders" element={<ExportOrdersCenter />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
