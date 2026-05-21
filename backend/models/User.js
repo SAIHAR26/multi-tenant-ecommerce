@@ -81,6 +81,24 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
 
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
+
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+      index: true,
+    },
+
+    rejectionReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     lastLogin: {
       type: Date,
     },

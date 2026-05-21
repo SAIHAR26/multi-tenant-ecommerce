@@ -62,7 +62,7 @@ const getAdminReport = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(8)
         .lean(),
-      User.countDocuments({ role: "vendor", isActive: false }),
+      User.countDocuments({ role: "vendor", approvalStatus: "pending" }),
       Review.aggregate([
         {
           $group: {
