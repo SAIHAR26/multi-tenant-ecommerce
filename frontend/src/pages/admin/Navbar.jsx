@@ -1,4 +1,30 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { getNotifications } from "../../services/notificationService";
+
 function Navbar() {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getNotifications()
+      .then((data) => {
+        if (isMounted) {
+          setUnreadCount(data.unreadCount || 0);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setUnreadCount(0);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <header className="admin-navbar">
       <label className="admin-search" htmlFor="admin-search">
@@ -7,10 +33,12 @@ function Navbar() {
       </label>
 
       <div className="navbar-actions">
-        <button className="icon-button" type="button" aria-label="Open notifications">
+        <Link className="icon-button" to="/admin/notifications" aria-label="Open notifications">
           N
-          <span className="notification-dot" />
-        </button>
+          {unreadCount > 0 ? (
+            <span className="notification-count">{unreadCount > 9 ? "9+" : unreadCount}</span>
+          ) : null}
+        </Link>
 
         <div className="profile-card" aria-label="Admin profile">
           <div className="profile-avatar">VH</div>

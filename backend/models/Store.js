@@ -16,8 +16,8 @@ const storeSchema = new mongoose.Schema(
 
     storeDescription: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
     },
 
     storeCategory: {
@@ -28,8 +28,8 @@ const storeSchema = new mongoose.Schema(
 
     location: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
     },
 
     storeLogo: {

@@ -11,6 +11,16 @@ function RecommendationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const applyRecommendations = (data) => {
+    setRecommendedProducts(data.products || []);
+    setCategories(data.categories || []);
+    setError("");
+  };
+
+  const handleRecommendationError = (err) => {
+    setError("Unable to process personalized feed engine. " + (err.message || ""));
+  };
+
   const fetchRecommendations = async () => {
     try {
       setLoading(true);
@@ -29,19 +39,50 @@ function RecommendationsPage() {
       }
 
       const data = await response.json();
-      
-      // Map data feeds safely or apply local mock fallbacks if backend array structures are empty
-      setRecommendedProducts(data.products || []);
-      setCategories(data.categories || []);
+      applyRecommendations(data);
     } catch (err) {
-      setError("Unable to process personalized feed engine. " + (err.message || ""));
+      handleRecommendationError(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRecommendations();
+    let isMounted = true;
+
+    const token = localStorage.getItem("token");
+
+    fetch(`${API_BASE_URL}/api/products/recommendations`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Could not safely sync personalized data feeds.");
+        }
+
+        return response.json();
+      })
+      .then((data) => {
+        if (isMounted) {
+          applyRecommendations(data);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          handleRecommendationError(err);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) {

@@ -16,6 +16,7 @@ import AnalyticsPage from "../pages/admin/AnalyticsPage";
 import ReviewsPage from "../pages/admin/ReviewsPage";
 import PaymentsPage from "../pages/admin/PaymentsPage";
 import SettingsPage from "../pages/admin/SettingsPage";
+import AdminNotificationsPage from "../pages/admin/NotificationsPage";
 
 /* ================= VENDOR ================= */
 import VendorLayout from "../layouts/VendorLayout";
@@ -65,6 +66,7 @@ function AppRoutes() {
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
+          <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 

@@ -55,12 +55,26 @@ const seedData = async () => {
         password: "123456",
         role: "customer",
       },
+      {
+        name: "Kiran",
+        email: "kiran@gmail.com",
+        password: "123456",
+        role: "customer",
+      },
+      {
+        name: "Priya",
+        email: "priya@gmail.com",
+        password: "123456",
+        role: "customer",
+      },
     ]);
 
     const vendor1 = users[0];
     const vendor2 = users[1];
     const customer1 = users[2];
     const customer2 = users[3];
+    const customer3 = users[4];
+    const customer4 = users[5];
 
     // STORES
     const stores = await Store.insertMany([
@@ -98,6 +112,7 @@ const seedData = async () => {
         images: [],
         sizes: ["M", "L"],
         colors: ["Blue"],
+        rating: 4.5,
       },
       {
         storeId: store2._id,
@@ -112,11 +127,44 @@ const seedData = async () => {
         images: [],
         sizes: ["8", "9"],
         colors: ["Black"],
+        rating: 4,
+      },
+      {
+        storeId: store1._id,
+        vendor: vendor1._id,
+        name: "Hoodie",
+        description: "Winter cotton hoodie",
+        price: 1499,
+        stock: 25,
+        category: "Winter Wear",
+        brand: "FashionHub",
+        discount: 15,
+        images: [],
+        sizes: ["M", "L", "XL"],
+        colors: ["Grey"],
+        rating: 5,
+      },
+      {
+        storeId: store2._id,
+        vendor: vendor2._id,
+        name: "Jeans",
+        description: "Slim fit denim jeans",
+        price: 1799,
+        stock: 30,
+        category: "Clothing",
+        brand: "UrbanWear",
+        discount: 8,
+        images: [],
+        sizes: ["30", "32", "34"],
+        colors: ["Blue"],
+        rating: 4.2,
       },
     ]);
 
     const product1 = products[0];
     const product2 = products[1];
+    const product3 = products[2];
+    const product4 = products[3];
 
     // REVIEWS
     await Review.insertMany([
@@ -132,6 +180,18 @@ const seedData = async () => {
         rating: 4,
         comment: "Good product",
       },
+      {
+        userId: customer3._id,
+        productId: product3._id,
+        rating: 5,
+        comment: "Worth the money",
+      },
+      {
+        userId: customer4._id,
+        productId: product4._id,
+        rating: 4,
+        comment: "Fast delivery and nice fit",
+      },
     ]);
 
     // CART
@@ -142,6 +202,10 @@ const seedData = async () => {
           {
             productId: product1._id,
             quantity: 1,
+          },
+          {
+            productId: product3._id,
+            quantity: 2,
           },
         ],
       },
@@ -154,17 +218,30 @@ const seedData = async () => {
           },
         ],
       },
+      {
+        userId: customer3._id,
+        items: [
+          {
+            productId: product4._id,
+            quantity: 1,
+          },
+        ],
+      },
     ]);
 
     // WISHLIST
     await Wishlist.insertMany([
       {
         userId: customer1._id,
-        savedProducts: [product2._id],
+        savedProducts: [product2._id, product4._id],
       },
       {
         userId: customer2._id,
         savedProducts: [product1._id],
+      },
+      {
+        userId: customer3._id,
+        savedProducts: [product3._id],
       },
     ]);
 
@@ -196,12 +273,40 @@ const seedData = async () => {
         deliveryAddress: "Bangalore",
         paymentStatus: "PAID",
       },
+      {
+        userId: customer3._id,
+        products: [
+          {
+            productId: product3._id,
+            quantity: 1,
+          },
+        ],
+        totalAmount: 1499,
+        status: "SHIPPED",
+        deliveryAddress: "Chennai",
+        paymentStatus: "PAID",
+      },
+      {
+        userId: customer4._id,
+        products: [
+          {
+            productId: product4._id,
+            quantity: 2,
+          },
+        ],
+        totalAmount: 3598,
+        status: "PACKED",
+        deliveryAddress: "Mumbai",
+        paymentStatus: "PENDING",
+      },
     ]);
 
     const order1 = orders[0];
     const order2 = orders[1];
+    const order3 = orders[2];
+    const order4 = orders[3];
 
-    // PAYMENTS (FIXED ENUM ISSUE)
+    // PAYMENTS
     await Payment.insertMany([
       {
         userId: customer1._id,
@@ -214,10 +319,26 @@ const seedData = async () => {
       {
         userId: customer2._id,
         orderId: order2._id,
-        method: "NETBANKING",   // ✅ FIXED (UPI removed)
-        status: "SUCCESS",     // ✅ FIXED (PAID removed)
+        method: "NETBANKING",
+        status: "SUCCESS",
         transactionId: "TXN123456",
         amount: 3998,
+      },
+      {
+        userId: customer3._id,
+        orderId: order3._id,
+        method: "CARD",
+        status: "SUCCESS",
+        transactionId: "TXN789456",
+        amount: 1499,
+      },
+      {
+        userId: customer4._id,
+        orderId: order4._id,
+        method: "COD",
+        status: "PENDING",
+        transactionId: "",
+        amount: 3598,
       },
     ]);
 

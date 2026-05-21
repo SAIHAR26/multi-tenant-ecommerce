@@ -34,9 +34,7 @@ function ProductDetails() {
         const currentProduct =
           productData.product || productData;
 
-        const productsArray = Array.isArray(
-          allProducts.products
-        )
+        const productsArray = Array.isArray(allProducts.products)
           ? allProducts.products
           : Array.isArray(allProducts)
           ? allProducts
@@ -113,10 +111,7 @@ function ProductDetails() {
     );
   }
 
-  const formattedPrice = new Intl.NumberFormat(
-    "en-IN"
-  ).format(product.price || 0);
-
+  const formattedPrice = new Intl.NumberFormat("en-IN").format(product.price || 0);
   const stockCount = product.stock || 10;
 
   const availability =
@@ -145,14 +140,9 @@ function ProductDetails() {
                     ? "product-gallery__thumb is-active"
                     : "product-gallery__thumb"
                 }
-                onClick={() =>
-                  setSelectedImage(image)
-                }
+                onClick={() => setSelectedImage(image)}
               >
-                <img
-                  src={image}
-                  alt={`thumb-${index}`}
-                />
+                <img src={image} alt={`thumb-${index}`} />
               </button>
             ))}
           </div>
@@ -179,26 +169,20 @@ function ProductDetails() {
             <div>
               <span>Availability</span>
               <strong>{availability}</strong>
-              <small>
-                {stockCount} pieces ready
-              </small>
+              <small>{stockCount} pieces ready</small>
             </div>
 
             <div>
               <span>Vendor</span>
-
               <strong>
-                {product.vendor?.storeName ||
-                  "V SHOP"}
+                {product.vendor?.storeName || "V SHOP"}
               </strong>
-
               <small>Verified seller</small>
             </div>
           </div>
 
           <div className="product-description">
             <h2>Product Description</h2>
-
             <p>
               {product.description ||
                 `${product.name} available in V SHOP marketplace.`}
@@ -207,20 +191,15 @@ function ProductDetails() {
 
           <div className="product-size-section">
             <h2>Select Size</h2>
-
             <div className="product-size-options">
               {sizes.map((size) => (
                 <button
                   key={size}
                   type="button"
                   className={
-                    selectedSize === size
-                      ? "is-selected"
-                      : ""
+                    selectedSize === size ? "is-selected" : ""
                   }
-                  onClick={() =>
-                    setSelectedSize(size)
-                  }
+                  onClick={() => setSelectedSize(size)}
                 >
                   {size}
                 </button>
@@ -233,11 +212,8 @@ function ProductDetails() {
 
             <div className="product-quantity-control">
               <button
-                type="button"
                 onClick={() =>
-                  setQuantity((prev) =>
-                    Math.max(1, prev - 1)
-                  )
+                  setQuantity((prev) => Math.max(1, prev - 1))
                 }
               >
                 -
@@ -246,7 +222,6 @@ function ProductDetails() {
               <span>{quantity}</span>
 
               <button
-                type="button"
                 onClick={() =>
                   setQuantity((prev) =>
                     Math.min(stockCount, prev + 1)
@@ -259,24 +234,15 @@ function ProductDetails() {
           </div>
 
           <div className="product-action-row">
-            <button
-              className="product-action product-action--primary"
-              type="button"
-            >
+            <button className="product-action product-action--primary">
               Add to Cart
             </button>
 
-            <button
-              className="product-action product-action--solid"
-              type="button"
-            >
+            <button className="product-action product-action--solid">
               Buy Now
             </button>
 
-            <button
-              className="product-action product-action--outline"
-              type="button"
-            >
+            <button className="product-action product-action--outline">
               Add to Wishlist
             </button>
           </div>
@@ -286,16 +252,11 @@ function ProductDetails() {
       <section className="similar-products-section">
         <div className="customer-panel__header">
           <div>
-            <p className="customer-eyebrow">
-              Recommended
-            </p>
-
+            <p className="customer-eyebrow">Recommended</p>
             <h2>Similar Products</h2>
           </div>
 
-          <span>
-            {similarProducts.length} picks
-          </span>
+          <span>{similarProducts.length} picks</span>
         </div>
 
         {similarProducts.length > 0 ? (
@@ -304,6 +265,7 @@ function ProductDetails() {
               <ProductCard
                 key={item._id}
                 product={item}
+                allProducts={products}  // ✅ THIS IS THE FIX
               />
             ))}
           </div>
