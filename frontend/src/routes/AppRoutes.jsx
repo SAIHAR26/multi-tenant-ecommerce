@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import Home from "../pages/Home";
 import Login from "../pages/Login";
@@ -9,6 +10,7 @@ import AdminLayout from "../layouts/AdminLayout";
 
 import AdminOverview from "../pages/admin/AdminOverview";
 import VendorsPage from "../pages/admin/VendorsPage";
+import VendorApprovalCenter from "../pages/admin/VendorApprovalCenter";
 import CustomersPage from "../pages/admin/CustomersPage";
 import ProductsPage from "../pages/admin/ProductsPage";
 import OrdersPage from "../pages/admin/OrdersPage";
@@ -46,6 +48,27 @@ import CheckoutPage from "../pages/customer/CheckoutPage";
 import OrderSuccessPage from "../pages/customer/OrderSuccessPage";
 import ProductDetails from "../pages/customer/ProductDetails";
 
+const parseSavedUser = (savedUser) => {
+  try {
+    return JSON.parse(savedUser);
+  } catch {
+    return null;
+  }
+};
+
+function AdminProtectedRoute({ children }) {
+  const savedUser = localStorage.getItem("vshopUser");
+  const token = localStorage.getItem("vshopToken");
+
+  if (!token || !savedUser) {
+    return <Navigate replace to="/login" />;
+  }
+
+  const user = parseSavedUser(savedUser);
+
+  return user?.role === "admin" ? children : <Navigate replace to="/login" />;
+}
+
 function AppRoutes() {
   return (
     <BrowserRouter>
@@ -60,6 +83,14 @@ function AppRoutes() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminOverview />} />
           <Route path="vendors" element={<VendorsPage />} />
+          <Route
+            path="vendor-approvals"
+            element={
+              <AdminProtectedRoute>
+                <VendorApprovalCenter />
+              </AdminProtectedRoute>
+            }
+          />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="orders" element={<OrdersPage />} />

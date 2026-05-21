@@ -23,6 +23,7 @@ app.get("/api/health", (req, res) => {
 });
 
 const authRoutes = require("./routes/authRoutes");
+const adminVendorRoutes = require("./routes/adminVendorRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -32,6 +33,7 @@ const storeRoutes = require("./routes/storeRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin/vendors", adminVendorRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
