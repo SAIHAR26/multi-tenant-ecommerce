@@ -30,7 +30,12 @@ const productRoutes = require("./routes/productRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const storeRoutes = require("./routes/storeRoutes");
+<<<<<<< HEAD
+const notificationRoutes = require("./routes/notificationRoutes");
+const reportRoutes = require("./routes/reportRoutes");
+=======
 const userRoutes = require("./routes/userRoutes");
+>>>>>>> 0e163d3577a0ac26133f4da7d6b7b7489a0452c8
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/vendors", adminVendorRoutes);
@@ -40,7 +45,11 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/notifications", notificationRoutes);
+<<<<<<< HEAD
+app.use("/api/reports", reportRoutes);
+=======
 app.use("/api/admin/report", reportRoutes);
+>>>>>>> 0e163d3577a0ac26133f4da7d6b7b7489a0452c8
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
