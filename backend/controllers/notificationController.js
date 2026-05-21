@@ -55,7 +55,7 @@ const createNotification = async (req, res) => {
 };
 
 
-// MARK NOTIFICATION AS READ
+// MARK AS READ
 
 const markAsRead = async (req, res) => {
 
