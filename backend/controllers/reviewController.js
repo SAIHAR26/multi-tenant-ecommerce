@@ -1,7 +1,7 @@
 const Review = require("../models/Review");
 
 
-// GET REVIEWS
+// GET ALL REVIEWS
 
 const getReviews = async (req, res) => {
 
@@ -11,11 +11,16 @@ const getReviews = async (req, res) => {
       .populate("userId", "name email")
       .populate("productId", "name");
 
-    res.status(200).json(reviews);
+    res.status(200).json({
+      success: true,
+      count: reviews.length,
+      data: reviews,
+    });
 
   } catch (error) {
 
     res.status(500).json({
+      success: false,
       message: error.message,
     });
 
@@ -34,11 +39,92 @@ const createReview = async (req, res) => {
 
     const savedReview = await newReview.save();
 
-    res.status(201).json(savedReview);
+    res.status(201).json({
+      success: true,
+      data: savedReview,
+    });
 
   } catch (error) {
 
     res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+};
+
+
+// GET SINGLE REVIEW
+
+const getReviewById = async (req, res) => {
+
+  try {
+
+    const review = await Review.findById(req.params.id)
+      .populate("userId", "name email")
+      .populate("productId", "name");
+
+    if (!review) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+
+    }
+
+    res.status(200).json({
+      success: true,
+      data: review,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+};
+
+
+// UPDATE REVIEW
+
+const updateReview = async (req, res) => {
+
+  try {
+
+    const updatedReview = await Review.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedReview) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedReview,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
       message: error.message,
     });
 
@@ -58,18 +144,21 @@ const deleteReview = async (req, res) => {
     if (!deletedReview) {
 
       return res.status(404).json({
+        success: false,
         message: "Review not found",
       });
 
     }
 
     res.status(200).json({
+      success: true,
       message: "Review deleted successfully",
     });
 
   } catch (error) {
 
     res.status(500).json({
+      success: false,
       message: error.message,
     });
 
@@ -81,5 +170,7 @@ const deleteReview = async (req, res) => {
 module.exports = {
   getReviews,
   createReview,
+  getReviewById,
+  updateReview,
   deleteReview,
 };
