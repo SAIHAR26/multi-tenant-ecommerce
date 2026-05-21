@@ -10,6 +10,7 @@ const Store = require("./models/Store");
 const Cart = require("./models/Cart");
 const Wishlist = require("./models/Wishlist");
 const Payment = require("./models/Payment");
+const Notification = require("./models/Notification");
 
 const seedData = async () => {
   try {
@@ -25,6 +26,7 @@ const seedData = async () => {
       Cart.deleteMany(),
       Wishlist.deleteMany(),
       Payment.deleteMany(),
+      Notification.deleteMany(),
     ]);
 
     console.log("Old Ecommerce Data Deleted");
@@ -309,7 +311,6 @@ const seedData = async () => {
     // PAYMENTS
     await Payment.insertMany([
       {
-        userId: customer1._id,
         orderId: order1._id,
         method: "COD",
         status: "PENDING",
@@ -317,7 +318,6 @@ const seedData = async () => {
         amount: 999,
       },
       {
-        userId: customer2._id,
         orderId: order2._id,
         method: "NETBANKING",
         status: "SUCCESS",
@@ -325,7 +325,6 @@ const seedData = async () => {
         amount: 3998,
       },
       {
-        userId: customer3._id,
         orderId: order3._id,
         method: "CARD",
         status: "SUCCESS",
@@ -333,12 +332,45 @@ const seedData = async () => {
         amount: 1499,
       },
       {
-        userId: customer4._id,
         orderId: order4._id,
         method: "COD",
         status: "PENDING",
         transactionId: "",
         amount: 3598,
+      },
+    ]);
+
+    // NOTIFICATIONS
+    await Notification.insertMany([
+      {
+        userId: customer1._id,
+        type: "ORDER",
+        message: "Your order has been placed successfully",
+      },
+      {
+        userId: customer2._id,
+        type: "PAYMENT",
+        message: "Payment completed successfully",
+      },
+      {
+        userId: customer3._id,
+        type: "ORDER",
+        message: "Your order has been shipped",
+      },
+      {
+        userId: customer4._id,
+        type: "SYSTEM",
+        message: "Your order is out for delivery",
+      },
+      {
+        userId: vendor1._id,
+        type: "STORE",
+        message: "New order received in your store",
+      },
+      {
+        userId: vendor2._id,
+        type: "REVIEW",
+        message: "A customer added a new review",
       },
     ]);
 
