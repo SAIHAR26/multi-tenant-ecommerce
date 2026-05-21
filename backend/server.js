@@ -42,6 +42,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/segments", segmentRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportRoutes);
 app.use("/api/admin/report", reportRoutes);
 
 app.use((err, req, res, next) => {

@@ -8,6 +8,7 @@ const {
   exportOrders,
   getOrderById,
   getOrders,
+  updateOrder,
 } = require("../controllers/orderController");
 
 router.get("/export", exportOrders);
@@ -20,6 +21,7 @@ router
 router
   .route("/:id")
   .get(getOrderById)
+  .patch(updateOrder)
   .delete(deleteOrder);
 
 module.exports = router;

@@ -34,6 +34,47 @@ const createReview = async (req, res) => {
   }
 };
 
+const getReviewById = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id)
+      .populate("userId", "name email")
+      .populate("productId", "name");
+
+    if (!review) {
+      return res.status(404).json({
+        message: "Review not found.",
+      });
+    }
+
+    res.status(200).json(review);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to fetch review.",
+    });
+  }
+};
+
+const updateReview = async (req, res) => {
+  try {
+    const updatedReview = await Review.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedReview) {
+      return res.status(404).json({
+        message: "Review not found.",
+      });
+    }
+
+    res.status(200).json(updatedReview);
+  } catch (error) {
+    res.status(400).json({
+      message: error.message || "Failed to update review.",
+    });
+  }
+};
+
 const deleteReview = async (req, res) => {
   try {
     const deletedReview = await Review.findByIdAndDelete(req.params.id);
@@ -57,5 +98,7 @@ const deleteReview = async (req, res) => {
 module.exports = {
   createReview,
   deleteReview,
+  getReviewById,
   getReviews,
+  updateReview,
 };

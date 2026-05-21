@@ -43,7 +43,9 @@ const buildCsv = (rows) => {
 };
 
 const buildExcel = (rows) => {
-  const cells = rows.map((row) => `
+  const cells = rows
+    .map(
+      (row) => `
     <tr>
       <td>${row.orderId}</td>
       <td>${row.customer}</td>
@@ -52,7 +54,9 @@ const buildExcel = (rows) => {
       <td>${row.payment}</td>
       <td>${row.date}</td>
       <td>${row.amount}</td>
-    </tr>`).join("");
+    </tr>`
+    )
+    .join("");
 
   return `
     <html>
@@ -69,8 +73,9 @@ const buildPdf = (rows) => {
   const text = [
     "V SHOP Order Export",
     "Order ID | Customer | Vendor | Status | Payment | Date | Amount",
-    ...rows.map((row) =>
-      `${row.orderId} | ${row.customer} | ${row.vendor} | ${row.status} | ${row.payment} | ${row.date} | ${row.amount}`
+    ...rows.map(
+      (row) =>
+        `${row.orderId} | ${row.customer} | ${row.vendor} | ${row.status} | ${row.payment} | ${row.date} | ${row.amount}`
     ),
   ].join("\\n");
 
@@ -206,6 +211,27 @@ const getOrderById = async (req, res) => {
   }
 };
 
+const updateOrder = async (req, res) => {
+  try {
+    const updatedOrder = await Order.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        message: "Order not found.",
+      });
+    }
+
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    res.status(400).json({
+      message: error.message || "Failed to update order.",
+    });
+  }
+};
+
 const deleteOrder = async (req, res) => {
   try {
     const deletedOrder = await Order.findByIdAndDelete(req.params.id);
@@ -232,4 +258,5 @@ module.exports = {
   exportOrders,
   getOrderById,
   getOrders,
+  updateOrder,
 };

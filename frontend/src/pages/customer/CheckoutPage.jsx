@@ -4,7 +4,12 @@ import { getSavedUser } from "../../api/auth";
 import { products } from "./customerData";
 import "./CheckoutPage.css";
 
-const paymentMethods = ["UPI", "Credit Card", "Debit Card", "Cash On Delivery"];
+const paymentMethods = [
+  "UPI",
+  "Credit Card",
+  "Debit Card",
+  "Cash On Delivery",
+];
 
 const createInitialAddress = () => ({
   fullName: getSavedUser()?.name || "",
@@ -18,11 +23,13 @@ const createInitialAddress = () => ({
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const [address, setAddress] = useState(createInitialAddress);
+
+  const [address, setAddress] = useState(createInitialAddress());
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [coupon, setCoupon] = useState("");
   const [isAddressSaved, setIsAddressSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
   const [orderItems] = useState(() =>
     products.slice(0, 2).map((product, index) => ({
       ...product,
@@ -31,26 +38,39 @@ function CheckoutPage() {
   );
 
   useEffect(() => {
-    const timerId = window.setTimeout(() => setIsLoading(false), 350);
+    const timerId = window.setTimeout(() => {
+      setIsLoading(false);
+    }, 350);
 
     return () => window.clearTimeout(timerId);
   }, []);
 
   const totals = useMemo(() => {
-    const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const subtotal = orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
     const discount = Math.round(subtotal * 0.12);
     const deliveryCharge = subtotal > 0 ? 99 : 0;
     const total = subtotal - discount + deliveryCharge;
 
-    return { subtotal, discount, deliveryCharge, total };
+    return {
+      subtotal,
+      discount,
+      deliveryCharge,
+      total,
+    };
   }, [orderItems]);
 
   const handleAddressChange = (event) => {
     const { name, value } = event.target;
+
     setAddress((currentAddress) => ({
       ...currentAddress,
       [name]: value,
     }));
+
     setIsAddressSaved(false);
   };
 
@@ -67,7 +87,9 @@ function CheckoutPage() {
     return (
       <div className="checkout-state customer-panel">
         <div className="checkout-loader" />
+
         <h2>Loading order...</h2>
+
         <p>Please wait while we prepare your secure checkout.</p>
       </div>
     );
@@ -77,7 +99,9 @@ function CheckoutPage() {
     return (
       <div className="checkout-state customer-panel">
         <span className="checkout-empty-icon">0</span>
+
         <h2>No items available</h2>
+
         <p>Add products to your cart before starting checkout.</p>
       </div>
     );
@@ -88,21 +112,38 @@ function CheckoutPage() {
       <section className="customer-hero customer-hero--compact checkout-hero">
         <div>
           <p className="customer-eyebrow">Secure checkout</p>
+
           <h1>Complete your V SHOP order.</h1>
-          <p>Confirm delivery details, choose payment, and place your premium order.</p>
+
+          <p>
+            Confirm delivery details, choose payment, and place your premium
+            order.
+          </p>
         </div>
-        <span className="checkout-secure-pill">Protected payment</span>
+
+        <span className="checkout-secure-pill">
+          Protected payment
+        </span>
       </section>
 
       <section className="checkout-layout">
         <div className="checkout-main">
-          <form className="customer-panel checkout-card" onSubmit={handleSaveAddress}>
+          <form
+            className="customer-panel checkout-card"
+            onSubmit={handleSaveAddress}
+          >
             <div className="customer-panel__header">
               <div>
-                <p className="customer-eyebrow">Shipping address</p>
+                <p className="customer-eyebrow">
+                  Shipping address
+                </p>
+
                 <h2>Delivery details</h2>
               </div>
-              {isAddressSaved ? <span className="customer-pill">Saved</span> : null}
+
+              {isAddressSaved ? (
+                <span className="customer-pill">Saved</span>
+              ) : null}
             </div>
 
             <div className="checkout-form-grid">
@@ -113,6 +154,7 @@ function CheckoutPage() {
                 onChange={handleAddressChange}
                 required
               />
+
               <CheckoutField
                 label="Phone Number"
                 name="phone"
@@ -121,6 +163,7 @@ function CheckoutPage() {
                 onChange={handleAddressChange}
                 required
               />
+
               <CheckoutField
                 label="Address"
                 name="address"
@@ -129,7 +172,15 @@ function CheckoutPage() {
                 required
                 wide
               />
-              <CheckoutField label="City" name="city" value={address.city} onChange={handleAddressChange} required />
+
+              <CheckoutField
+                label="City"
+                name="city"
+                value={address.city}
+                onChange={handleAddressChange}
+                required
+              />
+
               <CheckoutField
                 label="State"
                 name="state"
@@ -137,6 +188,7 @@ function CheckoutPage() {
                 onChange={handleAddressChange}
                 required
               />
+
               <CheckoutField
                 label="Pincode"
                 name="pincode"
@@ -145,6 +197,7 @@ function CheckoutPage() {
                 onChange={handleAddressChange}
                 required
               />
+
               <CheckoutField
                 label="Country"
                 name="country"
@@ -154,7 +207,10 @@ function CheckoutPage() {
               />
             </div>
 
-            <button className="customer-secondary-button checkout-save-button" type="submit">
+            <button
+              className="customer-secondary-button checkout-save-button"
+              type="submit"
+            >
               Save Address
             </button>
           </form>
@@ -162,7 +218,10 @@ function CheckoutPage() {
           <section className="customer-panel checkout-card">
             <div className="customer-panel__header">
               <div>
-                <p className="customer-eyebrow">Payment method</p>
+                <p className="customer-eyebrow">
+                  Payment method
+                </p>
+
                 <h2>Choose payment option</h2>
               </div>
             </div>
@@ -170,7 +229,11 @@ function CheckoutPage() {
             <div className="payment-method-grid">
               {paymentMethods.map((method) => (
                 <label
-                  className={`payment-method ${paymentMethod === method ? "payment-method--active" : ""}`}
+                  className={`payment-method ${
+                    paymentMethod === method
+                      ? "payment-method--active"
+                      : ""
+                  }`}
                   key={method}
                 >
                   <input
@@ -180,7 +243,9 @@ function CheckoutPage() {
                     value={method}
                     onChange={() => setPaymentMethod(method)}
                   />
+
                   <span />
+
                   <strong>{method}</strong>
                 </label>
               ))}
@@ -192,48 +257,88 @@ function CheckoutPage() {
           <div className="customer-panel__header">
             <div>
               <p className="customer-eyebrow">Order summary</p>
+
               <h2>{orderItems.length} items</h2>
             </div>
           </div>
 
           <div className="checkout-items">
             {orderItems.map((item) => (
-              <article className="checkout-item" key={item.id}>
-                <img src={item.image} alt={item.name} />
+              <article
+                className="checkout-item"
+                key={item.id}
+              >
+                <img
+                  src={item.image}
+                  alt={item.name}
+                />
+
                 <div>
                   <h3>{item.name}</h3>
+
                   <p>{item.vendor}</p>
+
                   <span>Qty: {item.quantity}</span>
                 </div>
-                <strong>{formatPrice(item.price * item.quantity)}</strong>
+
+                <strong>
+                  {formatPrice(item.price * item.quantity)}
+                </strong>
               </article>
             ))}
           </div>
 
           <div className="coupon-box">
-            <label htmlFor="checkout-coupon">Coupon</label>
+            <label htmlFor="checkout-coupon">
+              Coupon
+            </label>
+
             <div>
               <input
                 id="checkout-coupon"
                 placeholder="Enter coupon code"
                 value={coupon}
-                onChange={(event) => setCoupon(event.target.value)}
+                onChange={(event) =>
+                  setCoupon(event.target.value)
+                }
               />
-              <button type="button">Apply</button>
+
+              <button type="button">
+                Apply
+              </button>
             </div>
           </div>
 
           <div className="checkout-total-stack">
-            <SummaryRow label="Price" value={formatPrice(totals.subtotal)} />
-            <SummaryRow label="Discount" value={`-${formatPrice(totals.discount)}`} />
-            <SummaryRow label="Delivery charge" value={formatPrice(totals.deliveryCharge)} />
+            <SummaryRow
+              label="Price"
+              value={formatPrice(totals.subtotal)}
+            />
+
+            <SummaryRow
+              label="Discount"
+              value={`-${formatPrice(totals.discount)}`}
+            />
+
+            <SummaryRow
+              label="Delivery charge"
+              value={formatPrice(totals.deliveryCharge)}
+            />
+
             <div className="checkout-grand-total">
               <span>Total price</span>
-              <strong>{formatPrice(totals.total)}</strong>
+
+              <strong>
+                {formatPrice(totals.total)}
+              </strong>
             </div>
           </div>
 
-          <button className="checkout-place-order" type="button" onClick={handlePlaceOrder}>
+          <button
+            className="checkout-place-order"
+            type="button"
+            onClick={handlePlaceOrder}
+          >
             Place Order
           </button>
         </aside>
@@ -242,11 +347,29 @@ function CheckoutPage() {
   );
 }
 
-function CheckoutField({ label, name, type = "text", wide = false, ...props }) {
+function CheckoutField({
+  label,
+  name,
+  type = "text",
+  wide = false,
+  ...props
+}) {
   return (
-    <label className={wide ? "checkout-field checkout-field--wide" : "checkout-field"}>
+    <label
+      className={
+        wide
+          ? "checkout-field checkout-field--wide"
+          : "checkout-field"
+      }
+    >
       <span>{label}</span>
-      <input name={name} type={type} placeholder={label} {...props} />
+
+      <input
+        name={name}
+        type={type}
+        placeholder={label}
+        {...props}
+      />
     </label>
   );
 }
@@ -255,6 +378,7 @@ function SummaryRow({ label, value }) {
   return (
     <div className="checkout-summary-row">
       <span>{label}</span>
+
       <strong>{value}</strong>
     </div>
   );

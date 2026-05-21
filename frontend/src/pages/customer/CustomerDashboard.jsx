@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
-import { categoryTabs, priceRanges, products as fallbackProducts } from "./customerData";
 import { getProducts } from "../../services/productService";
+import { categoryTabs, priceRanges, products as fallbackProducts } from "./customerData";
 
 const ratingFilters = [4, 3];
 const discountFilters = [10, 25, 50];
@@ -26,12 +26,13 @@ function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("Trending");
-  const searchTerm = searchParams.get("search") || "";
   const [priceFilter, setPriceFilter] = useState("All");
   const [ratingFilter, setRatingFilter] = useState(0);
   const [discountFilter, setDiscountFilter] = useState(0);
   const [brandFilter, setBrandFilter] = useState("All");
   const [sortBy, setSortBy] = useState("Most Popular");
+
+  const searchTerm = searchParams.get("search") || "";
 
   const brands = useMemo(
     () => [...new Set(products.map((product) => product.brand).filter(Boolean))].sort(),
@@ -77,7 +78,6 @@ function CustomerDashboard() {
 
   const clearSearch = () => {
     const nextSearchParams = new URLSearchParams(searchParams);
-
     nextSearchParams.delete("search");
     setSearchParams(nextSearchParams, { replace: true });
   };
