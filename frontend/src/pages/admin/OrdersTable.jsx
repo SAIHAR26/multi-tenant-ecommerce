@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const orders = [
   { id: "#VS-1048", customer: "Anaya Rao", product: "Noir Leather Tote", status: "Paid", amount: "₹20,584" },
   { id: "#VS-1047", customer: "Rohan Mehta", product: "Urban Runner Pro", status: "Packed", amount: "₹15,687" },
@@ -6,6 +8,8 @@ const orders = [
 ];
 
 function OrdersTable() {
+  const navigate = useNavigate();
+
   return (
     <article className="glass-panel orders-panel">
       <div className="panel-header">
@@ -13,7 +17,9 @@ function OrdersTable() {
           <p className="admin-eyebrow">Recent orders</p>
           <h2>Live order flow</h2>
         </div>
-        <button className="text-button" type="button">Export</button>
+        <button className="text-button" type="button" onClick={() => navigate("/admin/export-orders")}>
+          Export
+        </button>
       </div>
 
       <div className="orders-table-wrap">

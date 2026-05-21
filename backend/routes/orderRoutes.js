@@ -7,9 +7,11 @@ const {
   createOrder,
   getOrderById,
   deleteOrder,
+  exportOrders,
 } = require("../controllers/orderController");
 
 router.get("/", getOrders);
+router.get("/export", exportOrders);
 
 router.post("/", createOrder);
 

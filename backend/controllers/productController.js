@@ -1,5 +1,53 @@
 const Product = require("../models/Product");
 require("../models/Store");
+const Store = require("../models/Store");
+const User = require("../models/User");
+
+const normalizeProductPayload = async (body) => {
+  const payload = {
+    ...body,
+    tags: Array.isArray(body.tags)
+      ? body.tags
+      : String(body.tags || "")
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+    isActive: body.status ? body.status === "Live" : body.isActive,
+  };
+
+  if (!payload.storeId || !payload.vendor) {
+    const store = payload.storeId
+      ? await Store.findById(payload.storeId)
+      : await Store.findOne().sort({ createdAt: -1 });
+
+    if (store) {
+      payload.storeId = store._id;
+      payload.vendor = payload.vendor || store.vendorId;
+    }
+  }
+
+  if (!payload.vendor) {
+    const vendor =
+      (await User.findOne({ role: "vendor" }).sort({ createdAt: -1 })) ||
+      (await User.findOne({ role: "admin" }).sort({ createdAt: -1 })) ||
+      (await User.findOne().sort({ createdAt: -1 }));
+    payload.vendor = vendor?._id;
+  }
+
+  if (!payload.storeId && payload.vendor) {
+    const store = await Store.create({
+      vendorId: payload.vendor,
+      storeName: "V SHOP Marketplace",
+      storeDescription: "Default admin marketplace store",
+      storeCategory: payload.category || "Marketplace",
+      location: "Global",
+    });
+
+    payload.storeId = store._id;
+  }
+
+  return payload;
+};
 
 // GET ALL PRODUCTS
 const getProducts = async (req, res) => {
@@ -60,9 +108,13 @@ const getProductById = async (req, res) => {
 // CREATE PRODUCT
 const addProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const payload = await normalizeProductPayload(req.body);
+    const product = await Product.create(payload);
 
-    res.status(201).json(product);
+    res.status(201).json({
+      message: "Product created successfully",
+      product,
+    });
 
   } catch (error) {
     res.status(400).json({
@@ -74,9 +126,10 @@ const addProduct = async (req, res) => {
 // UPDATE PRODUCT
 const updateProduct = async (req, res) => {
   try {
+    const payload = await normalizeProductPayload(req.body);
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      payload,
       {
         new: true,
         runValidators: true,
