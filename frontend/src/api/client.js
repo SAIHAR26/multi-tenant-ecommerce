@@ -13,9 +13,11 @@ const getErrorMessage = async (response, fallbackMessage) => {
 
 export const apiRequest = async (path, options = {}, fallbackMessage = "Request could not be completed.") => {
   try {
+    const token = localStorage.getItem("vshopToken");
     const response = await fetch(`${API_BASE_URL}${path}`, {
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,

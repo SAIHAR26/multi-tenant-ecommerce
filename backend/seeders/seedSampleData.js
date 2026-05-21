@@ -8,6 +8,15 @@ const Product = require("../models/Product");
 
 dotenv.config();
 
+const adminUser = {
+  name: "V Shop Admin",
+  email: "admin@vshop.com",
+  password: "Admin@12345",
+  role: "admin",
+  isApproved: true,
+  approvalStatus: "approved",
+};
+
 const vendors = [
   {
     name: "Arjun Rao",
@@ -200,8 +209,10 @@ const seedSampleData = async () => {
     name: { $in: [...productNames, ...legacySampleData.productNames] },
   });
   await Store.deleteMany({ storeName: { $in: [...vendorNames, ...legacySampleData.storeNames] } });
-  await User.deleteMany({ email: { $in: [...vendorEmails, ...legacySampleData.userEmails] } });
+  await User.deleteMany({ email: { $in: [adminUser.email, ...vendorEmails, ...legacySampleData.userEmails] } });
   await User.deleteMany({ email: { $in: customerEmails } });
+
+  await User.create(adminUser);
 
   for (const vendor of vendors) {
     const user = await User.create({
@@ -228,6 +239,8 @@ const seedSampleData = async () => {
       vendor.products.map((product) => ({
         ...product,
         storeId: store._id,
+        vendor: user._id,
+        brand: vendor.storeName,
       }))
     );
   }
@@ -241,7 +254,7 @@ const seedSampleData = async () => {
   }
 
   console.log(
-    `Seeded ${vendors.length} vendors, ${customers.length} customers, ${vendors.length} stores, and ${vendors.reduce((total, vendor) => total + vendor.products.length, 0)} products.`
+    `Seeded 1 admin, ${vendors.length} vendors, ${customers.length} customers, ${vendors.length} stores, and ${vendors.reduce((total, vendor) => total + vendor.products.length, 0)} products.`
   );
 };
 
