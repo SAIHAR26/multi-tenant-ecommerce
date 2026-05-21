@@ -3,20 +3,23 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  getOrders,
   createOrder,
-  getOrderById,
   deleteOrder,
   exportOrders,
+  getOrderById,
+  getOrders,
 } = require("../controllers/orderController");
 
-router.get("/", getOrders);
 router.get("/export", exportOrders);
 
-router.post("/", createOrder);
+router
+  .route("/")
+  .get(getOrders)
+  .post(createOrder);
 
-router.get("/:id", getOrderById);
-
-router.delete("/:id", deleteOrder);
+router
+  .route("/:id")
+  .get(getOrderById)
+  .delete(deleteOrder);
 
 module.exports = router;
