@@ -25,6 +25,8 @@ export const markNotificationRead = async (id) => {
   );
 };
 
+export const markNotificationAsRead = markNotificationRead;
+
 export const markAllNotificationsRead = async () => {
   return apiRequest(
     "/api/notifications/read-all",
