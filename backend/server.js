@@ -1,25 +1,22 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-
 require("dotenv").config();
-
 const connectDB = require("./config/db");
 
 const app = express();
-
 let databaseStatus = "connecting";
 
-// MIDDLEWARES
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// HOME ROUTE
+// Test route
 app.get("/", (req, res) => {
   res.send("V SHOP Backend Running");
 });
 
-// HEALTH CHECK
+// Health check
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
@@ -28,10 +25,9 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ROUTES IMPORTS
+// 🔥 ROUTES IMPORT
 const authRoutes = require("./routes/authRoutes");
 const adminVendorRoutes = require("./routes/adminVendorRoutes");
-const cartRoutes = require("./routes/cartRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -44,13 +40,15 @@ const vendorRoutes = require("./routes/vendorRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const vendorStatsRoutes = require("./routes/vendorStatsRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 
-// API ROUTES
+// 🔥 ROUTES USE
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/vendors", adminVendorRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/vendor", vendorRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/segments", segmentRoutes);
@@ -58,17 +56,7 @@ app.use("/api/store", storeRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/admin/report", reportRoutes);
-
-// CART API
-app.use("/api/cart", cartRoutes);
-
-// WISHLIST API
-app.use("/api/wishlist", wishlistRoutes);
-
-// VENDOR STATS API
 app.use("/api/vendor/stats", vendorStatsRoutes);
-
-// RECOMMENDATIONS API
 app.use("/api/recommendations", recommendationRoutes);
 
 // ERROR HANDLER
@@ -79,12 +67,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Server start
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+// DB connect
 connectDB({ exitOnFailure: false })
   .then(() => {
     databaseStatus = "connected";
