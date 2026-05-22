@@ -42,7 +42,9 @@ function OrdersTable() {
           <p className="admin-eyebrow">Recent orders</p>
           <h2>Live order flow</h2>
         </div>
-        <button className="text-button" type="button">Export</button>
+        <button className="text-button" type="button" onClick={() => navigate("/admin/export-orders")}>
+          Export
+        </button>
       </div>
 
       {loading ? <LoadingState message="Loading orders..." /> : null}

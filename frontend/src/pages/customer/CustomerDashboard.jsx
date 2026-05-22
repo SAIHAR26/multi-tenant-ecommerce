@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/customer/ProductCard";
-import { categoryTabs, priceRanges } from "./customerData";
 import { getProducts } from "../../services/productService";
+import { categoryTabs, priceRanges, products as fallbackProducts } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
 const discountFilters = [10, 20, 30, 40, 50];
@@ -99,16 +99,12 @@ function CustomerDashboard() {
     }
   }, [searchTerm]);
 
-  // CLEAR SEARCH
   const clearSearch = () => {
     const nextSearchParams =
       new URLSearchParams(searchParams);
 
     nextSearchParams.delete("search");
-
-    setSearchParams(nextSearchParams, {
-      replace: true,
-    });
+    setSearchParams(nextSearchParams, { replace: true });
   };
 
   // DYNAMIC BRANDS
@@ -239,40 +235,53 @@ function CustomerDashboard() {
     <div className="customer-page">
       {/* HERO */}
       <section className="marketplace-hero">
-        <h1>V SHOP Marketplace</h1>
+        <div className="marketplace-hero__content">
+          <p className="customer-eyebrow">Festival Sale live now</p>
+          <h1>Luxury marketplace drops, curated for every cart.</h1>
+          <p>
+            Explore premium fashion, electronics, books, shoes, accessories, and daily deals from verified V SHOP
+            vendors.
+          </p>
+          <div className="marketplace-hero__actions">
+            <button className="customer-primary-button" type="button">Shop Now</button>
+            <span>Up to 50% off on flash picks</span>
+          </div>
+        </div>
 
-        <p>
-          Explore premium products from
-          verified vendors.
-        </p>
+        <div className="marketplace-hero__deal">
+          <span>Featured Offer</span>
+          <strong>Premium Collection</strong>
+          <p>Extra 15% off on luxe accessories and red-tag sneakers tonight.</p>
+        </div>
       </section>
 
-      {/* CATEGORY STRIP */}
-      <section className="category-strip">
+      <section className="offer-banner-grid" aria-label="Special shopping offers">
+        {["Festival Sale", "Limited Offer", "Premium Collection", "Flash Sale"].map((offer, index) => (
+          <article className="offer-banner" key={offer}>
+            <span>0{index + 1}</span>
+            <h2>{offer}</h2>
+            <p>{index % 2 === 0 ? "Red hot vendor deals" : "Members-only luxury prices"}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="category-strip" aria-label="Shop by category">
         {categoryTabs.map((category) => (
           <button
+            className={`category-pill ${activeCategory === category ? "category-pill--active" : ""}`}
             key={category}
-            className={
-              activeCategory === category
-                ? "active"
-                : ""
-            }
-            onClick={() =>
-              setActiveCategory(category)
-            }
+            type="button"
+            onClick={() => setActiveCategory(category)}
           >
             {category}
           </button>
         ))}
       </section>
 
-      {/* MAIN */}
       <section className="marketplace-layout">
-        {/* FILTER PANEL */}
-        <aside className="filter-panel">
+        <aside className="filter-panel" aria-label="Product filters">
           <div className="filter-panel__header">
-            <p>Filters</p>
-
+            <p className="customer-eyebrow">Filters</p>
             <button
               onClick={() => {
                 setPriceFilter("All");
@@ -285,16 +294,9 @@ function CustomerDashboard() {
             </button>
           </div>
 
-          {/* PRICE */}
           <div className="filter-group">
-            <h3>Price</h3>
-
-            {[
-              "All",
-              ...priceRanges.map(
-                (r) => r.label
-              ),
-            ].map((range) => (
+            <h3>Price Range</h3>
+            {["All", ...priceRanges.map((range) => range.label)].map((range) => (
               <button
                 key={range}
                 className={
@@ -311,23 +313,16 @@ function CustomerDashboard() {
             ))}
           </div>
 
-          {/* RATING */}
           <div className="filter-group">
             <h3>Rating</h3>
-
             {ratingFilters.map((rating) => (
               <button
+                className={ratingFilter === rating ? "filter-choice filter-choice--active" : "filter-choice"}
                 key={rating}
-                className={
-                  ratingFilter === rating
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setRatingFilter(rating)
-                }
+                type="button"
+                onClick={() => setRatingFilter(rating)}
               >
-                {rating}+ stars
+                {rating} star and above
               </button>
             ))}
           </div>

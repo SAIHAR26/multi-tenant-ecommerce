@@ -24,7 +24,6 @@ const createReview = async (req, res) => {
       title: review.rating <= 2 ? "Low rating review alert" : "New product review",
       message: `A ${review.rating}-star review was added to a product.`,
       type: "review",
-      userId: review.userId,
     });
 
     res.status(201).json(review);

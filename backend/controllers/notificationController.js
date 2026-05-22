@@ -29,7 +29,7 @@ const getNotifications = async (req, res) => {
 
 const createNotification = async (req, res) => {
   try {
-    const { title, message, type = "system", userId } = req.body;
+    const { title, message, type = "system", userId = null } = req.body;
 
     if (!title || !message) {
       return res.status(400).json({ message: "Title and message are required." });
