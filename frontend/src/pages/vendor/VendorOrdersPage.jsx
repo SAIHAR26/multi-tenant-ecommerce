@@ -1,10 +1,53 @@
-const orders = [
-  { id: "#VS-1048", customer: "Aarav Mehta", item: "Leather Tote", total: "Rs. 15,699", status: "Processing", location: "Mumbai", eta: "Today, 7 PM" },
-  { id: "#VS-1047", customer: "Maya Carter", item: "Luxe Jacket", total: "Rs. 28,299", status: "Shipped", location: "Bengaluru", eta: "Tomorrow" },
-  { id: "#VS-1046", customer: "Nina Shah", item: "Gift Set", total: "Rs. 10,299", status: "Pending", location: "Delhi", eta: "Awaiting pickup" },
-];
+import { useEffect, useMemo, useState } from "react";
+import ErrorState from "../../components/ErrorState";
+import LoadingState from "../../components/LoadingState";
+import { getOrders } from "../../services/orderService";
+
+const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
+const getOrderItems = (order) =>
+  order.products?.map((item) => item.productId?.name || item.name || "Product").join(", ") || "Order items";
 
 function VendorOrdersPage() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getOrders()
+      .then((data) => {
+        const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
+        if (isMounted) {
+          setOrders(ordersArray);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) setError(err.message || "Orders could not be loaded.");
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const stats = useMemo(() => {
+    const packed = orders.filter((order) => order.status === "PACKED").length;
+    const inTransit = orders.filter((order) => order.status === "SHIPPED").length;
+    const delivered = orders.filter((order) => order.status === "DELIVERED").length;
+
+    return {
+      newOrders: orders.length,
+      packed,
+      inTransit,
+      delivered,
+    };
+  }, [orders]);
+
   return (
     <>
       <section className="vendor-page-header">
@@ -16,10 +59,10 @@ function VendorOrdersPage() {
       </section>
 
       <section className="vendor-stats-grid" aria-label="Order statistics">
-        <article className="vendor-stat-card"><div className="vendor-stat-icon">NW</div><div><p>New Orders</p><strong>96</strong><span>Today</span></div></article>
-        <article className="vendor-stat-card"><div className="vendor-stat-icon">PK</div><div><p>Packed</p><strong>64</strong><span>Ready to ship</span></div></article>
-        <article className="vendor-stat-card"><div className="vendor-stat-icon">TR</div><div><p>In Transit</p><strong>211</strong><span>Live tracking</span></div></article>
-        <article className="vendor-stat-card"><div className="vendor-stat-icon">DL</div><div><p>Delivered</p><strong>1,115</strong><span>This month</span></div></article>
+        <article className="vendor-stat-card"><div className="vendor-stat-icon">NW</div><div><p>New Orders</p><strong>{stats.newOrders}</strong><span>Live total</span></div></article>
+        <article className="vendor-stat-card"><div className="vendor-stat-icon">PK</div><div><p>Packed</p><strong>{stats.packed}</strong><span>Ready to ship</span></div></article>
+        <article className="vendor-stat-card"><div className="vendor-stat-icon">TR</div><div><p>In Transit</p><strong>{stats.inTransit}</strong><span>Live tracking</span></div></article>
+        <article className="vendor-stat-card"><div className="vendor-stat-icon">DL</div><div><p>Delivered</p><strong>{stats.delivered}</strong><span>Completed</span></div></article>
       </section>
 
       <section className="orders-section vendor-full-panel">
@@ -30,21 +73,28 @@ function VendorOrdersPage() {
           </div>
           <button type="button">Sync courier</button>
         </div>
-        <div className="orders-list">
-          {orders.map((order) => (
-            <article className="order-card" key={order.id}>
-              <div>
-                <span>{order.id} - {order.location}</span>
-                <strong>{order.customer}</strong>
-                <small>{order.item} - ETA {order.eta}</small>
-              </div>
-              <div>
-                <strong>{order.total}</strong>
-                <small>{order.status}</small>
-              </div>
-            </article>
-          ))}
-        </div>
+
+        {loading ? <LoadingState message="Loading orders..." /> : null}
+        {!loading && error ? <ErrorState title="Unable to load orders" message={error} /> : null}
+        {!loading && !error && orders.length === 0 ? <ErrorState title="No orders" message="No fulfillment records found." /> : null}
+
+        {!loading && !error && orders.length > 0 ? (
+          <div className="orders-list">
+            {orders.map((order) => (
+              <article className="order-card" key={order._id || order.id}>
+                <div>
+                  <span>#{String(order._id || order.id).slice(-6).toUpperCase()}</span>
+                  <strong>{order.userId?.name || order.customer || "Customer"}</strong>
+                  <small>{getOrderItems(order)} - ETA live</small>
+                </div>
+                <div>
+                  <strong>{formatPrice(order.totalAmount)}</strong>
+                  <small>{order.status}</small>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
       </section>
     </>
   );

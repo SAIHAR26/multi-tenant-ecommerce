@@ -49,6 +49,18 @@ const normalizeProductPayload = async (body) => {
   return payload;
 };
 
+const getCategoryImage = (category) => {
+  const images = {
+    Accessories: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=80",
+    Footwear: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    Men: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+    Shoes: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    Women: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
+  };
+
+  return images[category] || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80";
+};
+
 // GET ALL PRODUCTS
 const getProducts = async (req, res) => {
   try {
@@ -101,6 +113,36 @@ const getProductById = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to fetch product.",
+    });
+  }
+};
+
+const getRecommendations = async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true })
+      .populate("storeId")
+      .sort({ rating: -1, discount: -1, createdAt: -1 })
+      .limit(8);
+
+    const categoryGroups = await Product.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: "$category", count: { $sum: 1 }, averageRating: { $avg: "$rating" } } },
+      { $sort: { count: -1, averageRating: -1 } },
+      { $limit: 4 },
+    ]);
+
+    res.status(200).json({
+      products,
+      categories: categoryGroups.map((category) => ({
+        title: category._id || "Recommended",
+        reason: "Based on live marketplace signals",
+        count: category.count,
+        image: getCategoryImage(category._id),
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to load recommendations.",
     });
   }
 };
@@ -175,6 +217,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
   getProducts,
+  getRecommendations,
   getProductById,
   addProduct,
   updateProduct,

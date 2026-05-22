@@ -1,14 +1,39 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import ErrorState from "../../components/ErrorState";
+import LoadingState from "../../components/LoadingState";
+import { getOrders } from "../../services/orderService";
 
-const orders = [
-  { id: "#VS-1048", customer: "Anaya Rao", product: "Noir Leather Tote", status: "Paid", amount: "₹20,584" },
-  { id: "#VS-1047", customer: "Rohan Mehta", product: "Urban Runner Pro", status: "Packed", amount: "₹15,687" },
-  { id: "#VS-1046", customer: "Maya Sen", product: "Utility Jacket", status: "Pending", amount: "₹26,892" },
-  { id: "#VS-1045", customer: "Neil Kapoor", product: "Chrome Wallet", status: "Paid", amount: "₹7,138" },
-];
+const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
+const getOrderItems = (order) =>
+  order.products?.map((item) => item.productId?.name || item.name || "Product").join(", ") || "Order items";
 
 function OrdersTable() {
-  const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getOrders()
+      .then((data) => {
+        const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
+        if (isMounted) {
+          setOrders(ordersArray.slice(0, 6));
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) setError(err.message || "Orders could not be loaded.");
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <article className="glass-panel orders-panel">
@@ -22,34 +47,40 @@ function OrdersTable() {
         </button>
       </div>
 
-      <div className="orders-table-wrap">
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Product</th>
-              <th>Status</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id}>
-                <td>{order.id}</td>
-                <td>{order.customer}</td>
-                <td>{order.product}</td>
-                <td>
-                  <span className={`status-badge status-badge--${order.status.toLowerCase()}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td>{order.amount}</td>
+      {loading ? <LoadingState message="Loading orders..." /> : null}
+      {!loading && error ? <ErrorState title="Unable to load orders" message={error} /> : null}
+      {!loading && !error && orders.length === 0 ? <ErrorState title="No orders" message="No orders found." /> : null}
+
+      {!loading && !error && orders.length > 0 ? (
+        <div className="orders-table-wrap">
+          <table className="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Status</th>
+                <th>Amount</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order._id || order.id}>
+                  <td>#{String(order._id || order.id).slice(-6).toUpperCase()}</td>
+                  <td>{order.userId?.name || order.customer || "Customer"}</td>
+                  <td>{getOrderItems(order)}</td>
+                  <td>
+                    <span className={`status-badge status-badge--${String(order.status || "pending").toLowerCase()}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td>{formatPrice(order.totalAmount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </article>
   );
 }

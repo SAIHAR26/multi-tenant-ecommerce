@@ -4,7 +4,9 @@ const Review = require("../models/Review");
 
 // GET VENDOR STATS
 const getVendorStats = async (req, res) => {
+
   try {
+
     // TOTAL PRODUCTS
     const totalProducts = await Product.countDocuments();
 
@@ -32,12 +34,16 @@ const getVendorStats = async (req, res) => {
         totalRevenue,
       },
     });
+
   } catch (error) {
+
     res.status(500).json({
       success: false,
       message: error.message,
     });
+
   }
+
 };
 
 module.exports = {

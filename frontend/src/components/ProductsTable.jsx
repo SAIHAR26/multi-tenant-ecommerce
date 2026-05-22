@@ -1,39 +1,46 @@
-const products = [
-  {
-    name: "Signature Leather Tote",
-    category: "Bags",
-    price: "₹15,699",
-    stock: 42,
-    status: "Live",
-    image: "LT",
-  },
-  {
-    name: "Crimson Luxe Jacket",
-    category: "Fashion",
-    price: "₹28,299",
-    stock: 18,
-    status: "Live",
-    image: "CJ",
-  },
-  {
-    name: "Matte Steel Watch",
-    category: "Accessories",
-    price: "₹21,649",
-    stock: 9,
-    status: "Low Stock",
-    image: "SW",
-  },
-  {
-    name: "Premium Gift Set",
-    category: "Lifestyle",
-    price: "₹10,299",
-    stock: 0,
-    status: "Paused",
-    image: "GS",
-  },
-];
+import { useEffect, useState } from "react";
+import ErrorState from "./ErrorState";
+import LoadingState from "./LoadingState";
+import { getProducts } from "../services/productService";
+
+const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
+const getStatus = (product) => {
+  if (!product.isActive) return "Paused";
+  if (Number(product.stock || 0) <= 0) return "Paused";
+  if (Number(product.stock || 0) <= 10) return "Low Stock";
+  return "Live";
+};
 
 function ProductsTable() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getProducts()
+      .then((data) => {
+        const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+        if (isMounted) {
+          setProducts(productsArray.slice(0, 5));
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err.message || "Products could not be loaded.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <section className="products-table-panel">
       <div className="vendor-section-heading">
@@ -44,42 +51,52 @@ function ProductsTable() {
         <button type="button">View all</button>
       </div>
 
-      <div className="vendor-table-wrap">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>Product Image</th>
-              <th>Product Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.name}>
-                <td>
-                  <div className="product-image">{product.image}</div>
-                </td>
-                <td>{product.name}</td>
-                <td>{product.category}</td>
-                <td>{product.price}</td>
-                <td>{product.stock}</td>
-                <td>
-                  <span className={`product-status ${product.status.toLowerCase().replace(" ", "-")}`}>
-                    {product.status}
-                  </span>
-                </td>
-                <td>
-                  <button type="button" className="table-action">Edit</button>
-                </td>
+      {loading ? <LoadingState message="Loading products..." /> : null}
+      {!loading && error ? <ErrorState title="Unable to load products" message={error} /> : null}
+      {!loading && !error && products.length === 0 ? <ErrorState title="No products" message="No catalog items found." /> : null}
+
+      {!loading && !error && products.length > 0 ? (
+        <div className="vendor-table-wrap">
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th>Product Image</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {products.map((product) => {
+                const status = getStatus(product);
+
+                return (
+                  <tr key={product._id || product.id}>
+                    <td>
+                      <div className="product-image">{product.name?.slice(0, 2).toUpperCase()}</div>
+                    </td>
+                    <td>{product.name}</td>
+                    <td>{product.category}</td>
+                    <td>{formatPrice(product.price)}</td>
+                    <td>{product.stock}</td>
+                    <td>
+                      <span className={`product-status ${status.toLowerCase().replace(" ", "-")}`}>
+                        {status}
+                      </span>
+                    </td>
+                    <td>
+                      <button type="button" className="table-action">Edit</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -28,7 +28,6 @@ router.post("/", addProduct);
 
 // UPDATE PRODUCT
 router.patch("/:id", updateProduct);
-
 router.put("/:id", updateProduct);
 
 // DELETE PRODUCT
