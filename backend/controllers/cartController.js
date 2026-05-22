@@ -1,90 +1,131 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
-const getUserId = (req) => req.user?._id;
-
-const sendCartItems = async (res, userId) => {
-  const cart = await Cart.findOne({ userId }).populate("items.productId");
-
-  const items =
-    cart?.items.map((item) => ({
-      _id: item._id,
-      quantity: item.quantity,
-      productId: item.productId?._id,
-      product: item.productId,
-    })) || [];
-
-  res.status(200).json({ items });
-};
-
+// GET CART
 const getCart = async (req, res) => {
+
   try {
-    await sendCartItems(res, getUserId(req));
+
+    const carts = await Cart.find()
+      .populate("userId", "name email")
+      .populate("items.productId", "name price images");
+
+    res.status(200).json({
+      success: true,
+      count: carts.length,
+      data: carts,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message || "Unable to load cart." });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
   }
+
 };
 
+// ADD TO CART
 const addToCart = async (req, res) => {
+
   try {
-    const userId = getUserId(req);
-    const productId = req.body.productId || req.body.product?._id || req.body.product?.id;
-    const quantity = Math.max(Number(req.body.quantity) || 1, 1);
 
-    if (!productId) {
-      return res.status(400).json({ message: "Product id is required." });
-    }
+    const newCart = new Cart(req.body);
 
-    const product = await Product.findById(productId);
+    const savedCart = await newCart.save();
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found." });
-    }
+    res.status(201).json({
+      success: true,
+      data: savedCart,
+    });
 
-    const cart = await Cart.findOneAndUpdate(
-      { userId },
-      { $setOnInsert: { userId } },
-      { new: true, upsert: true }
-    );
-
-    const existingItem = cart.items.find((item) => item.productId.toString() === productId.toString());
-
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      cart.items.push({ productId, quantity });
-    }
-
-    await cart.save();
-    await sendCartItems(res, userId);
   } catch (error) {
-    res.status(400).json({ message: error.message || "Unable to add item to cart." });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
   }
+
 };
 
-const removeFromCart = async (req, res) => {
+// UPDATE CART
+const updateCart = async (req, res) => {
+
   try {
-    const userId = getUserId(req);
-    const { id } = req.params;
-    const cart = await Cart.findOne({ userId });
 
-    if (!cart) {
-      return res.status(404).json({ message: "Cart not found." });
-    }
-
-    cart.items = cart.items.filter(
-      (item) => item._id.toString() !== id && item.productId.toString() !== id
+    const updatedCart = await Cart.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
-    await cart.save();
-    await sendCartItems(res, userId);
+    if (!updatedCart) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedCart,
+    });
+
   } catch (error) {
-    res.status(400).json({ message: error.message || "Unable to remove item from cart." });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
   }
+
+};
+
+// DELETE CART
+const deleteCart = async (req, res) => {
+
+  try {
+
+    const deletedCart = await Cart.findByIdAndDelete(req.params.id);
+
+    if (!deletedCart) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Cart not found",
+      });
+
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Cart deleted successfully",
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
 };
 
 module.exports = {
-  addToCart,
   getCart,
-  removeFromCart,
+  addToCart,
+  updateCart,
+  deleteCart,
 };

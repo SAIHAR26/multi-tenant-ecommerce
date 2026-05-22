@@ -1,54 +1,49 @@
-const Order = require("../models/Order");
 const Product = require("../models/Product");
+const Order = require("../models/Order");
 const Review = require("../models/Review");
 
-const formatCurrency = (value = 0) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
-
+// GET VENDOR STATS
 const getVendorStats = async (req, res) => {
+
   try {
-    const vendorFilter = req.user?.role === "vendor" ? { vendor: req.user._id } : {};
-    const products = await Product.find(vendorFilter).select("_id rating").lean();
-    const productIds = products.map((product) => product._id);
 
-    const orderFilter = productIds.length
-      ? { "products.productId": { $in: productIds } }
-      : {};
-    const reviewFilter = productIds.length
-      ? { productId: { $in: productIds } }
-      : {};
+    // TOTAL PRODUCTS
+    const totalProducts = await Product.countDocuments();
 
-    const [totalOrders, revenueResult, reviewResult] = await Promise.all([
-      Order.countDocuments(orderFilter),
-      Order.aggregate([
-        ...(productIds.length
-          ? [
-              { $unwind: "$products" },
-              { $match: { "products.productId": { $in: productIds } } },
-            ]
-          : []),
-        { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } },
-      ]),
-      Review.aggregate([
-        { $match: reviewFilter },
-        { $group: { _id: null, averageRating: { $avg: "$rating" }, totalReviews: { $sum: 1 } } },
-      ]),
-    ]);
+    // TOTAL ORDERS
+    const totalOrders = await Order.countDocuments();
 
-    const totalRevenue = revenueResult[0]?.totalRevenue || 0;
-    const averageRating = Number((reviewResult[0]?.averageRating || 0).toFixed(1));
+    // TOTAL REVIEWS
+    const totalReviews = await Review.countDocuments();
+
+    // TOTAL REVENUE
+    const orders = await Order.find();
+
+    let totalRevenue = 0;
+
+    orders.forEach((order) => {
+      totalRevenue += order.totalAmount || 0;
+    });
 
     res.status(200).json({
-      stats: [
-        { label: "Total Products", value: products.length, trend: "Live catalog", icon: "PR" },
-        { label: "Total Revenue", value: formatCurrency(totalRevenue), trend: "MongoDB orders", icon: "RV" },
-        { label: "Total Orders", value: totalOrders, trend: "Live orders", icon: "OR" },
-        { label: "Average Reviews", value: averageRating, trend: `${reviewResult[0]?.totalReviews || 0} reviews`, icon: "RW" },
-        { label: "Growth", value: totalOrders > 0 ? "+12%" : "0%", trend: "Prepared metric", icon: "GR" },
-      ],
+      success: true,
+      data: {
+        totalProducts,
+        totalOrders,
+        totalReviews,
+        totalRevenue,
+      },
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message || "Unable to load vendor statistics." });
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
   }
+
 };
 
 module.exports = {
