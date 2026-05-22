@@ -53,6 +53,30 @@ const productSchema = new mongoose.Schema(
       trim: true,
     },
 
+    sku: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+
+    tags: {
+      type: [String],
+      default: [],
+    },
+
+    weight: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    dimensions: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     discount: {
       type: Number,
       default: 0,
@@ -80,6 +104,23 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: 0,
       max: 5,
+    },
+
+    status: {
+      type: String,
+      enum: ["Live", "Draft", "Hidden"],
+      default: "Live",
+      index: true,
+    },
+
+    lowStockThreshold: {
+      type: Number,
+      default: 5,
+      min: 0,
+    },
+
+    restockDate: {
+      type: Date,
     },
 
     isActive: {

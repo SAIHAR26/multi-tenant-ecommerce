@@ -1,5 +1,65 @@
 const Product = require("../models/Product");
 require("../models/Store");
+const Store = require("../models/Store");
+const User = require("../models/User");
+
+const normalizeProductPayload = async (body) => {
+  const payload = {
+    ...body,
+    tags: Array.isArray(body.tags)
+      ? body.tags
+      : String(body.tags || "")
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+    isActive: body.status ? body.status === "Live" : body.isActive,
+  };
+
+  if (!payload.storeId || !payload.vendor) {
+    const store = payload.storeId
+      ? await Store.findById(payload.storeId)
+      : await Store.findOne().sort({ createdAt: -1 });
+
+    if (store) {
+      payload.storeId = store._id;
+      payload.vendor = payload.vendor || store.vendorId;
+    }
+  }
+
+  if (!payload.vendor) {
+    const vendor =
+      (await User.findOne({ role: "vendor" }).sort({ createdAt: -1 })) ||
+      (await User.findOne({ role: "admin" }).sort({ createdAt: -1 })) ||
+      (await User.findOne().sort({ createdAt: -1 }));
+    payload.vendor = vendor?._id;
+  }
+
+  if (!payload.storeId && payload.vendor) {
+    const store = await Store.create({
+      vendorId: payload.vendor,
+      storeName: "V SHOP Marketplace",
+      storeDescription: "Default admin marketplace store",
+      storeCategory: payload.category || "Marketplace",
+      location: "Global",
+    });
+
+    payload.storeId = store._id;
+  }
+
+  return payload;
+};
+
+const getCategoryImage = (category) => {
+  const images = {
+    Accessories: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=80",
+    Footwear: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    Men: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+    Shoes: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    Women: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
+  };
+
+  return images[category] || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80";
+};
 
 // GET ALL PRODUCTS
 const getProducts = async (req, res) => {
@@ -57,12 +117,46 @@ const getProductById = async (req, res) => {
   }
 };
 
+const getRecommendations = async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true })
+      .populate("storeId")
+      .sort({ rating: -1, discount: -1, createdAt: -1 })
+      .limit(8);
+
+    const categoryGroups = await Product.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: "$category", count: { $sum: 1 }, averageRating: { $avg: "$rating" } } },
+      { $sort: { count: -1, averageRating: -1 } },
+      { $limit: 4 },
+    ]);
+
+    res.status(200).json({
+      products,
+      categories: categoryGroups.map((category) => ({
+        title: category._id || "Recommended",
+        reason: "Based on live marketplace signals",
+        count: category.count,
+        image: getCategoryImage(category._id),
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to load recommendations.",
+    });
+  }
+};
+
 // CREATE PRODUCT
 const addProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const payload = await normalizeProductPayload(req.body);
+    const product = await Product.create(payload);
 
-    res.status(201).json(product);
+    res.status(201).json({
+      message: "Product created successfully",
+      product,
+    });
 
   } catch (error) {
     res.status(400).json({
@@ -74,9 +168,10 @@ const addProduct = async (req, res) => {
 // UPDATE PRODUCT
 const updateProduct = async (req, res) => {
   try {
+    const payload = await normalizeProductPayload(req.body);
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      payload,
       {
         new: true,
         runValidators: true,
@@ -122,6 +217,7 @@ const deleteProduct = async (req, res) => {
 
 module.exports = {
   getProducts,
+  getRecommendations,
   getProductById,
   addProduct,
   updateProduct,

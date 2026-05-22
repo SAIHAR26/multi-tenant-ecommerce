@@ -1,11 +1,56 @@
-const products = [
-  { name: "Signature Leather Tote", category: "Bags", price: "Rs. 15,699", stock: 42, status: "Live", sku: "VST-1001", image: "LT" },
-  { name: "Crimson Luxe Jacket", category: "Fashion", price: "Rs. 28,299", stock: 18, status: "Live", sku: "VST-1002", image: "CJ" },
-  { name: "Matte Steel Watch", category: "Accessories", price: "Rs. 21,649", stock: 9, status: "Low Stock", sku: "VST-1003", image: "SW" },
-  { name: "Premium Gift Set", category: "Lifestyle", price: "Rs. 10,299", stock: 0, status: "Paused", sku: "VST-1004", image: "GS" },
-];
+import { useEffect, useMemo, useState } from "react";
+import ErrorState from "../../components/ErrorState";
+import LoadingState from "../../components/LoadingState";
+import { getProducts } from "../../services/productService";
+
+const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
+const getStatus = (product) => {
+  if (!product.isActive || Number(product.stock || 0) <= 0) return "Paused";
+  if (Number(product.stock || 0) <= 10) return "Low Stock";
+  return "Live";
+};
 
 function VendorProductsPage() {
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getProducts()
+      .then((data) => {
+        const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+        if (isMounted) {
+          setProducts(productsArray);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) setError(err.message || "Products could not be loaded.");
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return products;
+
+    return products.filter((product) =>
+      [product.name, product.category, product.brand, product._id]
+        .join(" ")
+        .toLowerCase()
+        .includes(term)
+    );
+  }, [products, searchTerm]);
+
   return (
     <>
       <section className="vendor-page-header">
@@ -16,71 +61,92 @@ function VendorProductsPage() {
         </div>
         <label className="vendor-filter-search">
           <span>Search products</span>
-          <input type="search" placeholder="Search by product, SKU, category" />
+          <input
+            type="search"
+            placeholder="Search by product, SKU, category"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
         </label>
       </section>
 
-      <section className="vendor-products-cards">
-        {products.map((product) => (
-          <article className="vendor-product-card" key={product.sku}>
-            <div className="product-image">{product.image}</div>
-            <div>
-              <h2>{product.name}</h2>
-              <p>{product.category} - {product.sku}</p>
-              <strong>{product.price}</strong>
+      {loading ? <LoadingState message="Loading products..." /> : null}
+      {!loading && error ? <ErrorState title="Unable to load products" message={error} /> : null}
+      {!loading && !error && filteredProducts.length === 0 ? <ErrorState title="No products" message="No products matched this view." /> : null}
+
+      {!loading && !error && filteredProducts.length > 0 ? (
+        <>
+          <section className="vendor-products-cards">
+            {filteredProducts.slice(0, 4).map((product) => {
+              const status = getStatus(product);
+
+              return (
+                <article className="vendor-product-card" key={product._id || product.id}>
+                  <div className="product-image">{product.name?.slice(0, 2).toUpperCase()}</div>
+                  <div>
+                    <h2>{product.name}</h2>
+                    <p>{product.category} - {product._id?.slice(-6).toUpperCase()}</p>
+                    <strong>{formatPrice(product.price)}</strong>
+                  </div>
+                  <span className={`product-status ${status.toLowerCase().replace(" ", "-")}`}>
+                    {status}
+                  </span>
+                </article>
+              );
+            })}
+          </section>
+
+          <section className="products-table-panel">
+            <div className="vendor-section-heading">
+              <div>
+                <p>Inventory table</p>
+                <h2>Stock control</h2>
+              </div>
+              <button type="button">Export</button>
             </div>
-            <span className={`product-status ${product.status.toLowerCase().replace(" ", "-")}`}>
-              {product.status}
-            </span>
-          </article>
-        ))}
-      </section>
 
-      <section className="products-table-panel">
-        <div className="vendor-section-heading">
-          <div>
-            <p>Inventory table</p>
-            <h2>Stock control</h2>
-          </div>
-          <button type="button">Export</button>
-        </div>
+            <div className="vendor-table-wrap">
+              <table className="products-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((product) => {
+                    const status = getStatus(product);
 
-        <div className="vendor-table-wrap">
-          <table className="products-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>SKU</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product.sku}>
-                  <td>{product.name}</td>
-                  <td>{product.sku}</td>
-                  <td>{product.category}</td>
-                  <td>{product.price}</td>
-                  <td>{product.stock}</td>
-                  <td>
-                    <span className={`product-status ${product.status.toLowerCase().replace(" ", "-")}`}>
-                      {product.status}
-                    </span>
-                  </td>
-                  <td className="vendor-table-actions">
-                    <button type="button" className="table-action">Edit</button>
-                    <button type="button" className="table-action">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                    return (
+                      <tr key={product._id || product.id}>
+                        <td>{product.name}</td>
+                        <td>{product._id?.slice(-6).toUpperCase()}</td>
+                        <td>{product.category}</td>
+                        <td>{formatPrice(product.price)}</td>
+                        <td>{product.stock}</td>
+                        <td>
+                          <span className={`product-status ${status.toLowerCase().replace(" ", "-")}`}>
+                            {status}
+                          </span>
+                        </td>
+                        <td className="vendor-table-actions">
+                          <button type="button" className="table-action">Edit</button>
+                          <button type="button" className="table-action">Delete</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      ) : null}
     </>
   );
 }

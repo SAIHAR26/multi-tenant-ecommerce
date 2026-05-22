@@ -42,7 +42,7 @@ function NotificationsPage() {
   }, []);
 
   const unreadCount = notifications.filter(
-    (item) => !item.read
+    (item) => !item.isRead
   ).length;
 
   const handleOpenNotification = async (
@@ -50,7 +50,7 @@ function NotificationsPage() {
   ) => {
     setSelectedNotification(notification);
 
-    if (!notification.read) {
+    if (!notification.isRead) {
       try {
         await markNotificationAsRead(
           notification._id
@@ -59,7 +59,7 @@ function NotificationsPage() {
         setNotifications((prev) =>
           prev.map((item) =>
             item._id === notification._id
-              ? { ...item, read: true }
+              ? { ...item, isRead: true }
               : item
           )
         );
@@ -149,7 +149,8 @@ function NotificationsPage() {
                   <h3>{notification.title}</h3>
 
                   <span>
-                    {notification.preview}
+                    {notification.preview ||
+                      notification.message}
                   </span>
                 </div>
 
@@ -185,7 +186,8 @@ function NotificationsPage() {
             <div className="notification-message">
               <span className="notification-message__badge">
                 From{" "}
-                {selectedNotification.sender}
+                {selectedNotification.sender ||
+                  "V SHOP"}
               </span>
 
               <h3>

@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSavedUser } from "../../api/auth";
-import { products } from "./customerData";
+import ErrorState from "../../components/ErrorState";
+import LoadingState from "../../components/LoadingState";
+import { useToast } from "../../components/useToast";
+import { getCartItems } from "../../services/cartService";
 import "./CheckoutPage.css";
 
 const paymentMethods = [
@@ -23,31 +26,48 @@ const createInitialAddress = () => ({
 
 function CheckoutPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [address, setAddress] = useState(createInitialAddress());
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [coupon, setCoupon] = useState("");
   const [isAddressSaved, setIsAddressSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [orderItems] = useState(() =>
-    products.slice(0, 2).map((product, index) => ({
-      ...product,
-      quantity: index + 1,
-    }))
-  );
+  const [orderItems, setOrderItems] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const timerId = window.setTimeout(() => {
-      setIsLoading(false);
-    }, 350);
+    let isMounted = true;
 
-    return () => window.clearTimeout(timerId);
+    getCartItems()
+      .then((items) => {
+        if (isMounted) {
+          setOrderItems(items);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err.message || "Unable to load checkout items.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const totals = useMemo(() => {
     const subtotal = orderItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) => {
+        const product = item.product || item;
+        return sum + Number(product.price || 0) * (Number(item.quantity) || 1);
+      },
       0
     );
 
@@ -80,17 +100,22 @@ function CheckoutPage() {
   };
 
   const handlePlaceOrder = () => {
+    showToast("Order created");
     navigate("/customer/order-success");
   };
 
   if (isLoading) {
     return (
       <div className="checkout-state customer-panel">
-        <div className="checkout-loader" />
+        <LoadingState message="Loading order..." />
+      </div>
+    );
+  }
 
-        <h2>Loading order...</h2>
-
-        <p>Please wait while we prepare your secure checkout.</p>
+  if (error) {
+    return (
+      <div className="checkout-state customer-panel">
+        <ErrorState title="Unable to load checkout" message={error} />
       </div>
     );
   }
@@ -266,23 +291,23 @@ function CheckoutPage() {
             {orderItems.map((item) => (
               <article
                 className="checkout-item"
-                key={item.id}
+                key={item.id || item._id || item.productId || item.product?._id}
               >
                 <img
-                  src={item.image}
-                  alt={item.name}
+                  src={(item.product || item).image}
+                  alt={(item.product || item).name}
                 />
 
                 <div>
-                  <h3>{item.name}</h3>
+                  <h3>{(item.product || item).name}</h3>
 
-                  <p>{item.vendor}</p>
+                  <p>{(item.product || item).vendor || (item.product || item).brand}</p>
 
-                  <span>Qty: {item.quantity}</span>
+                  <span>Qty: {item.quantity || 1}</span>
                 </div>
 
                 <strong>
-                  {formatPrice(item.price * item.quantity)}
+                  {formatPrice(Number((item.product || item).price || 0) * (Number(item.quantity) || 1))}
                 </strong>
               </article>
             ))}

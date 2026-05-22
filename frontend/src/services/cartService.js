@@ -1,51 +1,44 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000";
+import { apiRequest } from "../api/client";
+
+const normalizeCartPayload = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.cart)) return data.cart;
+  if (Array.isArray(data?.cart?.items)) return data.cart.items;
+  return [];
+};
 
 export const getCartItems = async () => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/cart`
+  const data = await apiRequest(
+    "/api/cart",
+    {},
+    "Unable to load cart."
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch cart items");
-  }
-
-  return response.json();
+  return normalizeCartPayload(data);
 };
 
-export const addToCart = async (product) => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/cart`,
+export const addToCart = async (product, quantity = 1) => {
+  return apiRequest(
+    "/api/cart",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(product),
-    }
+      body: JSON.stringify({
+        productId: product?._id || product?.id || product?.productId,
+        quantity,
+        product,
+      }),
+    },
+    "Unable to add item to cart."
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to add to cart");
-  }
-
-  return response.json();
 };
 
-export const removeFromCart = async (
-  id
-) => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/cart/${id}`,
+export const removeFromCart = async (id) => {
+  return apiRequest(
+    `/api/cart/${id}`,
     {
       method: "DELETE",
-    }
+    },
+    "Unable to remove item from cart."
   );
-
-  if (!response.ok) {
-    throw new Error("Failed to remove item");
-  }
-
-  return response.json();
 };

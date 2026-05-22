@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
+import ErrorState from "../../components/ErrorState";
+import LoadingState from "../../components/LoadingState";
 import VendorNavbar from "../../components/VendorNavbar";
 import VendorSidebar from "../../components/VendorSidebar";
 import VendorStatsCard from "../../components/VendorStatsCard";
 import ProductsTable from "../../components/ProductsTable";
 import OrdersSection from "../../components/OrdersSection";
-import "../VendorDashboard.css"; // Fixed path to match your layout's structure
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import { getFallbackVendorStats, getVendorStats } from "../../services/vendorStatsService";
+import "../VendorDashboard.css";
 
 function VendorDashboard() {
   const [stats, setStats] = useState([]);
@@ -18,44 +19,31 @@ function VendorDashboard() {
 
     async function fetchVendorStats() {
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE_URL}/api/vendor/stats`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboard metrics.");
-        }
-
-        const data = await response.json();
+        const data = await getVendorStats();
         if (isMounted) {
-          setStats(data.stats || []);
+          setStats(data);
+          setError("");
           setLoading(false);
         }
       } catch (err) {
         if (isMounted) {
-          setStats([
-            { label: "Total Products", value: "248", trend: "+18 this month", icon: "PR" },
-            { label: "Total Revenue", value: "₹70.2L", trend: "+12.8% growth", icon: "RV" },
-            { label: "Total Orders", value: "1,426", trend: "96 new orders", icon: "OR" },
-            { label: "Pending Deliveries", value: "37", trend: "8 priority shipments", icon: "DL" }
-          ]);
-          setError("Using backup offline stats: " + (err.message || ""));
+          setStats(getFallbackVendorStats());
+          setError(err.message || "Unable to load vendor statistics.");
           setLoading(false);
         }
       }
     }
 
     fetchVendorStats();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) {
     return (
       <div className="vendor-dashboard" style={{ padding: "40px", color: "#fff" }}>
-        <p>Loading seller workspace controls...</p>
+        <LoadingState message="Loading seller workspace..." />
       </div>
     );
   }
@@ -76,7 +64,11 @@ function VendorDashboard() {
                 Track products, revenue, orders, and growth signals from one
                 polished vendor cockpit.
               </p>
-              {error && <small style={{ color: "orange", display: "block", marginTop: "8px" }}>{error}</small>}
+              {error && (
+                <small style={{ color: "orange", display: "block", marginTop: "8px" }}>
+                  Offline stats shown: {error}
+                </small>
+              )}
             </div>
 
             <div className="vendor-hero-panel">
@@ -87,9 +79,11 @@ function VendorDashboard() {
           </section>
 
           <section className="vendor-stats-grid" aria-label="Vendor statistics">
-            {stats.map((stat) => (
-              <VendorStatsCard key={stat.label} {...stat} />
-            ))}
+            {stats.length > 0 ? (
+              stats.map((stat) => <VendorStatsCard key={stat.label} {...stat} />)
+            ) : (
+              <ErrorState title="No vendor stats" message="Vendor metrics are not available yet." />
+            )}
           </section>
 
           <section className="vendor-content-grid">

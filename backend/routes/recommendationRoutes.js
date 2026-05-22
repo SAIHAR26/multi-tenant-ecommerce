@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const { getRecommendations } = require("../services/recommendationService");
@@ -11,5 +12,16 @@ router.get("/:userId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+const router = express.Router();
+
+const {
+  getRecommendations,
+} = require("../controllers/recommendationController");
+
+// GET RECOMMENDATIONS
+router.get("/", getRecommendations);
+
 
 module.exports = router;

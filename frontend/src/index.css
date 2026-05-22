@@ -37,3 +37,61 @@ img {
 #root {
   min-height: 100vh;
 }
+
+.app-state {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  min-height: 180px;
+  padding: 32px;
+  text-align: center;
+}
+
+.app-state h2,
+.app-state p {
+  margin: 0;
+}
+
+.app-state p {
+  max-width: 560px;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.app-state__spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #ffffff;
+  border-radius: 999px;
+  animation: app-spin 0.8s linear infinite;
+}
+
+.toast-region {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 36px));
+}
+
+.toast {
+  padding: 12px 14px;
+  color: #ffffff;
+  background: rgba(20, 20, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 4px solid #43d17a;
+  border-radius: 8px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+.toast--error {
+  border-left-color: #ff6b6b;
+}
+
+@keyframes app-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
