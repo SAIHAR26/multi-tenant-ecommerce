@@ -8,10 +8,10 @@ const notificationSchema = new mongoose.Schema(
       required: true,
     },
 
-    title: {
+    type: {
       type: String,
+      enum: ["ORDER", "PAYMENT", "STORE", "REVIEW", "SYSTEM"],
       required: true,
-      trim: true,
     },
 
     message: {
@@ -20,17 +20,9 @@ const notificationSchema = new mongoose.Schema(
       trim: true,
     },
 
-    type: {
-      type: String,
-      enum: ["vendor", "order", "review", "payment", "customer", "system"],
-      default: "system",
-      index: true,
-    },
-
     isRead: {
       type: Boolean,
       default: false,
-      index: true,
     },
   },
   {
