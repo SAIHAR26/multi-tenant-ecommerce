@@ -7,16 +7,32 @@ const notificationSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+
+
+    type: {
+      type: String,
+      enum: ["ORDER", "PAYMENT", "STORE", "REVIEW", "SYSTEM"],
+      required: true,
+    },
+
+
     title: {
       type: String,
       required: true,
       trim: true,
     },
+
     message: {
       type: String,
       required: true,
       trim: true,
     },
+
+
+    isRead: {
+      type: Boolean,
+      default: false,
+
     type: {
       type: String,
       enum: ["vendor", "order", "review", "payment", "customer", "system"],
@@ -43,6 +59,7 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       index: true,
+
     },
   },
   {
@@ -50,4 +67,8 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
+
 module.exports = mongoose.model("Notification", notificationSchema);
+
+module.exports = mongoose.model("Notification", notificationSchema);
+
