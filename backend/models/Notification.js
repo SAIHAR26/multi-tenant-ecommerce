@@ -23,6 +23,22 @@ const notificationSchema = new mongoose.Schema(
       default: "system",
       index: true,
     },
+    targetRole: {
+      type: String,
+      enum: ["admin", "vendor", "customer", "all"],
+      default: "all",
+      index: true,
+    },
+    sender: {
+      type: String,
+      trim: true,
+      default: "V SHOP",
+    },
+    preview: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     isRead: {
       type: Boolean,
       default: false,

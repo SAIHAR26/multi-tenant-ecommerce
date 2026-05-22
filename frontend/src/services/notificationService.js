@@ -1,7 +1,26 @@
 import { apiRequest } from "../api/client";
+import { getSavedUser } from "../api/auth";
+
+const getAudienceParams = () => {
+  const user = getSavedUser();
+  const params = new URLSearchParams();
+
+  if (user?.role) {
+    params.set("role", user.role);
+  }
+
+  if (user?.id) {
+    params.set("userId", user.id);
+  }
+
+  return params;
+};
 
 export const getNotifications = async (filter = "all") => {
-  return apiRequest(`/api/notifications?filter=${filter}`, {}, "Notifications could not be loaded.");
+  const params = getAudienceParams();
+  params.set("filter", filter);
+
+  return apiRequest(`/api/notifications?${params.toString()}`, {}, "Notifications could not be loaded.");
 };
 
 export const createNotification = async (payload) => {
@@ -28,8 +47,10 @@ export const markNotificationRead = async (id) => {
 export const markNotificationAsRead = markNotificationRead;
 
 export const markAllNotificationsRead = async () => {
+  const params = getAudienceParams();
+
   return apiRequest(
-    "/api/notifications/read-all",
+    `/api/notifications/read-all?${params.toString()}`,
     {
       method: "PATCH",
     },
