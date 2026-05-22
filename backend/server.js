@@ -43,6 +43,7 @@ const userRoutes = require("./routes/userRoutes");
 const vendorRoutes = require("./routes/vendorRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const vendorStatsRoutes = require("./routes/vendorStatsRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
 
 // API ROUTES
 app.use("/api/auth", authRoutes);
@@ -65,4 +66,37 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 
 // VENDOR STATS API
-app.use("/api/vendor
+app.use("/api/vendor/stats", vendorStatsRoutes);
+
+// RECOMMENDATIONS API
+app.use("/api/recommendations", recommendationRoutes);
+
+// ERROR HANDLER
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: "Something went wrong.",
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+connectDB({ exitOnFailure: false })
+  .then(() => {
+    databaseStatus = "connected";
+  })
+  .catch(() => {
+    databaseStatus = "disconnected";
+  });
+
+mongoose.connection.on("disconnected", () => {
+  databaseStatus = "disconnected";
+});
+
+mongoose.connection.on("reconnected", () => {
+  databaseStatus = "connected";
+});

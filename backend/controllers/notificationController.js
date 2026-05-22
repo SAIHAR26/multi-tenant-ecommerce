@@ -24,14 +24,13 @@ const getNotifications = async (req, res) => {
       query.type = filter;
     }
 
-const notifications = await Notification.find(query)
-  .populate("userId", "name email")
-  .sort({ createdAt: -1 });
-
-const unreadCount = await Notification.countDocuments({
-  ...getAudienceQuery(role),
-  isRead: false,
-});
+    const notifications = await Notification.find(query)
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+    const unreadCount = await Notification.countDocuments({
+      ...getAudienceQuery(role),
+      isRead: false,
+    });
 
     res.status(200).json({
       notifications,
