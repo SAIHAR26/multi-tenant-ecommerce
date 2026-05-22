@@ -260,6 +260,25 @@
     #1a1a1a;
 }
 
+.connect-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-top: 22px;
+}
+
+.connect-details a,
+.connect-details span {
+  color: #f4f4f4;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.connect-details a:hover {
+  color: #ff2e2e;
+}
+
 .footer {
   padding: 64px clamp(20px, 5vw, 72px) 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);

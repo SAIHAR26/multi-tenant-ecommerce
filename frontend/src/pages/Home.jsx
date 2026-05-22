@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getProducts } from "../services/productService";
+import { getStores } from "../services/storeService";
 import "./Home.css";
 
 function Home() {
   const [products, setProducts] = useState([]);
+  const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -15,16 +17,21 @@ function Home() {
       try {
         setLoading(true);
 
-        const data = await getProducts();
+        const [productsData, storesData] = await Promise.all([
+          getProducts(),
+          getStores(),
+        ]);
 
         const productsArray =
-          Array.isArray(data?.products)
-            ? data.products
-            : Array.isArray(data)
-            ? data
+          Array.isArray(productsData?.products)
+            ? productsData.products
+            : Array.isArray(productsData)
+            ? productsData
             : [];
+        const storesArray = Array.isArray(storesData) ? storesData : [];
 
         setProducts(productsArray);
+        setStores(storesArray);
       } catch (err) {
         console.error(err);
         setError("Failed to load products");
@@ -91,6 +98,7 @@ function Home() {
                     <div className="product-card__image">
                       <img
                         src={
+                          product.images?.[0] ||
                           product.image ||
                           "https://via.placeholder.com/300"
                         }
@@ -124,35 +132,46 @@ function Home() {
         </section>
 
         {/* ✅ KEEP VENDORS STATIC */}
-        <section className="section section--vendors">
+        <section className="section section--vendors" id="top-vendors">
           <div className="section__header">
             <p className="eyebrow">Top vendors</p>
             <h2>Stores customers keep coming back to</h2>
           </div>
 
           <div className="vendor-grid">
-            <article className="vendor-card">
-              <div className="vendor-card__image">
-                <img
-                  src="https://images.unsplash.com/photo-1441986300917-64674bd600d8"
-                  alt="Vendor"
-                />
-              </div>
-              <div>
-                <h3>Urban Vault</h3>
-                <p>Curated premium streetwear</p>
-              </div>
-            </article>
+            {stores.map((store) => (
+              <article className="vendor-card" key={store._id}>
+                <div className="vendor-card__image">
+                  <img
+                    src={
+                      store.storeBanner ||
+                      store.storeLogo ||
+                      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80"
+                    }
+                    alt={store.storeName}
+                  />
+                </div>
+                <div>
+                  <h3>{store.storeName}</h3>
+                  <p>{store.storeDescription || store.storeCategory}</p>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
 
         {/* CONNECT */}
-        <section className="connect-strip">
+        <section className="connect-strip" id="connect">
           <div>
             <p className="eyebrow">Connect</p>
             <h2>
               Launch, shop, and scale inside one premium marketplace.
             </h2>
+            <div className="connect-details" aria-label="Contact details">
+              <a href="mailto:support@vshop.com">support@vshop.com</a>
+              <a href="tel:+919000000000">+91 90000 00000</a>
+              <span>Partner support: Hyderabad, India</span>
+            </div>
           </div>
 
           <a className="btn btn--primary" href="/register">
