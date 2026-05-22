@@ -11,7 +11,9 @@ const getNotifications = async (req, res) => {
       query.type = filter;
     }
 
-    const notifications = await Notification.find(query).sort({ createdAt: -1 });
+    const notifications = await Notification.find(query)
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
     const unreadCount = await Notification.countDocuments({ isRead: false });
 
     res.status(200).json({

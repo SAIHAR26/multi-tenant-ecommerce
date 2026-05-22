@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
+import ErrorState from "../../components/ErrorState";
+import LoadingState from "../../components/LoadingState";
 import ProductCard from "../../components/customer/ProductCard";
 import RecommendationCard from "../../components/customer/RecommendationCard";
-
-// Connect to your dynamic production API URL configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import { getRecommendations } from "../../services/recommendationService";
 
 function RecommendationsPage() {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
@@ -26,19 +26,7 @@ function RecommendationsPage() {
       setLoading(true);
       setError("");
 
-      // Fetch personalized items from your backend engine routes
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/api/products/recommendations`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Could not safely sync personalized data feeds.");
-      }
-
-      const data = await response.json();
+      const data = await getRecommendations();
       applyRecommendations(data);
     } catch (err) {
       handleRecommendationError(err);
@@ -50,20 +38,7 @@ function RecommendationsPage() {
   useEffect(() => {
     let isMounted = true;
 
-    const token = localStorage.getItem("token");
-
-    fetch(`${API_BASE_URL}/api/products/recommendations`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Could not safely sync personalized data feeds.");
-        }
-
-        return response.json();
-      })
+    getRecommendations()
       .then((data) => {
         if (isMounted) {
           applyRecommendations(data);
@@ -88,7 +63,20 @@ function RecommendationsPage() {
   if (loading) {
     return (
       <div className="customer-page">
-        <p className="customer-eyebrow">Processing your taste parameters and curating boutique lanes...</p>
+        <LoadingState message="Loading recommendations..." />
+      </div>
+    );
+  }
+
+  if (error && recommendedProducts.length === 0 && categories.length === 0) {
+    return (
+      <div className="customer-page">
+        <ErrorState
+          title="Unable to load recommendations"
+          message={error}
+          actionLabel="Refresh Picks"
+          onAction={fetchRecommendations}
+        />
       </div>
     );
   }
@@ -107,7 +95,6 @@ function RecommendationsPage() {
         </button>
       </section>
 
-      {/* STEP 7: EMPTY STATE FOR SHOPPING LANES/CATEGORIES */}
       <section className="customer-panel">
         <div className="customer-panel__header">
           <div><p className="customer-eyebrow">Favorite categories</p><h2>Shopping lanes</h2></div>
@@ -125,14 +112,13 @@ function RecommendationsPage() {
         )}
       </section>
 
-      {/* STEP 7: EMPTY STATE FOR RECOMMENDED PRODUCTS */}
       <section className="customer-panel">
         <div className="customer-panel__header">
           <div><p className="customer-eyebrow">Recommended products</p><h2>Made for your next cart</h2></div>
         </div>
         {recommendedProducts.length === 0 ? (
           <div style={{ padding: "40px 0", textAlign: "center" }}>
-            <p style={{ opacity: 0.8 }}>No explicit product recommendations calculated. Check back after adding premium items to your wishlist!</p>
+            <p style={{ opacity: 0.8 }}>No explicit product recommendations calculated. Check back after adding premium items to your wishlist.</p>
           </div>
         ) : (
           <div className="customer-product-grid">

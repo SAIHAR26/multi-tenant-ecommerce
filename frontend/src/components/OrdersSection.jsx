@@ -1,28 +1,40 @@
-const orders = [
-  {
-    id: "#VS-1048",
-    customer: "Aarav Mehta",
-    item: "Leather Tote",
-    total: "₹15,699",
-    status: "Processing",
-  },
-  {
-    id: "#VS-1047",
-    customer: "Maya Carter",
-    item: "Luxe Jacket",
-    total: "₹28,299",
-    status: "Shipped",
-  },
-  {
-    id: "#VS-1046",
-    customer: "Nina Shah",
-    item: "Gift Set",
-    total: "₹10,299",
-    status: "Pending",
-  },
-];
+import { useEffect, useState } from "react";
+import ErrorState from "./ErrorState";
+import LoadingState from "./LoadingState";
+import { getOrders } from "../services/orderService";
+
+const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
+const getOrderItems = (order) =>
+  order.products?.map((item) => item.productId?.name || item.name || "Product").join(", ") || "Order items";
 
 function OrdersSection() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getOrders()
+      .then((data) => {
+        const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
+        if (isMounted) {
+          setOrders(ordersArray.slice(0, 4));
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) setError(err.message || "Orders could not be loaded.");
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <section className="orders-section">
       <div className="vendor-section-heading">
@@ -33,21 +45,27 @@ function OrdersSection() {
         <button type="button">Open</button>
       </div>
 
-      <div className="orders-list">
-        {orders.map((order) => (
-          <article className="order-card" key={order.id}>
-            <div>
-              <span>{order.id}</span>
-              <strong>{order.customer}</strong>
-              <small>{order.item}</small>
-            </div>
-            <div>
-              <strong>{order.total}</strong>
-              <small>{order.status}</small>
-            </div>
-          </article>
-        ))}
-      </div>
+      {loading ? <LoadingState message="Loading orders..." /> : null}
+      {!loading && error ? <ErrorState title="Unable to load orders" message={error} /> : null}
+      {!loading && !error && orders.length === 0 ? <ErrorState title="No orders" message="No orders found yet." /> : null}
+
+      {!loading && !error && orders.length > 0 ? (
+        <div className="orders-list">
+          {orders.map((order) => (
+            <article className="order-card" key={order._id || order.id}>
+              <div>
+                <span>#{String(order._id || order.id).slice(-6).toUpperCase()}</span>
+                <strong>{order.userId?.name || order.customer || "Customer"}</strong>
+                <small>{getOrderItems(order)}</small>
+              </div>
+              <div>
+                <strong>{formatPrice(order.totalAmount)}</strong>
+                <small>{order.status}</small>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }

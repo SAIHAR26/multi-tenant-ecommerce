@@ -1,15 +1,26 @@
-function WishlistCard({ item }) {
-  const price = typeof item.price === "number" ? `Rs ${new Intl.NumberFormat("en-IN").format(item.price)}` : item.price;
+function WishlistCard({ item, onMoveToCart, onRemove }) {
+  const product = item.product || item;
+  const price =
+    typeof product.price === "number"
+      ? `Rs ${new Intl.NumberFormat("en-IN").format(product.price)}`
+      : product.price;
 
   return (
     <article className="wishlist-card">
-      <img src={item.image} alt={item.name} />
+      <img src={product.image} alt={product.name} />
       <div>
-        <h3>{item.name}</h3>
-        <p>{item.vendor}</p>
+        <h3>{product.name}</h3>
+        <p>{product.vendor || product.brand}</p>
         <strong>{price}</strong>
       </div>
-      <button className="customer-secondary-button" type="button">Move to Cart</button>
+      <div className="customer-product-card__actions">
+        <button className="customer-secondary-button" type="button" onClick={() => onRemove?.(item)}>
+          Remove
+        </button>
+        <button className="customer-primary-button" type="button" onClick={() => onMoveToCart?.(item)}>
+          Move to Cart
+        </button>
+      </div>
     </article>
   );
 }

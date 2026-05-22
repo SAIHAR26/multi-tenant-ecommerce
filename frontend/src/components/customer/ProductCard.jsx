@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../useToast";
+import { addToCart } from "../../services/cartService";
+import { addToWishlist } from "../../services/wishlistService";
 
 function ProductCard({ product = {}, allProducts = [] }) {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [previewProduct, setPreviewProduct] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
-  const productId = product?._id;
+  const productId = product?._id || product?.id;
 
   const formattedPrice = new Intl.NumberFormat("en-IN").format(
     product?.price || 0
@@ -22,24 +28,56 @@ function ProductCard({ product = {}, allProducts = [] }) {
     navigate(`/customer/product/${productId}`);
   };
 
+  const handleAddToWishlist = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      setIsAddingToWishlist(true);
+      await addToWishlist(product);
+      showToast("Product added to wishlist");
+    } catch (err) {
+      showToast(err.message || "Unable to add product to wishlist", "error");
+    } finally {
+      setIsAddingToWishlist(false);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      setIsAddingToCart(true);
+      await addToCart(product);
+      showToast("Product added to cart");
+      navigate("/customer/cart");
+    } catch (err) {
+      showToast(err.message || "Unable to add product to cart", "error");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
     <article className="customer-product-card">
-      {/* IMAGE */}
       <div className="customer-product-card__image">
         <button type="button" onClick={goToDetails}>
           <img
             src={product?.image || "https://via.placeholder.com/300"}
-            alt={product?.name}
+            alt={product?.name || "Product"}
           />
           <span>{product?.discount || 0}% off</span>
         </button>
 
-        <button className="wishlist-action" type="button">
-          ❤️
+        <button
+          className="wishlist-action"
+          type="button"
+          aria-label="Add to wishlist"
+          disabled={isAddingToWishlist}
+          onClick={handleAddToWishlist}
+        >
+          Heart
         </button>
       </div>
 
-      {/* BODY */}
       <div className="customer-product-card__body">
         <div>
           <button
@@ -53,8 +91,8 @@ function ProductCard({ product = {}, allProducts = [] }) {
         </div>
 
         <div className="customer-product-card__meta">
-          <strong>₹ {formattedPrice}</strong>
-          <span>{product?.rating || 4} ★</span>
+          <strong>Rs {formattedPrice}</strong>
+          <span>{product?.rating || 4} stars</span>
         </div>
 
         <div className="customer-product-card__actions">
@@ -69,14 +107,14 @@ function ProductCard({ product = {}, allProducts = [] }) {
           <button
             className="customer-primary-button"
             type="button"
-            onClick={() => navigate("/customer/cart")}
+            disabled={isAddingToCart}
+            onClick={handleAddToCart}
           >
-            Add to Cart
+            {isAddingToCart ? "Adding..." : "Add to Cart"}
           </button>
         </div>
       </div>
 
-      {/* QUICK VIEW */}
       {previewProduct && (
         <QuickView
           product={previewProduct}
@@ -90,9 +128,11 @@ function ProductCard({ product = {}, allProducts = [] }) {
 }
 
 function QuickView({ product = {}, allProducts = [], onClose, navigate }) {
+  const { showToast } = useToast();
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const productId = product?._id;
+  const productId = product?._id || product?.id;
 
   const formattedPrice = new Intl.NumberFormat("en-IN").format(
     product?.price || 0
@@ -100,36 +140,51 @@ function QuickView({ product = {}, allProducts = [], onClose, navigate }) {
 
   const suggestedProducts =
     allProducts
-      ?.filter((item) => item?._id !== productId)
+      ?.filter((item) => (item?._id || item?.id) !== productId)
       ?.slice(0, 3) || [];
+
+  const handleAddToCart = async () => {
+    try {
+      setIsAddingToCart(true);
+      await addToCart(product, quantity);
+      showToast("Product added to cart");
+      navigate("/customer/cart");
+    } catch (err) {
+      showToast(err.message || "Unable to add product to cart", "error");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
 
   return (
     <section className="quick-view-popover">
-      <button onClick={onClose}>X</button>
+      <button type="button" onClick={onClose}>X</button>
 
       <img
         src={product?.image || "https://via.placeholder.com/300"}
-        alt={product?.name}
+        alt={product?.name || "Product"}
       />
 
       <h2>{product?.name}</h2>
       <p>{product?.description || "No description available"}</p>
 
-      <strong>₹ {formattedPrice}</strong>
-      <p>{product?.rating || 4} ★ rating</p>
+      <strong>Rs {formattedPrice}</strong>
+      <p>{product?.rating || 4} stars rating</p>
 
-      {/* QUANTITY */}
       <div>
-        <button onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
+        <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
           -
         </button>
         <span>{quantity}</span>
-        <button onClick={() => setQuantity((q) => q + 1)}>+</button>
+        <button type="button" onClick={() => setQuantity((q) => q + 1)}>+</button>
       </div>
 
-      <button>Add to Cart</button>
+      <button type="button" disabled={isAddingToCart} onClick={handleAddToCart}>
+        {isAddingToCart ? "Adding..." : "Add to Cart"}
+      </button>
 
       <button
+        type="button"
         onClick={() => {
           if (!productId) return;
           navigate(`/customer/product/${productId}`);
@@ -138,22 +193,22 @@ function QuickView({ product = {}, allProducts = [], onClose, navigate }) {
         View Details
       </button>
 
-      {/* SUGGESTED */}
       <h3>Suggested Products</h3>
 
       <div>
         {suggestedProducts.length > 0 ? (
           suggestedProducts.map((item) => (
             <button
-              key={item?._id}
-              onClick={() =>
-                item?._id &&
-                navigate(`/customer/product/${item._id}`)
-              }
+              key={item?._id || item?.id}
+              type="button"
+              onClick={() => {
+                const id = item?._id || item?.id;
+                if (id) navigate(`/customer/product/${id}`);
+              }}
             >
               <img
                 src={item?.image || "https://via.placeholder.com/100"}
-                alt={item?.name}
+                alt={item?.name || "Product"}
               />
               <p>{item?.name}</p>
             </button>

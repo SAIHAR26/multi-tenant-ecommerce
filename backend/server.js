@@ -24,6 +24,7 @@ app.get("/api/health", (req, res) => {
 
 const authRoutes = require("./routes/authRoutes");
 const adminVendorRoutes = require("./routes/adminVendorRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
@@ -32,11 +33,16 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const segmentRoutes = require("./routes/segmentRoutes");
 const storeRoutes = require("./routes/storeRoutes");
 const userRoutes = require("./routes/userRoutes");
+const vendorRoutes = require("./routes/vendorRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/vendors", adminVendorRoutes);
+app.use("/api/cart", cartRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/vendor", vendorRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/segments", segmentRoutes);

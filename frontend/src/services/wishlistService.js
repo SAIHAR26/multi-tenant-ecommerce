@@ -1,40 +1,42 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000";
+import { apiRequest } from "../api/client";
 
-export const getWishlist = async () => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/wishlist`
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      "Failed to fetch wishlist"
-    );
-  }
-
-  return response.json();
+const normalizeWishlistPayload = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.wishlist)) return data.wishlist;
+  return [];
 };
 
-export const addToWishlist =
-  async (product) => {
-    const response = await fetch(
-      `${API_BASE_URL}/api/wishlist`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify(product),
-      }
-    );
+export const getWishlist = async () => {
+  const data = await apiRequest(
+    "/api/wishlist",
+    {},
+    "Unable to load wishlist."
+  );
 
-    if (!response.ok) {
-      throw new Error(
-        "Failed to add wishlist"
-      );
-    }
+  return normalizeWishlistPayload(data);
+};
 
-    return response.json();
-  };
+export const addToWishlist = async (product) => {
+  return apiRequest(
+    "/api/wishlist",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        productId: product?._id || product?.id || product?.productId,
+        product,
+      }),
+    },
+    "Unable to add item to wishlist."
+  );
+};
+
+export const removeFromWishlist = async (id) => {
+  return apiRequest(
+    `/api/wishlist/${id}`,
+    {
+      method: "DELETE",
+    },
+    "Unable to remove item from wishlist."
+  );
+};
