@@ -128,4 +128,5 @@ module.exports = {
   addToCart,
   updateCart,
   deleteCart,
+  removeFromCart: deleteCart,
 };

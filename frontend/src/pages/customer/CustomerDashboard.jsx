@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
-import { categoryTabs, priceRanges, products as fallbackProducts } from "./customerData";
+import { categoryTabs, priceRanges } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
 const discountFilters = [10, 20, 30, 40, 50];
