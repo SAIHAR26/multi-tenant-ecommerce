@@ -40,5 +40,4 @@ const getRecommendations = async (userId) => {
     return [];
   }
 };
-
 module.exports = { getRecommendations };

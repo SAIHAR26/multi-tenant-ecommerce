@@ -88,6 +88,12 @@ const seedData = async () => {
         storeDescription: "Best fashion products",
         storeCategory: "Fashion",
         location: "Hyderabad",
+
+        // Vendor Analytics
+        totalRevenue: 50000,
+        totalOrders: 120,
+        averageRating: 4.5,
+        growthPercentage: 18,
       },
       {
         vendorId: vendor2._id,
@@ -95,6 +101,12 @@ const seedData = async () => {
         storeDescription: "Modern clothing collection",
         storeCategory: "Clothing",
         location: "Bangalore",
+
+        // Vendor Analytics
+        totalRevenue: 75000,
+        totalOrders: 180,
+        averageRating: 4.2,
+        growthPercentage: 25,
       },
     ]);
 
@@ -177,28 +189,28 @@ const seedData = async () => {
         description: "Customers with high purchase activity",
         users: [customer1._id, customer2._id],
         category: "Premium",
-        type: "VIP",
+        segmentType: "VIP",
       },
       {
         name: "Frequent Buyers",
         description: "Customers who shop regularly",
         users: [customer2._id, customer3._id],
         category: "Shopping",
-        type: "FREQUENT",
+        segmentType: "FREQUENT",
       },
       {
         name: "New Users",
         description: "Recently joined customers",
         users: [customer4._id],
         category: "New Customer",
-        type: "NEW",
+        segmentType: "NEW",
       },
       {
         name: "Inactive Users",
         description: "Customers with low activity",
         users: [customer3._id],
         category: "Inactive",
-        type: "INACTIVE",
+        segmentType: "INACTIVE",
       },
     ]);
 
