@@ -1,15 +1,29 @@
+
 function ErrorState({
   title = "Something went wrong",
-  message = "Please try again.",
-  actionLabel,
+  message = "Please try again later.",
+  actionLabel = "Try Again",
   onAction,
 }) {
   return (
-    <div className="app-state app-state--error" role="alert">
+    <div
+      className="app-state app-state--error"
+      role="alert"
+    >
+      <div className="app-state__error-icon">
+        !
+      </div>
+
       <h2>{title}</h2>
+
       <p>{message}</p>
-      {actionLabel && onAction ? (
-        <button className="customer-secondary-button" type="button" onClick={onAction}>
+
+      {onAction ? (
+        <button
+          type="button"
+          className="customer-secondary-button"
+          onClick={onAction}
+        >
           {actionLabel}
         </button>
       ) : null}
