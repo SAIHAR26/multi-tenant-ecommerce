@@ -8,32 +8,43 @@ import { getProducts } from "../../services/productService";
 const ratingFilters = [1, 2, 3, 4, 5];
 const discountFilters = [10, 20, 30, 40, 50];
 
-const normalizeText = (value) => value?.toString().toLowerCase().trim() || "";
-
-const categoryAliases = {
-  shoes: ["shoes", "shoe", "footwear", "sneaker", "sneakers", "runner", "running"],
-};
+const normalizeText = (value) =>
+  value?.toString().toLowerCase().trim() || "";
 
 const normalizeProduct = (product) => ({
   ...product,
   id: product.id || product._id,
   _id: product._id || product.id,
+
   image:
     product.image ||
     product.images?.[0] ||
-    "https://dummyimage.com/300x300/cccccc/000000&text=Product",
-  discount: product.discount || 0,
-  popularity: product.popularity || product.rating || 0,
+    "",
+
+  discount:
+    Number(product.discount) || 0,
+
+  popularity:
+    Number(product.popularity) ||
+    Number(product.rating) ||
+    0,
 });
 
 function CustomerDashboard() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] =
+    useSearchParams();
 
-  const productBrowsingRef = useRef(null);
+  const productBrowsingRef =
+    useRef(null);
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [products, setProducts] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   const [activeCategory, setActiveCategory] =
     useState("Trending");
@@ -62,25 +73,31 @@ function CustomerDashboard() {
       try {
         setLoading(true);
 
-        const data = await getProducts();
+        const data =
+          await getProducts();
 
-        const productsArray = Array.isArray(
-          data?.products
-        )
-          ? data.products
-          : Array.isArray(data)
-          ? data
-          : [];
+        const productsArray =
+          Array.isArray(data?.products)
+            ? data.products
+            : Array.isArray(data)
+            ? data
+            : [];
 
-        setProducts(
-          productsArray.map(normalizeProduct)
-        );
+        const cleanedProducts =
+          productsArray.map(
+            normalizeProduct
+          );
+
+        setProducts(cleanedProducts);
 
         setError("");
       } catch (err) {
         console.error(err);
 
-        setError("Failed to load products");
+        setError(
+          err.message ||
+            "Failed to load products"
+        );
       } finally {
         setLoading(false);
       }
@@ -89,13 +106,15 @@ function CustomerDashboard() {
     fetchProducts();
   }, []);
 
-  // SCROLL TO PRODUCTS
+  // SCROLL
   useEffect(() => {
     if (searchTerm) {
-      productBrowsingRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      productBrowsingRef.current?.scrollIntoView(
+        {
+          behavior: "smooth",
+          block: "start",
+        }
+      );
     }
   }, [searchTerm]);
 
@@ -111,7 +130,7 @@ function CustomerDashboard() {
     });
   };
 
-  // DYNAMIC BRANDS
+  // BRANDS
   const brands = useMemo(() => {
     return [
       ...new Set(
@@ -132,22 +151,35 @@ function CustomerDashboard() {
 
     return products
       .filter((product) => {
-        const productName = normalizeText(product?.name);
-        const productBrand = normalizeText(product?.brand);
-        const productCategory = normalizeText(product?.category);
-        const productDescription = normalizeText(product?.description);
-        const productStore = normalizeText(
-          product?.storeId?.storeName || product?.storeId?.storeCategory || product?.vendor
-        );
-        const normalizedSearch = normalizeText(searchTerm);
-        const normalizedCategory = normalizeText(activeCategory);
         const searchableText = [
-          productName,
-          productBrand,
-          productCategory,
-          productDescription,
-          productStore,
-        ].join(" ");
+          product?.name,
+          product?.brand,
+          product?.category,
+          product?.description,
+          product?.vendor,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        const normalizedSearch =
+          normalizeText(searchTerm);
+
+        const matchesCategory =
+          activeCategory === "Trending"
+            ? true
+            : normalizeText(
+                product?.category
+              ).includes(
+                normalizeText(
+                  activeCategory
+                )
+              );
+
+        const matchesSearch =
+          !normalizedSearch ||
+          searchableText.includes(
+            normalizedSearch
+          );
 
         const productPrice =
           Number(product?.price) || 0;
@@ -157,15 +189,6 @@ function CustomerDashboard() {
 
         const productDiscount =
           Number(product?.discount) || 0;
-
-        const categoryTerms = categoryAliases[normalizedCategory] || [normalizedCategory];
-        const matchesCategory =
-          activeCategory === "Trending"
-            ? true
-            : categoryTerms.some((term) => searchableText.includes(term));
-
-        const matchesSearch =
-          !normalizedSearch || searchableText.includes(normalizedSearch);
 
         const matchesPrice =
           selectedPriceRange
@@ -187,7 +210,8 @@ function CustomerDashboard() {
         const matchesBrand =
           brandFilter === "All"
             ? true
-            : product?.brand === brandFilter;
+            : product?.brand ===
+              brandFilter;
 
         return (
           matchesCategory &&
@@ -242,12 +266,12 @@ function CustomerDashboard() {
         <h1>V SHOP Marketplace</h1>
 
         <p>
-          Explore premium products from
-          verified vendors.
+          Explore premium products
+          from verified vendors.
         </p>
       </section>
 
-      {/* CATEGORY STRIP */}
+      {/* CATEGORY */}
       <section className="category-strip">
         {categoryTabs.map((category) => (
           <button
@@ -268,7 +292,7 @@ function CustomerDashboard() {
 
       {/* MAIN */}
       <section className="marketplace-layout">
-        {/* FILTER PANEL */}
+        {/* FILTERS */}
         <aside className="filter-panel">
           <div className="filter-panel__header">
             <p>Filters</p>
@@ -395,13 +419,14 @@ function CustomerDashboard() {
           <div className="browse-toolbar">
             <div>
               <strong>
-                {searchTerm
-                  ? searchTerm
-                  : activeCategory}
+                {searchTerm ||
+                  activeCategory}
               </strong>
 
               <p>
-                {filteredProducts.length}{" "}
+                {
+                  filteredProducts.length
+                }{" "}
                 products
               </p>
             </div>
@@ -446,10 +471,11 @@ function CustomerDashboard() {
             <p>{error}</p>
           )}
 
-          {/* PRODUCTS */}
+          {/* PRODUCTS GRID */}
           {!loading &&
             !error &&
-            (filteredProducts.length > 0 ? (
+            (filteredProducts.length >
+            0 ? (
               <div className="marketplace-product-grid">
                 {filteredProducts.map(
                   (product) => (
@@ -473,7 +499,8 @@ function CustomerDashboard() {
                 </h3>
 
                 <p>
-                  Try changing filters.
+                  Try changing
+                  filters or search.
                 </p>
               </div>
             ))}
