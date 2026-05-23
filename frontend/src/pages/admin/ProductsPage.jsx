@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getProducts } from "../../services/productService";
 
 function ProductsPage() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -52,7 +54,7 @@ function ProductsPage() {
           </p>
         </div>
 
-        <button className="hero-action" type="button">
+        <button className="hero-action" type="button" onClick={() => navigate("/admin/add-product")}>
           Add Product
         </button>
       </section>

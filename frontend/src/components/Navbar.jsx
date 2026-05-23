@@ -11,7 +11,7 @@ function Navbar() {
       <nav className="navbar__links" aria-label="Primary navigation">
         <a href="/">Home</a>
         <a href="#collections">Collections</a>
-        <a href="#reviews">Reviews</a>
+        <a href="#top-vendors">Top Vendors</a>
         <a href="#connect">Connect</a>
       </nav>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import { getOrders } from "../../services/orderService";
@@ -8,6 +9,7 @@ const getOrderItems = (order) =>
   order.products?.map((item) => item.productId?.name || item.name || "Product").join(", ") || "Order items";
 
 function OrdersTable() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,7 +44,9 @@ function OrdersTable() {
           <p className="admin-eyebrow">Recent orders</p>
           <h2>Live order flow</h2>
         </div>
-        <button className="text-button" type="button">Export</button>
+        <button className="text-button" type="button" onClick={() => navigate("/admin/export-orders")}>
+          Export
+        </button>
       </div>
 
       {loading ? <LoadingState message="Loading orders..." /> : null}

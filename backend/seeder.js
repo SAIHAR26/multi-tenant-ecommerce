@@ -10,6 +10,8 @@ const Store = require("./models/Store");
 const Cart = require("./models/Cart");
 const Wishlist = require("./models/Wishlist");
 const Payment = require("./models/Payment");
+const Notification = require("./models/Notification");
+const Segment = require("./models/Segment");
 
 const seedData = async () => {
   try {
@@ -25,6 +27,8 @@ const seedData = async () => {
       Cart.deleteMany(),
       Wishlist.deleteMany(),
       Payment.deleteMany(),
+      Notification.deleteMany(),
+      Segment.deleteMany(),
     ]);
 
     console.log("Old Ecommerce Data Deleted");
@@ -166,6 +170,38 @@ const seedData = async () => {
     const product3 = products[2];
     const product4 = products[3];
 
+    // SEGMENTS
+    await Segment.insertMany([
+      {
+        name: "VIP Customers",
+        description: "Customers with high purchase activity",
+        users: [customer1._id, customer2._id],
+        category: "Premium",
+        type: "VIP",
+      },
+      {
+        name: "Frequent Buyers",
+        description: "Customers who shop regularly",
+        users: [customer2._id, customer3._id],
+        category: "Shopping",
+        type: "FREQUENT",
+      },
+      {
+        name: "New Users",
+        description: "Recently joined customers",
+        users: [customer4._id],
+        category: "New Customer",
+        type: "NEW",
+      },
+      {
+        name: "Inactive Users",
+        description: "Customers with low activity",
+        users: [customer3._id],
+        category: "Inactive",
+        type: "INACTIVE",
+      },
+    ]);
+
     // REVIEWS
     await Review.insertMany([
       {
@@ -216,6 +252,10 @@ const seedData = async () => {
             productId: product2._id,
             quantity: 2,
           },
+          {
+            productId: product4._id,
+            quantity: 1,
+          },
         ],
       },
       {
@@ -223,6 +263,23 @@ const seedData = async () => {
         items: [
           {
             productId: product4._id,
+            quantity: 1,
+          },
+          {
+            productId: product1._id,
+            quantity: 1,
+          },
+        ],
+      },
+      {
+        userId: customer4._id,
+        items: [
+          {
+            productId: product2._id,
+            quantity: 1,
+          },
+          {
+            productId: product3._id,
             quantity: 1,
           },
         ],
@@ -237,11 +294,15 @@ const seedData = async () => {
       },
       {
         userId: customer2._id,
-        savedProducts: [product1._id],
+        savedProducts: [product1._id, product3._id],
       },
       {
         userId: customer3._id,
-        savedProducts: [product3._id],
+        savedProducts: [product2._id, product3._id],
+      },
+      {
+        userId: customer4._id,
+        savedProducts: [product1._id, product4._id],
       },
     ]);
 
@@ -309,7 +370,6 @@ const seedData = async () => {
     // PAYMENTS
     await Payment.insertMany([
       {
-        userId: customer1._id,
         orderId: order1._id,
         method: "COD",
         status: "PENDING",
@@ -317,7 +377,6 @@ const seedData = async () => {
         amount: 999,
       },
       {
-        userId: customer2._id,
         orderId: order2._id,
         method: "NETBANKING",
         status: "SUCCESS",
@@ -325,7 +384,6 @@ const seedData = async () => {
         amount: 3998,
       },
       {
-        userId: customer3._id,
         orderId: order3._id,
         method: "CARD",
         status: "SUCCESS",
@@ -333,12 +391,45 @@ const seedData = async () => {
         amount: 1499,
       },
       {
-        userId: customer4._id,
         orderId: order4._id,
         method: "COD",
         status: "PENDING",
         transactionId: "",
         amount: 3598,
+      },
+    ]);
+
+    // NOTIFICATIONS
+    await Notification.insertMany([
+      {
+        userId: customer1._id,
+        type: "ORDER",
+        message: "Your order has been placed successfully",
+      },
+      {
+        userId: customer2._id,
+        type: "PAYMENT",
+        message: "Payment completed successfully",
+      },
+      {
+        userId: customer3._id,
+        type: "ORDER",
+        message: "Your order has been shipped",
+      },
+      {
+        userId: customer4._id,
+        type: "SYSTEM",
+        message: "Your order is out for delivery",
+      },
+      {
+        userId: vendor1._id,
+        type: "STORE",
+        message: "New order received in your store",
+      },
+      {
+        userId: vendor2._id,
+        type: "REVIEW",
+        message: "A customer added a new review",
       },
     ]);
 
