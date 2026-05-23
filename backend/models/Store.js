@@ -41,6 +41,28 @@ const storeSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+
+    // Vendor Analytics Fields
+
+    totalRevenue: {
+      type: Number,
+      default: 0,
+    },
+
+    totalOrders: {
+      type: Number,
+      default: 0,
+    },
+
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+
+    growthPercentage: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
