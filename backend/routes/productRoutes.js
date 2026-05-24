@@ -10,23 +10,21 @@ const {
 // Middlewares
 const authMiddleware = require("../middlewares/authMiddleware");
 
-const {
-  vendorOnly,
-} = require("../middlewares/roleMiddleware");
+const roleMiddleware = require("../middlewares/roleMiddleware");
 
 
-// Public route
+// Public Route
 router.get(
   "/",
   getProducts
 );
 
 
-// Vendor only
+// Vendor Only Route
 router.post(
   "/add",
   authMiddleware,
-  vendorOnly,
+  roleMiddleware("vendor"),
   addProduct
 );
 

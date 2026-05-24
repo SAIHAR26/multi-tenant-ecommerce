@@ -2,22 +2,42 @@ const express = require("express");
 
 const router = express.Router();
 
-const { placeOrder } = require("../controllers/orderController");
+const {
+  placeOrder,
+  getMyOrders,
+  getAllOrders,
+} = require("../controllers/orderController");
 
 // Middlewares
 const authMiddleware = require("../middlewares/authMiddleware");
 
-const {
-  customerOnly,
-  adminOnly,
-} = require("../middlewares/roleMiddleware");
+const roleMiddleware = require("../middlewares/roleMiddleware");
 
-// Customer only can place order
+
+// Customer Only
 router.post(
   "/place",
   authMiddleware,
-  customerOnly,
+  roleMiddleware("customer"),
   placeOrder
+);
+
+
+// Customer Orders
+router.get(
+  "/my-orders",
+  authMiddleware,
+  roleMiddleware("customer"),
+  getMyOrders
+);
+
+
+// Admin Orders
+router.get(
+  "/all-orders",
+  authMiddleware,
+  roleMiddleware("admin"),
+  getAllOrders
 );
 
 module.exports = router;

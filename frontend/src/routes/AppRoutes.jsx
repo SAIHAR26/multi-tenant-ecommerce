@@ -1,27 +1,59 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
 
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+
 import AdminDashboard from "../pages/AdminDashboard";
 import VendorDashboard from "../pages/VendorDashboard";
 import CustomerDashboard from "../pages/CustomerDashboard";
+
+import Unauthorized from "../pages/Unauthorized";
+
 import ProtectedRoute from "../components/ProtectedRoute";
+
 function AppRoutes() {
+
   return (
+
     <BrowserRouter>
+
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+
+        {/* Public Routes */}
+
+        <Route
+          path="/"
+          element={<Home />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+        {/* Admin Route */}
+
         <Route
           path="/admin"
           element={
-          <ProtectedRoute role="admin">
-            <AdminDashboard />
-          </ProtectedRoute>
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
           }
         />
+
+        {/* Vendor Route */}
+
         <Route
           path="/vendor"
           element={
@@ -30,6 +62,9 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* Customer Route */}
+
         <Route
           path="/customer"
           element={
@@ -38,7 +73,16 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* Unauthorized */}
+
+        <Route
+          path="/unauthorized"
+          element={<Unauthorized />}
+        />
+
       </Routes>
+
     </BrowserRouter>
   );
 }
