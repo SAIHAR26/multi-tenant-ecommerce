@@ -1,27 +1,10 @@
 const express = require("express");
-
 const router = express.Router();
 
-const { getRecommendations } = require("../services/recommendationService");
+const { getRecommendations } = require("../controllers/recommendationController");
+const protect = require("../middlewares/authMiddleware");
 
-router.get("/:userId", async (req, res) => {
-  try {
-    const data = await getRecommendations(req.params.userId);
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-const router = express.Router();
-
-const {
-  getRecommendations,
-} = require("../controllers/recommendationController");
-
-// GET RECOMMENDATIONS
-router.get("/", getRecommendations);
-
+// Protected route
+router.get("/", protect, getRecommendations);
 
 module.exports = router;

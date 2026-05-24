@@ -1,24 +1,47 @@
 const Product = require("../models/Product");
+const Order = require("../models/Order");
+const Wishlist = require("../models/Wishlist");
 
-// GET RECOMMENDED PRODUCTS
-const getRecommendations = async (req, res) => {
+exports.getRecommendations = async (req, res) => {
   try {
-    const recommendedProducts = await Product.find()
-      .limit(6);
+    // ✅ SAFE CHECK (prevents crash)
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - user missing",
+      });
+    }
 
-    res.status(200).json({
+    const userId = req.user._id;
+
+    // Wishlist
+    const wishlist = await Wishlist.findOne({ userId });
+    const wishlistProducts = wishlist ? wishlist.savedProducts : [];
+
+    // Orders
+    const orders = await Order.find({ userId });
+
+    let orderedProducts = [];
+
+    orders.forEach((order) => {
+      order.products.forEach((p) => {
+        orderedProducts.push(p.productId.toString());
+      });
+    });
+
+    // Recommendations
+    const recommendations = await Product.find({
+      _id: { $nin: [...wishlistProducts, ...orderedProducts] },
+    }).limit(10);
+
+    return res.json({
       success: true,
-      count: recommendedProducts.length,
-      data: recommendedProducts,
+      recommendations,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
-};
-
-module.exports = {
-  getRecommendations,
 };
