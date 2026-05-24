@@ -1,29 +1,14 @@
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({
-  children,
-  role
-}) => {
+const ProtectedRoute = ({ children }) => {
 
-  const token =
-    localStorage.getItem("vshopToken");
+    const token = localStorage.getItem("vshopToken");
 
-  const user =
-    JSON.parse(
-      localStorage.getItem("vshopUser")
-    );
+    if (!token) {
+        return <Navigate to="/login" />;
+    }
 
-  // login lekapothe
-  if (!token) {
-    return <Navigate to="/login" />;
-  }
-
-  // wrong role
-  if (role && user.role !== role) {
-    return <Navigate to="/" />;
-  }
-
-  return children;
+    return children;
 };
 
 export default ProtectedRoute;
