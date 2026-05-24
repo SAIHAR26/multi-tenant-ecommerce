@@ -1,7 +1,9 @@
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 
-// GET CART
+// =====================
+// GET CART (user wise)
+// =====================
 const getCart = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
@@ -21,6 +23,7 @@ const getCart = async (req, res) => {
       data: cart,
     });
   } catch (error) {
+    console.error("GET CART ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -28,13 +31,14 @@ const getCart = async (req, res) => {
   }
 };
 
+// =====================
 // ADD TO CART
+// =====================
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     const userId = req.user.id || req.user._id;
 
-    // Check product exists
     const product = await Product.findById(productId);
 
     if (!product) {
@@ -53,7 +57,6 @@ const addToCart = async (req, res) => {
       });
     }
 
-    // check duplicate item
     const existingItem = cart.items.find(
       (item) => item.productId.toString() === productId
     );
@@ -69,12 +72,13 @@ const addToCart = async (req, res) => {
 
     await cart.save();
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       message: "Added to cart",
       data: cart,
     });
   } catch (error) {
+    console.error("ADD CART ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -82,7 +86,9 @@ const addToCart = async (req, res) => {
   }
 };
 
-// UPDATE CART ITEM QUANTITY
+// =====================
+// UPDATE CART ITEM
+// =====================
 const updateCart = async (req, res) => {
   try {
     const { quantity } = req.body;
@@ -116,6 +122,7 @@ const updateCart = async (req, res) => {
       data: cart,
     });
   } catch (error) {
+    console.error("UPDATE CART ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -123,7 +130,9 @@ const updateCart = async (req, res) => {
   }
 };
 
+// =====================
 // REMOVE FROM CART
+// =====================
 const removeFromCart = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
@@ -149,6 +158,7 @@ const removeFromCart = async (req, res) => {
       data: cart,
     });
   } catch (error) {
+    console.error("DELETE CART ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message,

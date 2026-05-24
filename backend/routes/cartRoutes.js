@@ -10,11 +10,12 @@ const {
 
 const protect = require("../middlewares/authMiddleware");
 
-// protect all routes
+// Protect all routes
 router.use(protect);
 
-router.post("/", addToCart);
+// Routes
 router.get("/", getCart);
+router.post("/", addToCart);
 router.put("/:id", updateCart);
 router.delete("/:id", removeFromCart);
 

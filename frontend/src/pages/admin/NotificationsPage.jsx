@@ -10,8 +10,11 @@ const filters = [
   { label: "All", value: "all" },
   { label: "Unread", value: "unread" },
   { label: "Orders", value: "order" },
+  { label: "Vendors", value: "vendor" },
+  { label: "Customers", value: "customer" },
   { label: "Reviews", value: "review" },
   { label: "Payments", value: "payment" },
+  { label: "System", value: "system" },
 ];
 
 function NotificationsPage() {

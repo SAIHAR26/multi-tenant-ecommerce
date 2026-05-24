@@ -4,7 +4,7 @@ const router = express.Router();
 const { getRecommendations } = require("../controllers/recommendationController");
 const protect = require("../middlewares/authMiddleware");
 
-// IMPORTANT: middleware must be here
+// Protected route
 router.get("/", protect, getRecommendations);
 
 module.exports = router;
