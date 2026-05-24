@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-// MODELS
+// IMPORT MODELS
 const User = require("./models/User");
 const Product = require("./models/Product");
 const Review = require("./models/Review");
@@ -10,56 +10,72 @@ const Order = require("./models/Order");
 const Cart = require("./models/Cart");
 const Wishlist = require("./models/Wishlist");
 
-// DB CONNECT
+// CONNECT DATABASE
 mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
-    console.log("MongoDB Connected ✅");
+    console.log("\n✅ MongoDB Connection Successful\n");
 
-    // PRODUCT → STORE TEST
-    const products = await Product.find()
+    // ================= PRODUCTS =================
+    const productData = await Product.find()
       .populate("storeId", "storeName location")
       .populate("vendor", "name email");
 
-    console.log("\n========== POPULATED PRODUCTS ==========\n");
-    console.log(products);
+    console.log("============= PRODUCTS WITH STORE & VENDOR =============");
+    productData.forEach((product, index) => {
+      console.log(`\nProduct ${index + 1}`);
+      console.log(product);
+    });
 
-    // REVIEW → USER + PRODUCT TEST
-    const reviews = await Review.find()
+    // ================= REVIEWS =================
+    const reviewData = await Review.find()
       .populate("userId", "name email")
       .populate("productId", "name price");
 
-    console.log("\n========== POPULATED REVIEWS ==========\n");
-    console.log(reviews);
+    console.log("\n============= REVIEWS WITH USER & PRODUCT =============");
+    reviewData.forEach((review, index) => {
+      console.log(`\nReview ${index + 1}`);
+      console.log(review);
+    });
 
-    // ORDER → USER + PRODUCTS TEST
-    const orders = await Order.find()
+    // ================= ORDERS =================
+    const orderData = await Order.find()
       .populate("userId", "name email")
       .populate("products.productId", "name price");
 
-    console.log("\n========== POPULATED ORDERS ==========\n");
-    console.log(orders);
+    console.log("\n============= ORDERS WITH USER & PRODUCTS =============");
+    orderData.forEach((order, index) => {
+      console.log(`\nOrder ${index + 1}`);
+      console.log(order);
+    });
 
-    // CART → USER + PRODUCTS TEST
-    const carts = await Cart.find()
+    // ================= CARTS =================
+    const cartData = await Cart.find()
       .populate("userId", "name email")
       .populate("items.productId", "name price");
 
-    console.log("\n========== POPULATED CARTS ==========\n");
-    console.log(carts);
+    console.log("\n============= CARTS WITH USER & ITEMS =============");
+    cartData.forEach((cart, index) => {
+      console.log(`\nCart ${index + 1}`);
+      console.log(cart);
+    });
 
-    // WISHLIST → USER + PRODUCTS TEST
-    const wishlists = await Wishlist.find()
+    // ================= WISHLISTS =================
+    const wishlistData = await Wishlist.find()
       .populate("userId", "name email")
       .populate("savedProducts", "name price");
 
-    console.log("\n========== POPULATED WISHLISTS ==========\n");
-    console.log(wishlists);
+    console.log("\n============= WISHLISTS WITH SAVED PRODUCTS =============");
+    wishlistData.forEach((wishlist, index) => {
+      console.log(`\nWishlist ${index + 1}`);
+      console.log(wishlist);
+    });
 
-    console.log("\n✅ ALL POPULATE TESTS COMPLETED SUCCESSFULLY");
+    console.log("\n🎉 DATABASE RELATIONSHIP TEST COMPLETED SUCCESSFULLY");
 
     process.exit();
   })
-  .catch((err) => {
-    console.log("Database Error:", err);
+  .catch((error) => {
+    console.log("\n❌ Database Connection Failed");
+    console.log(error);
   });
