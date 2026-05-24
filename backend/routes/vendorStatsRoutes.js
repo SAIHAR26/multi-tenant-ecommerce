@@ -1,12 +1,10 @@
 const express = require("express");
-
 const router = express.Router();
 
-const {
-  getVendorStats,
-} = require("../controllers/vendorStatsController");
+const { getVendorStats } = require("../controllers/vendorStatsController");
+const protect = require("../middlewares/authMiddleware");
 
-// GET VENDOR STATS
-router.get("/", getVendorStats);
+// 🔥 MUST be BEFORE controller
+router.get("/", protect, getVendorStats);
 
 module.exports = router;

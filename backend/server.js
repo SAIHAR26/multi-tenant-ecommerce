@@ -43,19 +43,35 @@ const userRoutes = require("./routes/userRoutes");
 const vendorRoutes = require("./routes/vendorRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const vendorStatsRoutes = require("./routes/vendorStatsRoutes");
+const recommendationRoutes = require("./routes/recommendationRoutes");
 
 // API ROUTES
 app.use("/api/auth", authRoutes);
+
 app.use("/api/admin/vendors", adminVendorRoutes);
+
 app.use("/api/products", productRoutes);
+
+app.use("/api/products/recommendations", recommendationRoutes);
+
 app.use("/api/users", userRoutes);
+
 app.use("/api/vendor", vendorRoutes);
-app.use("/api/orders", orderRoutes);
+
+app.use("/api/vendor/stats", vendorStatsRoutes);
+
+app.use("/api/order", orderRoutes);
+
 app.use("/api/reviews", reviewRoutes);
+
 app.use("/api/segments", segmentRoutes);
+
 app.use("/api/store", storeRoutes);
+
 app.use("/api/notifications", notificationRoutes);
+
 app.use("/api/reports", reportRoutes);
+
 app.use("/api/admin/report", reportRoutes);
 
 // CART API
@@ -64,5 +80,46 @@ app.use("/api/cart", cartRoutes);
 // WISHLIST API
 app.use("/api/wishlist", wishlistRoutes);
 
-// VENDOR STATS API
-app.use("/api/vendor
+// 404 ROUTE
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
+// ERROR HANDLER
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+
+  res.status(500).json({
+    success: false,
+    message: "Something went wrong.",
+  });
+});
+
+// PORT
+const PORT = process.env.PORT || 5000;
+
+// START SERVER
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// DATABASE CONNECTION
+connectDB({ exitOnFailure: false })
+  .then(() => {
+    databaseStatus = "connected";
+  })
+  .catch(() => {
+    databaseStatus = "disconnected";
+  });
+
+// DATABASE EVENTS
+mongoose.connection.on("disconnected", () => {
+  databaseStatus = "disconnected";
+});
+
+mongoose.connection.on("reconnected", () => {
+  databaseStatus = "connected";
+});

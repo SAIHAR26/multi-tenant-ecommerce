@@ -1,12 +1,10 @@
 const express = require("express");
-
 const router = express.Router();
 
-const {
-  getRecommendations,
-} = require("../controllers/recommendationController");
+const { getRecommendations } = require("../controllers/recommendationController");
+const protect = require("../middlewares/authMiddleware");
 
-// GET RECOMMENDATIONS
-router.get("/", getRecommendations);
+// IMPORTANT: middleware must be here
+router.get("/", protect, getRecommendations);
 
 module.exports = router;

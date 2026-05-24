@@ -1,27 +1,20 @@
 const express = require("express");
-
 const router = express.Router();
 
 const {
   createOrder,
-  deleteOrder,
-  exportOrders,
+  getMyOrders,
   getOrderById,
-  getOrders,
-  updateOrder,
+  updateOrderStatus,
 } = require("../controllers/orderController");
 
-router.get("/export", exportOrders);
+const protect = require("../middlewares/authMiddleware");
 
-router
-  .route("/")
-  .get(getOrders)
-  .post(createOrder);
+router.use(protect);
 
-router
-  .route("/:id")
-  .get(getOrderById)
-  .patch(updateOrder)
-  .delete(deleteOrder);
+router.post("/", createOrder);
+router.get("/", getMyOrders);
+router.get("/:id", getOrderById);
+router.put("/:id", updateOrderStatus);
 
 module.exports = router;
