@@ -1,4 +1,6 @@
 const Store = require("../models/Store");
+const mongoose = require("mongoose");
+const { fallbackStores } = require("../data/fallbackCatalog");
 
 const createStore = async (req, res) => {
   try {
@@ -32,6 +34,10 @@ const createStore = async (req, res) => {
 
 const getStores = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json(fallbackStores);
+    }
+
     const stores = await Store.find();
 
     res.status(200).json(stores);

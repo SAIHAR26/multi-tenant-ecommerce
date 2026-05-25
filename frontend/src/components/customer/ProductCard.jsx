@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../useToast";
 import { addToCart } from "../../services/cartService";
 import { addToWishlist } from "../../services/wishlistService";
+import { getProductImage, PRODUCT_IMAGE_FALLBACK } from "../../utils/productImages";
 
 function ProductCard({ product = {}, allProducts = [] }) {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
   const productId = product?._id || product?.id;
+  const productImage = getProductImage(product);
 
   const formattedPrice = new Intl.NumberFormat("en-IN").format(
     product?.price || 0
@@ -61,7 +63,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
       <div className="customer-product-card__image">
         <button type="button" onClick={goToDetails}>
           <img
-            src={product?.image || "https://via.placeholder.com/300"}
+            src={productImage}
             alt={product?.name || "Product"}
           />
           <span>{product?.discount || 0}% off</span>
@@ -133,6 +135,7 @@ function QuickView({ product = {}, allProducts = [], onClose, navigate }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const productId = product?._id || product?.id;
+  const productImage = getProductImage(product);
 
   const formattedPrice = new Intl.NumberFormat("en-IN").format(
     product?.price || 0
@@ -161,7 +164,7 @@ function QuickView({ product = {}, allProducts = [], onClose, navigate }) {
       <button type="button" onClick={onClose}>X</button>
 
       <img
-        src={product?.image || "https://via.placeholder.com/300"}
+        src={productImage}
         alt={product?.name || "Product"}
       />
 
@@ -207,7 +210,7 @@ function QuickView({ product = {}, allProducts = [], onClose, navigate }) {
               }}
             >
               <img
-                src={item?.image || "https://via.placeholder.com/100"}
+                src={getProductImage(item, PRODUCT_IMAGE_FALLBACK)}
                 alt={item?.name || "Product"}
               />
               <p>{item?.name}</p>

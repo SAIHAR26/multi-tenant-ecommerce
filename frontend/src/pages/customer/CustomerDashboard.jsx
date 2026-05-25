@@ -3,48 +3,35 @@ import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
+import { getProductImage } from "../../utils/productImages";
 import { categoryTabs, priceRanges } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
 const discountFilters = [10, 20, 30, 40, 50];
 
-const normalizeText = (value) =>
-  value?.toString().toLowerCase().trim() || "";
+const normalizeText = (value) => value?.toString().toLowerCase().trim() || "";
+
+const categoryAliases = {
+  shoes: ["shoes", "shoe", "footwear", "sneaker", "sneakers", "runner", "running"],
+};
 
 const normalizeProduct = (product) => ({
   ...product,
   id: product.id || product._id,
   _id: product._id || product.id,
-
-  image:
-    product.image ||
-    product.images?.[0] ||
-    "",
-
-  discount:
-    Number(product.discount) || 0,
-
-  popularity:
-    Number(product.popularity) ||
-    Number(product.rating) ||
-    0,
+  image: getProductImage(product),
+  discount: product.discount || 0,
+  popularity: product.popularity || product.rating || 0,
 });
 
 function CustomerDashboard() {
-  const [searchParams, setSearchParams] =
-    useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const productBrowsingRef =
-    useRef(null);
+  const productBrowsingRef = useRef(null);
 
-  const [products, setProducts] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [activeCategory, setActiveCategory] =
     useState("Trending");
@@ -73,31 +60,25 @@ function CustomerDashboard() {
       try {
         setLoading(true);
 
-        const data =
-          await getProducts();
+        const data = await getProducts();
 
-        const productsArray =
-          Array.isArray(data?.products)
-            ? data.products
-            : Array.isArray(data)
-            ? data
-            : [];
+        const productsArray = Array.isArray(
+          data?.products
+        )
+          ? data.products
+          : Array.isArray(data)
+          ? data
+          : [];
 
-        const cleanedProducts =
-          productsArray.map(
-            normalizeProduct
-          );
-
-        setProducts(cleanedProducts);
+        setProducts(
+          productsArray.map(normalizeProduct)
+        );
 
         setError("");
       } catch (err) {
         console.error(err);
 
-        setError(
-          err.message ||
-            "Failed to load products"
-        );
+        setError("Failed to load products");
       } finally {
         setLoading(false);
       }
@@ -106,15 +87,13 @@ function CustomerDashboard() {
     fetchProducts();
   }, []);
 
-  // SCROLL
+  // SCROLL TO PRODUCTS
   useEffect(() => {
     if (searchTerm) {
-      productBrowsingRef.current?.scrollIntoView(
-        {
-          behavior: "smooth",
-          block: "start",
-        }
-      );
+      productBrowsingRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }, [searchTerm]);
 
@@ -126,7 +105,7 @@ function CustomerDashboard() {
     setSearchParams(nextSearchParams, { replace: true });
   };
 
-  // BRANDS
+  // DYNAMIC BRANDS
   const brands = useMemo(() => {
     return [
       ...new Set(
@@ -147,35 +126,22 @@ function CustomerDashboard() {
 
     return products
       .filter((product) => {
+        const productName = normalizeText(product?.name);
+        const productBrand = normalizeText(product?.brand);
+        const productCategory = normalizeText(product?.category);
+        const productDescription = normalizeText(product?.description);
+        const productStore = normalizeText(
+          product?.storeId?.storeName || product?.storeId?.storeCategory || product?.vendor
+        );
+        const normalizedSearch = normalizeText(searchTerm);
+        const normalizedCategory = normalizeText(activeCategory);
         const searchableText = [
-          product?.name,
-          product?.brand,
-          product?.category,
-          product?.description,
-          product?.vendor,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        const normalizedSearch =
-          normalizeText(searchTerm);
-
-        const matchesCategory =
-          activeCategory === "Trending"
-            ? true
-            : normalizeText(
-                product?.category
-              ).includes(
-                normalizeText(
-                  activeCategory
-                )
-              );
-
-        const matchesSearch =
-          !normalizedSearch ||
-          searchableText.includes(
-            normalizedSearch
-          );
+          productName,
+          productBrand,
+          productCategory,
+          productDescription,
+          productStore,
+        ].join(" ");
 
         const productPrice =
           Number(product?.price) || 0;
@@ -185,6 +151,15 @@ function CustomerDashboard() {
 
         const productDiscount =
           Number(product?.discount) || 0;
+
+        const categoryTerms = categoryAliases[normalizedCategory] || [normalizedCategory];
+        const matchesCategory =
+          activeCategory === "Trending"
+            ? true
+            : categoryTerms.some((term) => searchableText.includes(term));
+
+        const matchesSearch =
+          !normalizedSearch || searchableText.includes(normalizedSearch);
 
         const matchesPrice =
           selectedPriceRange
@@ -206,8 +181,7 @@ function CustomerDashboard() {
         const matchesBrand =
           brandFilter === "All"
             ? true
-            : product?.brand ===
-              brandFilter;
+            : product?.brand === brandFilter;
 
         return (
           matchesCategory &&
@@ -272,14 +246,6 @@ function CustomerDashboard() {
           </div>
         </div>
 
-        <p>
-          Explore premium products
-          from verified vendors.
-        </p>
-      </section>
-
-      {/* CATEGORY */}
-      <section className="category-strip">
         <div className="marketplace-hero__deal">
           <span>Featured Offer</span>
           <strong>Premium Collection</strong>
@@ -311,8 +277,6 @@ function CustomerDashboard() {
       </section>
 
       <section className="marketplace-layout">
-        {/* FILTERS */}
-        <aside className="filter-panel">
         <aside className="filter-panel" aria-label="Product filters">
           <div className="filter-panel__header">
             <p className="customer-eyebrow">Filters</p>
@@ -424,14 +388,13 @@ function CustomerDashboard() {
           <div className="browse-toolbar">
             <div>
               <strong>
-                {searchTerm ||
-                  activeCategory}
+                {searchTerm
+                  ? searchTerm
+                  : activeCategory}
               </strong>
 
               <p>
-                {
-                  filteredProducts.length
-                }{" "}
+                {filteredProducts.length}{" "}
                 products
               </p>
             </div>
@@ -476,11 +439,10 @@ function CustomerDashboard() {
             <p>{error}</p>
           )}
 
-          {/* PRODUCTS GRID */}
+          {/* PRODUCTS */}
           {!loading &&
             !error &&
-            (filteredProducts.length >
-            0 ? (
+            (filteredProducts.length > 0 ? (
               <div className="marketplace-product-grid">
                 {filteredProducts.map(
                   (product) => (
@@ -504,8 +466,7 @@ function CustomerDashboard() {
                 </h3>
 
                 <p>
-                  Try changing
-                  filters or search.
+                  Try changing filters.
                 </p>
               </div>
             ))}

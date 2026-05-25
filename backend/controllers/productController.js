@@ -1,7 +1,9 @@
 const Product = require("../models/Product");
 require("../models/Store");
+const mongoose = require("mongoose");
 const Store = require("../models/Store");
 const User = require("../models/User");
+const { fallbackProducts } = require("../data/fallbackCatalog");
 
 const normalizeProductPayload = async (body) => {
   const payload = {
@@ -64,6 +66,10 @@ const getCategoryImage = (category) => {
 // GET ALL PRODUCTS
 const getProducts = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json(fallbackProducts);
+    }
+
     const { category, search, storeId } = req.query;
 
     const filters = {};
@@ -100,6 +106,18 @@ const getProducts = async (req, res) => {
 // GET SINGLE PRODUCT
 const getProductById = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      const product = fallbackProducts.find((item) => item._id === req.params.id);
+
+      if (!product) {
+        return res.status(404).json({
+          message: "Product not found",
+        });
+      }
+
+      return res.status(200).json(product);
+    }
+
     const product = await Product.findById(req.params.id);
 
     if (!product) {

@@ -8,6 +8,7 @@ const connectDB = require("./config/db");
 const app = express();
 
 let databaseStatus = "connecting";
+let databaseMessage = "";
 
 // ================= MIDDLEWARE =================
 app.use(cors());
@@ -38,6 +39,7 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
     database: databaseStatus,
+    message: databaseMessage,
     uptime: process.uptime(),
   });
 });
@@ -83,9 +85,11 @@ app.use((err, req, res, next) => {
 connectDB({ exitOnFailure: false })
   .then(() => {
     databaseStatus = "connected";
+    databaseMessage = "";
   })
-  .catch(() => {
+  .catch((error) => {
     databaseStatus = "disconnected";
+    databaseMessage = error.message;
   });
 
 mongoose.connection.on("disconnected", () => {
@@ -94,6 +98,12 @@ mongoose.connection.on("disconnected", () => {
 
 mongoose.connection.on("reconnected", () => {
   databaseStatus = "connected";
+  databaseMessage = "";
+});
+
+mongoose.connection.on("connected", () => {
+  databaseStatus = "connected";
+  databaseMessage = "";
 });
 
 // ================= START SERVER =================

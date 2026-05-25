@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 require("dotenv").config();
 
 // MODELS
@@ -11,7 +12,6 @@ const Cart = require("./models/Cart");
 const Wishlist = require("./models/Wishlist");
 const Payment = require("./models/Payment");
 const Notification = require("./models/Notification");
-const Segment = require("./models/Segment");
 
 const seedData = async () => {
   try {
@@ -28,57 +28,69 @@ const seedData = async () => {
       Wishlist.deleteMany(),
       Payment.deleteMany(),
       Notification.deleteMany(),
-      Segment.deleteMany(),
     ]);
 
     console.log("Old Ecommerce Data Deleted");
 
     // USERS
+    const hashedPassword = await bcrypt.hash("123456", 10);
     const users = await User.insertMany([
+      {
+        name: "Admin",
+        email: "admin@vshop.com",
+        password: hashedPassword,
+        role: "admin",
+        isApproved: true,
+        approvalStatus: "approved",
+      },
       {
         name: "FashionHub",
         email: "fashionhub@gmail.com",
-        password: "123456",
+        password: hashedPassword,
         role: "vendor",
+        isApproved: true,
+        approvalStatus: "approved",
       },
       {
         name: "UrbanWear",
         email: "urbanwear@gmail.com",
-        password: "123456",
+        password: hashedPassword,
         role: "vendor",
+        isApproved: true,
+        approvalStatus: "approved",
       },
       {
         name: "Rahul",
         email: "rahul@gmail.com",
-        password: "123456",
+        password: hashedPassword,
         role: "customer",
       },
       {
         name: "Sneha",
         email: "sneha@gmail.com",
-        password: "123456",
+        password: hashedPassword,
         role: "customer",
       },
       {
         name: "Kiran",
         email: "kiran@gmail.com",
-        password: "123456",
+        password: hashedPassword,
         role: "customer",
       },
       {
         name: "Priya",
         email: "priya@gmail.com",
-        password: "123456",
+        password: hashedPassword,
         role: "customer",
       },
     ]);
 
-    const vendor1 = users[0];
-    const vendor2 = users[1];
-    const customer1 = users[2];
-    const customer2 = users[3];
-    const customer3 = users[4];
-    const customer4 = users[5];
+    const vendor1 = users[1];
+    const vendor2 = users[2];
+    const customer1 = users[3];
+    const customer2 = users[4];
+    const customer3 = users[5];
+    const customer4 = users[6];
 
     // STORES
     const stores = await Store.insertMany([
@@ -88,12 +100,6 @@ const seedData = async () => {
         storeDescription: "Best fashion products",
         storeCategory: "Fashion",
         location: "Hyderabad",
-
-        // Vendor Analytics
-        totalRevenue: 50000,
-        totalOrders: 120,
-        averageRating: 4.5,
-        growthPercentage: 18,
       },
       {
         vendorId: vendor2._id,
@@ -101,12 +107,6 @@ const seedData = async () => {
         storeDescription: "Modern clothing collection",
         storeCategory: "Clothing",
         location: "Bangalore",
-
-        // Vendor Analytics
-        totalRevenue: 75000,
-        totalOrders: 180,
-        averageRating: 4.2,
-        growthPercentage: 25,
       },
     ]);
 
@@ -125,7 +125,9 @@ const seedData = async () => {
         category: "Men",
         brand: "FashionHub",
         discount: 10,
-        images: [],
+        images: [
+          "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=1000&auto=format&fit=crop",
+        ],
         sizes: ["M", "L"],
         colors: ["Blue"],
         rating: 4.5,
@@ -140,7 +142,9 @@ const seedData = async () => {
         category: "Footwear",
         brand: "UrbanWear",
         discount: 5,
-        images: [],
+        images: [
+          "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1000&auto=format&fit=crop",
+        ],
         sizes: ["8", "9"],
         colors: ["Black"],
         rating: 4,
@@ -155,7 +159,9 @@ const seedData = async () => {
         category: "Winter Wear",
         brand: "FashionHub",
         discount: 15,
-        images: [],
+        images: [
+          "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1000&auto=format&fit=crop",
+        ],
         sizes: ["M", "L", "XL"],
         colors: ["Grey"],
         rating: 5,
@@ -170,7 +176,9 @@ const seedData = async () => {
         category: "Clothing",
         brand: "UrbanWear",
         discount: 8,
-        images: [],
+        images: [
+          "https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=1000&auto=format&fit=crop",
+        ],
         sizes: ["30", "32", "34"],
         colors: ["Blue"],
         rating: 4.2,
@@ -181,38 +189,6 @@ const seedData = async () => {
     const product2 = products[1];
     const product3 = products[2];
     const product4 = products[3];
-
-    // SEGMENTS
-    await Segment.insertMany([
-      {
-        name: "VIP Customers",
-        description: "Customers with high purchase activity",
-        users: [customer1._id, customer2._id],
-        category: "Premium",
-        segmentType: "VIP",
-      },
-      {
-        name: "Frequent Buyers",
-        description: "Customers who shop regularly",
-        users: [customer2._id, customer3._id],
-        category: "Shopping",
-        segmentType: "FREQUENT",
-      },
-      {
-        name: "New Users",
-        description: "Recently joined customers",
-        users: [customer4._id],
-        category: "New Customer",
-        segmentType: "NEW",
-      },
-      {
-        name: "Inactive Users",
-        description: "Customers with low activity",
-        users: [customer3._id],
-        category: "Inactive",
-        segmentType: "INACTIVE",
-      },
-    ]);
 
     // REVIEWS
     await Review.insertMany([
@@ -264,10 +240,6 @@ const seedData = async () => {
             productId: product2._id,
             quantity: 2,
           },
-          {
-            productId: product4._id,
-            quantity: 1,
-          },
         ],
       },
       {
@@ -275,23 +247,6 @@ const seedData = async () => {
         items: [
           {
             productId: product4._id,
-            quantity: 1,
-          },
-          {
-            productId: product1._id,
-            quantity: 1,
-          },
-        ],
-      },
-      {
-        userId: customer4._id,
-        items: [
-          {
-            productId: product2._id,
-            quantity: 1,
-          },
-          {
-            productId: product3._id,
             quantity: 1,
           },
         ],
@@ -306,15 +261,11 @@ const seedData = async () => {
       },
       {
         userId: customer2._id,
-        savedProducts: [product1._id, product3._id],
+        savedProducts: [product1._id],
       },
       {
         userId: customer3._id,
-        savedProducts: [product2._id, product3._id],
-      },
-      {
-        userId: customer4._id,
-        savedProducts: [product1._id, product4._id],
+        savedProducts: [product3._id],
       },
     ]);
 
@@ -460,4 +411,5 @@ mongoose
     console.log("MongoDB Connected");
     seedData();
   })
+  
   .catch((err) => console.log(err));

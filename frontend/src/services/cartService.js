@@ -2,6 +2,7 @@ import { apiRequest } from "../api/client";
 
 const normalizeCartPayload = (data) => {
   if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.items)) return data.items;
   if (Array.isArray(data?.cart)) return data.cart;
   if (Array.isArray(data?.cart?.items)) return data.cart.items;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import OrderCard from "../../components/customer/OrderCard";
-import { getOrders } from "../../services/orderService";
+import { downloadInvoice, getOrders } from "../../services/orderService";
+import { formatPrice } from "../../utils/orderTotals";
 
 function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -11,8 +12,7 @@ function OrdersPage() {
     const fetchOrders = async () => {
       try {
         const data = await getOrders();
-
-        const ordersArray = Array.isArray(data.orders)
+        const ordersArray = Array.isArray(data?.orders)
           ? data.orders
           : Array.isArray(data)
           ? data
@@ -30,22 +30,14 @@ function OrdersPage() {
   }, []);
 
   const totalOrders = orders.length;
+  const deliveredOrders = orders.filter((order) => order.status === "DELIVERED").length;
+  const inTransitOrders = orders.filter((order) => ["PROCESSING", "PACKED", "SHIPPED"].includes(order.status)).length;
+  const totalSpent = orders.reduce((total, order) => total + (Number(order.totalAmount) || 0), 0);
 
-  const deliveredOrders = orders.filter(
-    (order) =>
-      order.status?.toLowerCase() === "delivered"
-  ).length;
-
-  const inTransitOrders = orders.filter(
-    (order) =>
-      order.status?.toLowerCase() === "shipped" ||
-      order.status?.toLowerCase() === "in transit"
-  ).length;
-
-  const totalSpent = orders.reduce(
-    (total, order) => total + (order.totalPrice || 0),
-    0
-  );
+  const handleDownloadInvoice = () => {
+    if (!orders.length) return;
+    downloadInvoice(orders[0]);
+  };
 
   if (loading) {
     return (
@@ -67,24 +59,16 @@ function OrdersPage() {
     <div className="customer-page">
       <section className="customer-hero customer-hero--compact">
         <div>
-          <p className="customer-eyebrow">
-            Order history
-          </p>
-
-          <h1>
-            Every order, beautifully organized.
-          </h1>
-
-          <p>
-            Review recent purchases, delivery
-            estimates, invoices, and order
-            statuses from V SHOP vendors.
-          </p>
+          <p className="customer-eyebrow">Order history</p>
+          <h1>Every order, beautifully organized.</h1>
+          <p>Review recent purchases, delivery estimates, invoices, and order statuses from V SHOP vendors.</p>
         </div>
 
         <button
           className="customer-primary-button"
           type="button"
+          disabled={!orders.length}
+          onClick={handleDownloadInvoice}
         >
           Download Invoice
         </button>
@@ -111,12 +95,7 @@ function OrdersPage() {
 
         <article className="customer-stat-card">
           <span>Total Spent</span>
-          <h2>
-            ₹
-            {new Intl.NumberFormat("en-IN").format(
-              totalSpent
-            )}
-          </h2>
+          <h2>{formatPrice(totalSpent)}</h2>
           <p>Across premium vendors</p>
         </article>
       </section>
@@ -124,29 +103,18 @@ function OrdersPage() {
       <section className="customer-panel">
         <div className="customer-panel__header">
           <div>
-            <p className="customer-eyebrow">
-              Recent orders
-            </p>
-
+            <p className="customer-eyebrow">Recent orders</p>
             <h2>Purchase timeline</h2>
           </div>
         </div>
 
         <div className="customer-order-list">
           {orders.length > 0 ? (
-            orders.map((order) => (
-              <OrderCard
-                order={order}
-                key={order._id || order.id}
-              />
-            ))
+            orders.map((order) => <OrderCard order={order} key={order._id || order.id} />)
           ) : (
             <div className="empty-browse-state">
               <h2>No orders found</h2>
-              <p>
-                You have not placed any orders
-                yet.
-              </p>
+              <p>You have not placed any orders yet.</p>
             </div>
           )}
         </div>
