@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSavedUser } from "../../api/auth";
+import { getCartItems } from "../../services/cartService";
+import { getNotifications } from "../../services/notificationService";
 
 function CustomerNavbar() {
   const navigate = useNavigate();
   const user = getSavedUser();
   const customerName = user?.name || "Customer";
   const [searchValue, setSearchValue] = useState("");
+  const [cartCount, setCartCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const initials = customerName
     .split(" ")
     .map((namePart) => namePart[0])
@@ -21,6 +25,29 @@ function CustomerNavbar() {
 
     navigate(query ? `/customer?search=${encodeURIComponent(query)}` : "/customer");
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    Promise.allSettled([getCartItems(), getNotifications()])
+      .then(([cartResult, notificationResult]) => {
+        if (!isMounted) return;
+
+        if (cartResult.status === "fulfilled") {
+          setCartCount(
+            cartResult.value.reduce((total, item) => total + Number(item.quantity || 1), 0)
+          );
+        }
+
+        if (notificationResult.status === "fulfilled") {
+          setUnreadCount(Number(notificationResult.value?.unreadCount || 0));
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <header className="customer-navbar">
@@ -58,7 +85,7 @@ function CustomerNavbar() {
           onClick={() => navigate("/customer/cart")}
         >
           C
-          <span className="customer-badge">3</span>
+          {cartCount > 0 ? <span className="customer-badge">{cartCount}</span> : null}
         </button>
         <button
           className="customer-icon-button"
@@ -68,7 +95,7 @@ function CustomerNavbar() {
           onClick={() => navigate("/customer/notifications")}
         >
           N
-          <span className="customer-dot" />
+          {unreadCount > 0 ? <span className="customer-dot" /> : null}
         </button>
 
         <button

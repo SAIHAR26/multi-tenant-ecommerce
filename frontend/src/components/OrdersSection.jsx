@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ErrorState from "./ErrorState";
 import LoadingState from "./LoadingState";
 import { getOrders } from "../services/orderService";
@@ -8,6 +9,7 @@ const getOrderItems = (order) =>
   order.products?.map((item) => item.productId?.name || item.name || "Product").join(", ") || "Order items";
 
 function OrdersSection() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,7 +44,7 @@ function OrdersSection() {
           <p>Recent orders</p>
           <h2>Fulfillment queue</h2>
         </div>
-        <button type="button">Open</button>
+        <button type="button" onClick={() => navigate("/vendor/orders")}>Open</button>
       </div>
 
       {loading ? <LoadingState message="Loading orders..." /> : null}

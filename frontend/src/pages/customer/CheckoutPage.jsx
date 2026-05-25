@@ -5,6 +5,9 @@ import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import { useToast } from "../../components/useToast";
 import { getCartItems } from "../../services/cartService";
+import { createOrder } from "../../services/orderService";
+import { getProductImage } from "../../utils/productImages";
+import { calculateOrderTotals, formatPrice, getLineDiscount } from "../../utils/orderTotals";
 import "./CheckoutPage.css";
 
 const paymentMethods = [
@@ -62,26 +65,7 @@ function CheckoutPage() {
     };
   }, []);
 
-  const totals = useMemo(() => {
-    const subtotal = orderItems.reduce(
-      (sum, item) => {
-        const product = item.product || item;
-        return sum + Number(product.price || 0) * (Number(item.quantity) || 1);
-      },
-      0
-    );
-
-    const discount = Math.round(subtotal * 0.12);
-    const deliveryCharge = subtotal > 0 ? 99 : 0;
-    const total = subtotal - discount + deliveryCharge;
-
-    return {
-      subtotal,
-      discount,
-      deliveryCharge,
-      total,
-    };
-  }, [orderItems]);
+  const totals = useMemo(() => calculateOrderTotals(orderItems), [orderItems]);
 
   const handleAddressChange = (event) => {
     const { name, value } = event.target;
@@ -99,9 +83,36 @@ function CheckoutPage() {
     setIsAddressSaved(true);
   };
 
-  const handlePlaceOrder = () => {
-    showToast("Order created");
-    navigate("/customer/order-success");
+  const handlePlaceOrder = async () => {
+    try {
+      const deliveryAddress = [
+        address.fullName,
+        address.phone,
+        address.address,
+        address.city,
+        address.state,
+        address.pincode,
+        address.country,
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      await createOrder({
+        products: orderItems.map((item) => ({
+          productId: item.product?._id || item._id || item.productId,
+          quantity: Number(item.quantity) || 1,
+        })),
+        totalAmount: totals.total,
+        paymentMethod,
+        deliveryAddress,
+        paymentStatus: paymentMethod === "Cash On Delivery" ? "PENDING" : "PAID",
+      });
+
+      showToast("Order created");
+      navigate("/customer/order-success");
+    } catch (err) {
+      showToast(err.message || "Unable to place order", "error");
+    }
   };
 
   if (isLoading) {
@@ -294,16 +305,17 @@ function CheckoutPage() {
                 key={item.id || item._id || item.productId || item.product?._id}
               >
                 <img
-                  src={(item.product || item).image}
+                  src={getProductImage(item.product || item)}
                   alt={(item.product || item).name}
                 />
 
                 <div>
                   <h3>{(item.product || item).name}</h3>
 
-                  <p>{(item.product || item).vendor || (item.product || item).brand}</p>
+                  <p>{(item.product || item).brand || "V SHOP"}</p>
 
                   <span>Qty: {item.quantity || 1}</span>
+                  {getLineDiscount(item) > 0 ? <small>{formatPrice(getLineDiscount(item))} off</small> : null}
                 </div>
 
                 <strong>
@@ -336,12 +348,12 @@ function CheckoutPage() {
 
           <div className="checkout-total-stack">
             <SummaryRow
-              label="Price"
+              label="Subtotal"
               value={formatPrice(totals.subtotal)}
             />
 
             <SummaryRow
-              label="Discount"
+              label="Product discount"
               value={`-${formatPrice(totals.discount)}`}
             />
 
@@ -407,10 +419,6 @@ function SummaryRow({ label, value }) {
       <strong>{value}</strong>
     </div>
   );
-}
-
-function formatPrice(value) {
-  return `Rs ${value.toLocaleString("en-IN")}`;
 }
 
 export default CheckoutPage;

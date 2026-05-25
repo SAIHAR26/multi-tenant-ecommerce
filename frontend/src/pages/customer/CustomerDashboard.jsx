@@ -3,11 +3,26 @@ import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
+import {
+  categoryTabs,
+  priceRanges,
+} from "./customerData";
+import { getProductImage } from "../../utils/productImages";
 import { categoryTabs, priceRanges } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
-const discountFilters = [10, 20, 30, 40, 50];
 
+const discountFilters = [
+  10,
+  20,
+  30,
+  40,
+  50,
+];
+
+const normalizeText = (value) =>
+  value?.toString().toLowerCase().trim() ||
+  "";
 const normalizeText = (value) => value?.toString().toLowerCase().trim() || "";
 
 const categoryAliases = {
@@ -16,12 +31,11 @@ const categoryAliases = {
 
 const normalizeProduct = (product) => ({
   ...product,
+
   id: product.id || product._id,
+
   _id: product._id || product.id,
-  image:
-    product.image ||
-    product.images?.[0] ||
-    "https://dummyimage.com/300x300/cccccc/000000&text=Product",
+  image: getProductImage(product),
   discount: product.discount || 0,
   popularity: product.popularity || product.rating || 0,
 });
@@ -99,12 +113,16 @@ function CustomerDashboard() {
     }
   }, [searchTerm]);
 
+  // CLEAR SEARCH
   const clearSearch = () => {
     const nextSearchParams =
       new URLSearchParams(searchParams);
 
     nextSearchParams.delete("search");
-    setSearchParams(nextSearchParams, { replace: true });
+
+    setSearchParams(nextSearchParams, {
+      replace: true,
+    });
   };
 
   // DYNAMIC BRANDS
@@ -112,7 +130,9 @@ function CustomerDashboard() {
     return [
       ...new Set(
         products
-          .map((product) => product?.brand)
+          .map(
+            (product) => product?.brand
+          )
           .filter(Boolean)
       ),
     ];
@@ -236,52 +256,113 @@ function CustomerDashboard() {
       {/* HERO */}
       <section className="marketplace-hero">
         <div className="marketplace-hero__content">
-          <p className="customer-eyebrow">Festival Sale live now</p>
-          <h1>Luxury marketplace drops, curated for every cart.</h1>
-          <p>
-            Explore premium fashion, electronics, books, shoes, accessories, and daily deals from verified V SHOP
-            vendors.
+          <p className="customer-eyebrow">
+            Festival Sale live now
           </p>
+
+          <h1>
+            Luxury marketplace drops,
+            curated for every cart.
+          </h1>
+
+          <p>
+            Explore premium fashion,
+            electronics, books,
+            shoes, accessories, and
+            daily deals from verified
+            V SHOP vendors.
+          </p>
+
           <div className="marketplace-hero__actions">
-            <button className="customer-primary-button" type="button">Shop Now</button>
-            <span>Up to 50% off on flash picks</span>
+            <button
+              className="customer-primary-button"
+              type="button"
+            >
+              Shop Now
+            </button>
+
+            <span>
+              Up to 50% off on flash
+              picks
+            </span>
           </div>
         </div>
 
         <div className="marketplace-hero__deal">
           <span>Featured Offer</span>
-          <strong>Premium Collection</strong>
-          <p>Extra 15% off on luxe accessories and red-tag sneakers tonight.</p>
+
+          <strong>
+            Premium Collection
+          </strong>
+
+          <p>
+            Extra 15% off on luxe
+            accessories and red-tag
+            sneakers tonight.
+          </p>
         </div>
       </section>
 
-      <section className="offer-banner-grid" aria-label="Special shopping offers">
-        {["Festival Sale", "Limited Offer", "Premium Collection", "Flash Sale"].map((offer, index) => (
-          <article className="offer-banner" key={offer}>
-            <span>0{index + 1}</span>
+      {/* OFFER BANNERS */}
+      <section className="offer-banner-grid">
+        {[
+          "Festival Sale",
+          "Limited Offer",
+          "Premium Collection",
+          "Flash Sale",
+        ].map((offer, index) => (
+          <article
+            className="offer-banner"
+            key={offer}
+          >
+            <span>
+              0{index + 1}
+            </span>
+
             <h2>{offer}</h2>
-            <p>{index % 2 === 0 ? "Red hot vendor deals" : "Members-only luxury prices"}</p>
+
+            <p>
+              {index % 2 === 0
+                ? "Red hot vendor deals"
+                : "Members-only luxury prices"}
+            </p>
           </article>
         ))}
       </section>
 
-      <section className="category-strip" aria-label="Shop by category">
+      {/* CATEGORY */}
+      <section className="category-strip">
         {categoryTabs.map((category) => (
           <button
-            className={`category-pill ${activeCategory === category ? "category-pill--active" : ""}`}
             key={category}
             type="button"
-            onClick={() => setActiveCategory(category)}
+            className={`category-pill ${
+              activeCategory === category
+                ? "category-pill--active"
+                : ""
+            }`}
+            onClick={() =>
+              setActiveCategory(category)
+            }
           >
             {category}
           </button>
         ))}
       </section>
 
+      {/* MAIN LAYOUT */}
       <section className="marketplace-layout">
+        {/* FILTER PANEL */}
+        <aside
+          className="filter-panel"
+          aria-label="Product filters"
+        >
         <aside className="filter-panel" aria-label="Product filters">
           <div className="filter-panel__header">
-            <p className="customer-eyebrow">Filters</p>
+            <p className="customer-eyebrow">
+              Filters
+            </p>
+
             <button
               onClick={() => {
                 setPriceFilter("All");
@@ -294,9 +375,16 @@ function CustomerDashboard() {
             </button>
           </div>
 
+          {/* PRICE */}
           <div className="filter-group">
             <h3>Price Range</h3>
-            {["All", ...priceRanges.map((range) => range.label)].map((range) => (
+
+            {[
+              "All",
+              ...priceRanges.map(
+                (range) => range.label
+              ),
+            ].map((range) => (
               <button
                 key={range}
                 className={
@@ -313,18 +401,29 @@ function CustomerDashboard() {
             ))}
           </div>
 
+          {/* RATING */}
           <div className="filter-group">
             <h3>Rating</h3>
-            {ratingFilters.map((rating) => (
-              <button
-                className={ratingFilter === rating ? "filter-choice filter-choice--active" : "filter-choice"}
-                key={rating}
-                type="button"
-                onClick={() => setRatingFilter(rating)}
-              >
-                {rating} star and above
-              </button>
-            ))}
+
+            {ratingFilters.map(
+              (rating) => (
+                <button
+                  key={rating}
+                  type="button"
+                  className={
+                    ratingFilter ===
+                    rating
+                      ? "filter-choice filter-choice--active"
+                      : "filter-choice"
+                  }
+                  onClick={() =>
+                    setRatingFilter(rating)
+                  }
+                >
+                  {rating} star and above
+                </button>
+              )
+            )}
           </div>
 
           {/* DISCOUNT */}
@@ -441,6 +540,7 @@ function CustomerDashboard() {
             <p>{error}</p>
           )}
 
+          {/* PRODUCT GRID */}
           {/* PRODUCTS */}
           {!loading &&
             !error &&
@@ -468,6 +568,8 @@ function CustomerDashboard() {
                 </h3>
 
                 <p>
+                  Try changing filters
+                  or search.
                   Try changing filters.
                 </p>
               </div>

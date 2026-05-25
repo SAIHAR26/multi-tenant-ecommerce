@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import { useToast } from "../../components/useToast";
@@ -6,9 +7,15 @@ import WishlistCard from "../../components/customer/WishlistCard";
 import { addToCart } from "../../services/cartService";
 import { getWishlist, removeFromWishlist } from "../../services/wishlistService";
 
-const getItemId = (item) => item._id || item.id || item.productId || item.product?._id;
+const getItemId = (item) => 
+  item?._id || 
+  item?.id || 
+  item?.productId || 
+  item?.product?._id || 
+  item?.product?.id;
 
 function WishlistPage() {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +28,7 @@ function WishlistPage() {
       try {
         const data = await getWishlist();
         if (isMounted) {
-          setWishlistItems(data);
+          setWishlistItems(Array.isArray(data) ? data : []);
           setError("");
           setLoading(false);
         }
@@ -45,29 +52,47 @@ function WishlistPage() {
   };
 
   const handleRemove = async (item) => {
+    const id = getItemId(item);
+    if (!id) {
+      showToast({ message: "Invalid item ID", type: "error" });
+      return;
+    }
     try {
-      await removeFromWishlist(getItemId(item));
+      await removeFromWishlist(id);
       removeLocalItem(item);
-      showToast("Item removed from wishlist");
+      showToast({ message: "Item removed from wishlist", type: "success" });
     } catch (err) {
-      showToast(err.message || "Unable to remove wishlist item", "error");
+      showToast({ message: err.message || "Unable to remove wishlist item", type: "error" });
     }
   };
 
   const handleMoveToCart = async (item) => {
+    const id = getItemId(item);
+    if (!id) {
+      showToast({ message: "Invalid item reference", type: "error" });
+      return;
+    }
     try {
       await addToCart(item.product || item);
-      await removeFromWishlist(getItemId(item));
+      await removeFromWishlist(id);
       removeLocalItem(item);
-      showToast("Item moved to cart");
+      showToast({ message: "Item moved to cart", type: "success" });
     } catch (err) {
-      showToast(err.message || "Unable to move item to cart", "error");
+      showToast({ message: err.message || "Unable to move item to cart", type: "error" });
     }
   };
 
   const handleMoveAllToCart = async () => {
-    for (const item of wishlistItems) {
-      await handleMoveToCart(item);
+    if (wishlistItems.length === 0) return;
+    try {
+      for (const item of wishlistItems) {
+        await addToCart(item.product || item);
+        await removeFromWishlist(getItemId(item));
+      }
+      setWishlistItems([]);
+      showToast({ message: "All items moved to cart successfully", type: "success" });
+    } catch (err) {
+      showToast({ message: "Error moving items to cart", type: "error" });
     }
   };
 
@@ -87,14 +112,25 @@ function WishlistPage() {
     );
   }
 
+  // EMPTY WISHLIST STATE
   if (!wishlistItems || wishlistItems.length === 0) {
     return (
       <div className="customer-page">
         <section className="customer-hero customer-hero--compact">
-          <div>
-            <p className="customer-eyebrow">Wishlist</p>
-            <h1>Your wishlist is empty.</h1>
-            <p>Save premium items you love here to track availability, price drops, and vendor drops.</p>
+          <div style={{ textAlign: "center", padding: "40px 20px", width: "100%" }}>
+            <div style={{ fontSize: "64px", marginBottom: "16px" }}>❤️</div>
+            <h1 style={{ marginBottom: "8px" }}>Your Wishlist is lonely</h1>
+            <p style={{ color: "#666", marginBottom: "24px" }}>
+              Tap the heart icon on any product while browsing to save your favorites here.
+            </p>
+            <button
+              onClick={() => navigate("/customer")}
+              className="customer-secondary-button"
+              type="button"
+              style={{ padding: "10px 24px", border: "1px solid black", cursor: "pointer" }}
+            >
+              Go to Marketplace
+            </button>
           </div>
         </section>
       </div>
@@ -123,7 +159,7 @@ function WishlistPage() {
           {wishlistItems.map((item) => (
             <WishlistCard
               item={item}
-              key={getItemId(item) || item.name}
+              key={getItemId(item) || item?.name || Math.random()}
               onMoveToCart={handleMoveToCart}
               onRemove={handleRemove}
             />

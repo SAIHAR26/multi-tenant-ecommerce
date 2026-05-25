@@ -1,33 +1,26 @@
 const Notification = require("../models/Notification");
 
 const allowedRoles = ["admin", "vendor", "customer"];
+const allowedTypes = ["vendor", "order", "review", "payment", "customer", "system"];
 
-const allowedTypes = [
-  "vendor",
-  "order",
-  "review",
-  "payment",
-  "customer",
-  "system",
-];
-
-// ROLE FILTER
-const getAudienceQuery = (role) => {
+const getAudienceQuery = (role, userId) => {
   const query = {};
 
   if (allowedRoles.includes(role)) {
     query.targetRole = { $in: [role, "all"] };
   }
 
+  if (userId) {
+    query.$or = [{ userId }, { userId: null }];
+  }
+
   return query;
 };
 
-// GET ALL NOTIFICATIONS
 const getNotifications = async (req, res) => {
   try {
-    const { filter = "all", role = "" } = req.query;
-
-    const query = getAudienceQuery(role);
+    const { filter = "all", role = "", userId = "" } = req.query;
+    const query = getAudienceQuery(role, userId);
 
     if (filter === "unread") {
       query.isRead = false;
@@ -38,30 +31,23 @@ const getNotifications = async (req, res) => {
     const notifications = await Notification.find(query)
       .populate("userId", "name email")
       .sort({ createdAt: -1 });
-
     const unreadCount = await Notification.countDocuments({
       ...getAudienceQuery(role),
+      ...(userId ? { $or: [{ userId }, { userId: null }] } : {}),
       isRead: false,
     });
 
     res.status(200).json({
-      success: true,
+      notifications,
       unreadCount,
-      count: notifications.length,
-      data: notifications,
     });
-
   } catch (error) {
-
     res.status(500).json({
-      success: false,
       message: error.message || "Failed to fetch notifications.",
     });
-
   }
 };
 
-// CREATE NOTIFICATION
 const createNotification = async (req, res) => {
   try {
     const {
@@ -75,10 +61,7 @@ const createNotification = async (req, res) => {
     } = req.body;
 
     if (!title || !message) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and message are required.",
-      });
+      return res.status(400).json({ message: "Title and message are required." });
     }
 
     const notification = await Notification.create({
@@ -91,25 +74,16 @@ const createNotification = async (req, res) => {
       preview,
     });
 
-    res.status(201).json({
-      success: true,
-      data: notification,
-    });
-
+    res.status(201).json(notification);
   } catch (error) {
-
     res.status(400).json({
-      success: false,
       message: error.message || "Failed to create notification.",
     });
-
   }
 };
 
-// MARK SINGLE NOTIFICATION AS READ
 const markNotificationRead = async (req, res) => {
   try {
-
     const notification = await Notification.findByIdAndUpdate(
       req.params.id,
       { isRead: true },
@@ -117,87 +91,57 @@ const markNotificationRead = async (req, res) => {
     );
 
     if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: "Notification not found.",
-      });
+      return res.status(404).json({ message: "Notification not found." });
     }
 
-    res.status(200).json({
-      success: true,
-      data: notification,
-    });
-
+    res.status(200).json(notification);
   } catch (error) {
-
     res.status(400).json({
-      success: false,
       message: error.message || "Failed to mark notification as read.",
     });
-
   }
 };
 
-// MARK ALL NOTIFICATIONS AS READ
 const markAllNotificationsRead = async (req, res) => {
   try {
-    const { role = "" } = req.query;
+    const { role = "", userId = "" } = req.query;
 
     await Notification.updateMany(
       {
-        ...getAudienceQuery(role),
+        ...getAudienceQuery(role, userId),
         isRead: false,
       },
       { isRead: true }
     );
 
-    res.status(200).json({
-      success: true,
-      message: "All notifications marked as read.",
-    });
-
+    res.status(200).json({ message: "All notifications marked as read." });
   } catch (error) {
-
     res.status(500).json({
-      success: false,
       message: error.message || "Failed to mark notifications as read.",
     });
-
   }
 };
 
-// DELETE NOTIFICATION
 const deleteNotification = async (req, res) => {
   try {
-
     const notification = await Notification.findByIdAndDelete(req.params.id);
 
     if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: "Notification not found.",
-      });
+      return res.status(404).json({ message: "Notification not found." });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Notification deleted successfully.",
-    });
-
+    res.status(200).json({ message: "Notification deleted." });
   } catch (error) {
-
     res.status(400).json({
-      success: false,
       message: error.message || "Failed to delete notification.",
     });
-
   }
 };
 
 module.exports = {
-  getNotifications,
   createNotification,
-  markNotificationRead,
-  markAllNotificationsRead,
   deleteNotification,
+  getNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
 };

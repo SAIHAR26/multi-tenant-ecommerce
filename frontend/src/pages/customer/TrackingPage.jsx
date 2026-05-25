@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { getOrderTracking } from "../../services/orderService";
+import { Link, useParams } from "react-router-dom";
 import { getSavedUser } from "../../api/auth";
+import { getOrderTracking } from "../../services/orderService";
+import { formatPrice } from "../../utils/orderTotals";
+import { getProductImage } from "../../utils/productImages";
 
-const trackingSteps = ["Ordered", "Packed", "Shipped", "Out for Delivery", "Delivered"];
+const trackingSteps = ["Ordered", "Packed", "Shipped", "Delivered"];
+const statusStepMap = {
+  PROCESSING: 0,
+  PACKED: 1,
+  SHIPPED: 2,
+  DELIVERED: 3,
+  CANCELLED: 0,
+};
 
 function TrackingPage() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const user = getSavedUser();
   const customerName = user?.name || "Customer";
 
@@ -20,20 +29,25 @@ function TrackingPage() {
         const orderId = id || "current-order";
         const data = await getOrderTracking(orderId);
         setOrder(data);
-        setLoading(false);
+        setError("");
       } catch (err) {
         setError("Unable to find order tracking details. " + (err.message || ""));
+      } finally {
         setLoading(false);
       }
     }
+
     fetchTracking();
   }, [id]);
 
   if (loading) {
-    return <div className="customer-page"><p className="customer-eyebrow">Locating your shipment updates...</p></div>;
+    return (
+      <div className="customer-page">
+        <p className="customer-eyebrow">Locating your shipment updates...</p>
+      </div>
+    );
   }
 
-  /* STEP 7: EMPTY STATE */
   if (error || !order) {
     return (
       <div className="customer-page">
@@ -49,7 +63,10 @@ function TrackingPage() {
     );
   }
 
-  const activeStep = trackingSteps.indexOf(order.status) !== -1 ? trackingSteps.indexOf(order.status) : 1;
+  const products = order.products || [];
+  const firstProduct = products[0]?.productId || {};
+  const productNames = products.map((item) => item.productId?.name).filter(Boolean).join(", ");
+  const activeStep = statusStepMap[order.status] ?? 0;
   const progressPercent = Math.round(((activeStep + 1) / trackingSteps.length) * 100);
 
   return (
@@ -60,16 +77,27 @@ function TrackingPage() {
           <h1>Track your premium delivery.</h1>
           <p>Follow every stage from processing to doorstep delivery with clear fulfillment updates.</p>
         </div>
-        <button className="customer-primary-button" type="button">Contact Support</button>
+        <div className="support-actions">
+          <a className="customer-primary-button" href="tel:+919000000000">Call Support</a>
+          <a className="customer-secondary-button" href="mailto:support@vshop.com">Email Support</a>
+        </div>
       </section>
 
       <section className="customer-panel">
         <div className="customer-panel__header">
           <div>
             <p className="customer-eyebrow">ID: {order._id || order.id}</p>
-            <h2>{order.product || "Package Shipments"}</h2>
+            <h2>{productNames || "Package shipment"}</h2>
           </div>
-          <span className="customer-pill">{order.delivery || "In Transit"}</span>
+          <span className="customer-pill">{order.status || "PROCESSING"}</span>
+        </div>
+
+        <div className="tracking-order-preview">
+          <img src={getProductImage(firstProduct)} alt={firstProduct.name || "Order"} />
+          <div>
+            <strong>{formatPrice(order.totalAmount)}</strong>
+            <span>{products.length} item groups - Payment {order.paymentStatus}</span>
+          </div>
         </div>
 
         <div className="tracking-timeline">
@@ -87,19 +115,23 @@ function TrackingPage() {
 
       <section className="customer-content-grid">
         <article className="customer-panel">
-          <div className="customer-panel__header"><div><p className="customer-eyebrow">Delivery address</p><h2>Saved address</h2></div></div>
+          <div className="customer-panel__header">
+            <div><p className="customer-eyebrow">Delivery address</p><h2>Saved address</h2></div>
+          </div>
           <div className="address-card">
             <h3>{customerName}</h3>
-            <p>{order.shippingAddress || "Indiranagar, Bengaluru, Karnataka 560038"}</p>
+            <p>{order.deliveryAddress || "Address not available"}</p>
             <span>Express delivery enabled</span>
           </div>
         </article>
         <article className="customer-panel">
-          <div className="customer-panel__header"><div><p className="customer-eyebrow">Shipment notes</p><h2>Courier updates</h2></div></div>
+          <div className="customer-panel__header">
+            <div><p className="customer-eyebrow">Shipment notes</p><h2>Courier updates</h2></div>
+          </div>
           <div className="offer-stack">
-            <div><strong>Status</strong><span>Current status verified as {order.status || "Processing"}.</span></div>
-            <div><strong>Packed</strong><span>Quality checked by Luxe Lane partners.</span></div>
-            <div><strong>Updates</strong><span>Handed to secure delivery courier network.</span></div>
+            <div><strong>Status</strong><span>Current status verified as {order.status || "PROCESSING"}.</span></div>
+            <div><strong>Products</strong><span>{productNames || "Order products"}</span></div>
+            <div><strong>Updates</strong><span>Latest fulfillment status is synced from MongoDB.</span></div>
           </div>
         </article>
       </section>

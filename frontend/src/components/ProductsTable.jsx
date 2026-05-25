@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ErrorState from "./ErrorState";
 import LoadingState from "./LoadingState";
+import { getSavedUser } from "../api/auth";
 import { getProducts } from "../services/productService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
@@ -12,14 +14,16 @@ const getStatus = (product) => {
 };
 
 function ProductsTable() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
+    const user = getSavedUser();
 
-    getProducts()
+    getProducts(user?.role === "vendor" ? { vendor: user.id } : {})
       .then((data) => {
         const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
         if (isMounted) {
@@ -48,7 +52,7 @@ function ProductsTable() {
           <p>Product management</p>
           <h2>Active catalog</h2>
         </div>
-        <button type="button">View all</button>
+        <button type="button" onClick={() => navigate("/vendor/products")}>View all</button>
       </div>
 
       {loading ? <LoadingState message="Loading products..." /> : null}
@@ -88,7 +92,7 @@ function ProductsTable() {
                       </span>
                     </td>
                     <td>
-                      <button type="button" className="table-action">Edit</button>
+                      <button type="button" className="table-action" onClick={() => navigate("/vendor/products")}>Open</button>
                     </td>
                   </tr>
                 );

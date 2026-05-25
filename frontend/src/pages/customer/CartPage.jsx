@@ -1,10 +1,35 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 import { Link } from "react-router-dom";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import { useToast } from "../../components/useToast";
 import { getCartItems, removeFromCart } from "../../services/cartService";
+import { getProductImage } from "../../utils/productImages";
+import { calculateOrderTotals, formatPrice, getLineDiscount } from "../../utils/orderTotals";
 
+import {
+  getCartItems,
+  removeFromCart,
+} from "../../services/cartService";
+
+const getItemId = (item) =>
+  item?._id ||
+  item?.id ||
+  item?.productId ||
+  item?.product?._id ||
+  item?.product?.id;
+
+const getProduct = (item) =>
+  item?.product || item;
+
+function CartPage() {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  const [cartItems, setCartItems] =
+    useState([]);
 const getItemId = (item) => item._id || item.id || item.productId || item.product?._id;
 const getProduct = (item) => item.product || item;
 
@@ -39,6 +64,30 @@ function CartPage() {
     };
   }, []);
 
+  // REMOVE ITEM
+  const handleRemove = async (
+    id
+  ) => {
+    if (!id) {
+      showToast({ message: "Invalid item identifier", type: "error" });
+      return;
+    }
+    try {
+      await removeFromCart(id);
+
+      setCartItems((prev) =>
+        prev.filter(
+          (item) =>
+            getItemId(item) !== id
+        )
+      );
+
+      showToast({ message: "Item removed from cart", type: "success" });
+    } catch (err) {
+      showToast({
+        message: err.message || "Could not remove item",
+        type: "error"
+      });
   const handleRemove = async (id) => {
     try {
       await removeFromCart(id);
@@ -49,12 +98,7 @@ function CartPage() {
     }
   };
 
-  const subtotal = cartItems.reduce((acc, item) => {
-    const product = getProduct(item);
-    return acc + (Number(product.price) || 0) * (Number(item.quantity) || 1);
-  }, 0);
-  const discount = subtotal > 0 ? 3200 : 0;
-  const total = subtotal - discount;
+  const totals = calculateOrderTotals(cartItems);
 
   if (loading) {
     return (
@@ -72,10 +116,25 @@ function CartPage() {
     );
   }
 
+  // EMPTY CART STATE
   if (!cartItems || cartItems.length === 0) {
     return (
       <div className="customer-page">
         <section className="customer-hero customer-hero--compact">
+          <div style={{ textAlign: "center", padding: "40px 20px", width: "100%" }}>
+            <div style={{ fontSize: "64px", marginBottom: "16px" }}>🛒</div>
+            <h1 style={{ marginBottom: "8px" }}>Your V SHOP cart is empty</h1>
+            <p style={{ color: "#666", marginBottom: "24px" }}>
+              Looks like you haven't added any luxury drops to your cart yet.
+            </p>
+            <button
+              onClick={() => navigate("/customer")}
+              className="customer-primary-button"
+              type="button"
+            >
+              Explore Trending Products
+            </button>
+          </div>
           <div>
             <p className="customer-eyebrow">Cart Status</p>
             <h1>Your cart is empty.</h1>
@@ -110,13 +169,40 @@ function CartPage() {
               const id = getItemId(item);
 
               return (
+                <div
+                  className="wishlist-card"
+                  key={
+                    id ||
+                    product?.name ||
+                    Math.random()
+                  }
+                >
+                  {/* PRODUCT IMAGE */}
+                  {product?.image ? (
+                    <img
+                      src={product.image}
+                      alt={
+                        product?.name ||
+                        "Product"
+                      }
+                    />
+                  ) : (
+                    <div className="product-no-image">
+                      No Image
+                    </div>
+                  )}
+
+                  {/* PRODUCT INFO */}
                 <div className="wishlist-card" key={id || product.name}>
-                  <img src={product.image} alt={product.name} />
+                  <img src={getProductImage(product)} alt={product.name} />
                   <div>
                     <h3>{product.name}</h3>
                     <p>{product.vendor || product.brand}</p>
-                    <strong>Rs {Number(product.price || 0).toLocaleString("en-IN")}</strong>
-                    <span>Qty: {item.quantity || 1}</span>
+                    <div className="cart-line-meta">
+                      <strong>{formatPrice(Number(product.price || 0) * (Number(item.quantity) || 1))}</strong>
+                      <span>Qty: {item.quantity || 1}</span>
+                      {getLineDiscount(item) > 0 ? <span>{formatPrice(getLineDiscount(item))} off</span> : null}
+                    </div>
                   </div>
                   <button
                     className="customer-secondary-button"
@@ -134,9 +220,10 @@ function CartPage() {
         <article className="customer-panel">
           <div className="customer-panel__header"><div><p className="customer-eyebrow">Summary</p><h2>Order total</h2></div></div>
           <div className="offer-stack">
-            <div><strong>Subtotal</strong><span>Rs {subtotal.toLocaleString("en-IN")}</span></div>
-            <div><strong>Discount</strong><span>Rs {discount.toLocaleString("en-IN")} saved</span></div>
-            <div><strong>Total</strong><span>Rs {total > 0 ? total.toLocaleString("en-IN") : 0}</span></div>
+            <div><strong>Subtotal</strong><span>{formatPrice(totals.subtotal)}</span></div>
+            <div><strong>Product discount</strong><span>{formatPrice(totals.discount)} saved</span></div>
+            <div><strong>Delivery charge</strong><span>{totals.deliveryCharge ? formatPrice(totals.deliveryCharge) : "Free"}</span></div>
+            <div><strong>Total</strong><span>{formatPrice(totals.total)}</span></div>
           </div>
         </article>
       </section>

@@ -5,6 +5,7 @@ import {
   getProductById,
   getProducts,
 } from "../../services/productService";
+import { getProductImage } from "../../utils/productImages";
 import "./ProductDetails.css";
 
 const sizes = ["S", "M", "L", "XL"];
@@ -44,8 +45,7 @@ function ProductDetails() {
         setProducts(productsArray);
 
         setSelectedImage(
-          currentProduct?.image ||
-            "https://via.placeholder.com/400"
+          getProductImage(currentProduct)
         );
       } catch (err) {
         console.log(err);
@@ -70,12 +70,10 @@ function ProductDetails() {
     if (!product) return [];
 
     return [
-      product.image ||
-        "https://via.placeholder.com/400",
+      getProductImage(product),
       ...similarProducts.map(
         (item) =>
-          item.image ||
-          "https://via.placeholder.com/400"
+          getProductImage(item)
       ),
     ];
   }, [product, similarProducts]);
@@ -265,7 +263,7 @@ function ProductDetails() {
               <ProductCard
                 key={item._id}
                 product={item}
-                allProducts={products}  // ✅ THIS IS THE FIX
+                allProducts={products}
               />
             ))}
           </div>
