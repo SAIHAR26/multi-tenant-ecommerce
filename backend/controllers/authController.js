@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const Notification = require("../models/Notification");
 const Store = require("../models/Store");
 const User = require("../models/User");
@@ -7,6 +8,19 @@ const createToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
+
+const isBcryptHash = (value = "") => /^\$2[aby]\$\d{2}\$/.test(value);
+
+const requireDatabaseConnection = (res) => {
+  if (mongoose.connection.readyState === 1) {
+    return true;
+  }
+
+  res.status(503).json({
+    message: "Database is not connected. Check backend/.env MONGO_URI and restart the backend.",
+  });
+  return false;
+};
 
 const sendAuthResponse = (res, statusCode, user) => {
   res.status(statusCode).json({
@@ -26,6 +40,8 @@ const sendAuthResponse = (res, statusCode, user) => {
 
 const registerUser = async (req, res) => {
   try {
+    if (!requireDatabaseConnection(res)) return;
+
     const {
       name,
       email,
@@ -107,6 +123,8 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
+    if (!requireDatabaseConnection(res)) return;
+
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
@@ -115,8 +133,21 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email }).select("+password");
 
-    if (!user || !(await user.matchPassword(password))) {
+    if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    const passwordMatches = isBcryptHash(user.password)
+      ? await user.matchPassword(password)
+      : user.password === password;
+
+    if (!passwordMatches) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    if (!isBcryptHash(user.password)) {
+      user.password = password;
+      await user.save();
     }
 
     if (user.role !== role) {

@@ -129,6 +129,7 @@ function AppRoutes() {
           <Route path="order-success" element={<OrderSuccessPage />} />
           <Route path="orders" element={<CustomerOrdersPage />} />
           <Route path="tracking" element={<TrackingPage />} />
+          <Route path="tracking/:id" element={<TrackingPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="recommendations" element={<RecommendationsPage />} />
           <Route path="product/:id" element={<ProductDetails />} />

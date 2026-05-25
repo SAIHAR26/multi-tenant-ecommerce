@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
+import { getProductImage } from "../../utils/productImages";
 import { categoryTabs, priceRanges } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
@@ -18,10 +19,7 @@ const normalizeProduct = (product) => ({
   ...product,
   id: product.id || product._id,
   _id: product._id || product.id,
-  image:
-    product.image ||
-    product.images?.[0] ||
-    "https://dummyimage.com/300x300/cccccc/000000&text=Product",
+  image: getProductImage(product),
   discount: product.discount || 0,
   popularity: product.popularity || product.rating || 0,
 });

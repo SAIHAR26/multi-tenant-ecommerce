@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getProducts } from "../services/productService";
 import { getStores } from "../services/storeService";
+import { getProductImage } from "../utils/productImages";
 import "./Home.css";
 
 function Home() {
@@ -97,11 +98,7 @@ function Home() {
                   >
                     <div className="product-card__image">
                       <img
-                        src={
-                          product.images?.[0] ||
-                          product.image ||
-                          "https://via.placeholder.com/300"
-                        }
+                        src={getProductImage(product)}
                         alt={product.name}
                       />
                     </div>
