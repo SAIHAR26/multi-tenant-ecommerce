@@ -13,11 +13,27 @@ const Payment = require("./models/Payment");
 const Notification = require("./models/Notification");
 const Segment = require("./models/Segment");
 
+/* =========================
+   🔥 REUSABLE HELPERS (STEP 5 UPGRADE)
+========================= */
+
+const range = (n) => [...Array(n).keys()];
+
+const pick = (arr, i) => arr[i % arr.length];
+
+const PAYMENT_METHODS = ["COD", "CARD", "NETBANKING", "UPI"];
+const ORDER_STATUS = ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED"];
+const NOTIFICATION_TYPES = ["ORDER", "PAYMENT", "SYSTEM", "REVIEW"];
+
+/* =========================
+   MAIN SEED FUNCTION
+========================= */
+
 const seedData = async () => {
   try {
-    console.log("Seeding started...");
+    console.log("🚀 Seeding Started...");
 
-    // CLEAR OLD DATA
+    // CLEAN DB
     await Promise.all([
       User.deleteMany(),
       Product.deleteMany(),
@@ -31,433 +47,184 @@ const seedData = async () => {
       Segment.deleteMany(),
     ]);
 
-    console.log("Old Ecommerce Data Deleted");
+    console.log("🧹 Old Data Cleared");
 
-    // USERS
+    /* ================= USERS ================= */
     const users = await User.insertMany([
-      {
-        name: "FashionHub",
-        email: "fashionhub@gmail.com",
+      { name: "Admin", email: "admin@gmail.com", password: "123456", role: "admin" },
+
+      ...range(10).map(i => ({
+        name: `Vendor ${i + 1}`,
+        email: `vendor${i + 1}@gmail.com`,
         password: "123456",
         role: "vendor",
-      },
-      {
-        name: "UrbanWear",
-        email: "urbanwear@gmail.com",
-        password: "123456",
-        role: "vendor",
-      },
-      {
-        name: "Rahul",
-        email: "rahul@gmail.com",
+      })),
+
+      ...range(20).map(i => ({
+        name: `Customer ${i + 1}`,
+        email: `customer${i + 1}@gmail.com`,
         password: "123456",
         role: "customer",
-      },
-      {
-        name: "Sneha",
-        email: "sneha@gmail.com",
-        password: "123456",
-        role: "customer",
-      },
-      {
-        name: "Kiran",
-        email: "kiran@gmail.com",
-        password: "123456",
-        role: "customer",
-      },
-      {
-        name: "Priya",
-        email: "priya@gmail.com",
-        password: "123456",
-        role: "customer",
-      },
+      })),
     ]);
 
-    const vendor1 = users[0];
-    const vendor2 = users[1];
-    const customer1 = users[2];
-    const customer2 = users[3];
-    const customer3 = users[4];
-    const customer4 = users[5];
+    const vendors = users.filter(u => u.role === "vendor");
+    const customers = users.filter(u => u.role === "customer");
 
-    // STORES
-    const stores = await Store.insertMany([
-      {
-        vendorId: vendor1._id,
-        storeName: "Fashion Hub",
-        storeDescription: "Best fashion products",
-        storeCategory: "Fashion",
-        location: "Hyderabad",
+    /* ================= STORES ================= */
+    const stores = await Store.insertMany(
+      vendors.map((v, i) => ({
+        vendorId: v._id,
+        storeName: `Store ${i + 1}`,
+        storeDescription: `Premium Store ${i + 1}`,
+        storeCategory: i % 2 ? "Footwear" : "Fashion",
+        location: "India",
+        totalRevenue: 50000 + i * 3000,
+        totalOrders: 100 + i * 5,
+        averageRating: 4 + (i % 2),
+        growthPercentage: 10 + i,
+      }))
+    );
 
-        // Vendor Analytics
-        totalRevenue: 50000,
-        totalOrders: 120,
-        averageRating: 4.5,
-        growthPercentage: 18,
-      },
-      {
-        vendorId: vendor2._id,
-        storeName: "Urban Wear",
-        storeDescription: "Modern clothing collection",
-        storeCategory: "Clothing",
-        location: "Bangalore",
+    /* ================= PRODUCTS ================= */
+    const productNames = [
+      "Nike Shoes",
+      "Adidas Sneakers",
+      "Levi Jeans",
+      "Puma T-Shirt",
+      "Roadster Shirt",
+      "Allen Solly Formal",
+      "Wildcraft Bag",
+      "Samsung Buds",
+      "Apple Watch",
+      "RayBan Glasses",
+    ];
 
-        // Vendor Analytics
-        totalRevenue: 75000,
-        totalOrders: 180,
-        averageRating: 4.2,
-        growthPercentage: 25,
-      },
-    ]);
+    const products = await Product.insertMany(
+      range(50).map(i => ({
+        storeId: stores[i % stores.length]._id,
+        vendor: vendors[i % vendors.length]._id,
+        name: `${pick(productNames, i)} ${i + 1}`,
+        description: "High quality premium product with durability.",
+        price: 500 + i * 150,
+        stock: 10 + i,
+        category: i % 2 ? "Electronics" : "Fashion",
+        brand: pick(["Nike", "Apple", "Samsung", "Adidas"], i),
+        discount: i % 30,
+        images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab"],
+        sizes: ["S", "M", "L"],
+        colors: ["Black", "White"],
+        rating: 4 + (i % 2),
+      }))
+    );
 
-    const store1 = stores[0];
-    const store2 = stores[1];
+    /* ================= ORDERS ================= */
+    const orders = await Order.insertMany(
+      range(30).map(i => ({
+        userId: customers[i % customers.length]._id,
+        products: [
+          {
+            productId: products[i]._id,
+            quantity: 1 + (i % 2),
+          },
+        ],
+        totalAmount: 800 + i * 200,
+        status: pick(ORDER_STATUS, i),
+        deliveryAddress: pick(["Hyd", "Bangalore", "Chennai", "Mumbai"], i),
+        paymentStatus: i % 2 ? "PENDING" : "PAID",
+      }))
+    );
 
-    // PRODUCTS
-    const products = await Product.insertMany([
-      {
-        storeId: store1._id,
-        vendor: vendor1._id,
-        name: "Formal Shirt",
-        description: "Premium cotton shirt",
-        price: 999,
-        stock: 20,
-        category: "Men",
-        brand: "FashionHub",
-        discount: 10,
-        images: [],
-        sizes: ["M", "L"],
-        colors: ["Blue"],
-        rating: 4.5,
-      },
-      {
-        storeId: store2._id,
-        vendor: vendor2._id,
-        name: "Sneakers",
-        description: "Comfort running shoes",
-        price: 1999,
-        stock: 15,
-        category: "Footwear",
-        brand: "UrbanWear",
-        discount: 5,
-        images: [],
-        sizes: ["8", "9"],
-        colors: ["Black"],
-        rating: 4,
-      },
-      {
-        storeId: store1._id,
-        vendor: vendor1._id,
-        name: "Hoodie",
-        description: "Winter cotton hoodie",
-        price: 1499,
-        stock: 25,
-        category: "Winter Wear",
-        brand: "FashionHub",
-        discount: 15,
-        images: [],
-        sizes: ["M", "L", "XL"],
-        colors: ["Grey"],
-        rating: 5,
-      },
-      {
-        storeId: store2._id,
-        vendor: vendor2._id,
-        name: "Jeans",
-        description: "Slim fit denim jeans",
-        price: 1799,
-        stock: 30,
-        category: "Clothing",
-        brand: "UrbanWear",
-        discount: 8,
-        images: [],
-        sizes: ["30", "32", "34"],
-        colors: ["Blue"],
-        rating: 4.2,
-      },
-    ]);
+    /* ================= PAYMENTS (FIX FIX FIX ✔) ================= */
+    await Payment.insertMany(
+      orders.map((o, i) => ({
+        orderId: o._id,
+        method: pick(PAYMENT_METHODS, i),
+        status: i % 2 ? "PENDING" : "SUCCESS",
+        transactionId: `TXN_${Date.now()}_${i}`,
+        amount: o.totalAmount,
+      }))
+    );
 
-    const product1 = products[0];
-    const product2 = products[1];
-    const product3 = products[2];
-    const product4 = products[3];
+    /* ================= REVIEWS ================= */
+    await Review.insertMany(
+      range(25).map(i => ({
+        userId: customers[i % customers.length]._id,
+        productId: products[i]._id,
+        rating: 4 + (i % 2),
+        comment: "Good product, fast delivery and worth money.",
+      }))
+    );
 
-    // SEGMENTS
+    /* ================= CART ================= */
+    await Cart.insertMany(
+      range(10).map(i => ({
+        userId: customers[i]._id,
+        items: [
+          { productId: products[i]._id, quantity: 1 },
+          { productId: products[i + 1]._id, quantity: 2 },
+        ],
+      }))
+    );
+
+    /* ================= WISHLIST ================= */
+    await Wishlist.insertMany(
+      range(10).map(i => ({
+        userId: customers[i]._id,
+        savedProducts: [products[i]._id, products[i + 2]._id],
+      }))
+    );
+
+    /* ================= SEGMENTS ================= */
     await Segment.insertMany([
       {
         name: "VIP Customers",
-        description: "Customers with high purchase activity",
-        users: [customer1._id, customer2._id],
+        description: "High value users",
+        users: customers.slice(0, 5).map(u => u._id),
         category: "Premium",
         segmentType: "VIP",
+        customerCount: 5,
       },
       {
         name: "Frequent Buyers",
-        description: "Customers who shop regularly",
-        users: [customer2._id, customer3._id],
+        description: "Regular users",
+        users: customers.slice(5, 10).map(u => u._id),
         category: "Shopping",
         segmentType: "FREQUENT",
-      },
-      {
-        name: "New Users",
-        description: "Recently joined customers",
-        users: [customer4._id],
-        category: "New Customer",
-        segmentType: "NEW",
-      },
-      {
-        name: "Inactive Users",
-        description: "Customers with low activity",
-        users: [customer3._id],
-        category: "Inactive",
-        segmentType: "INACTIVE",
+        customerCount: 5,
       },
     ]);
 
-    // REVIEWS
-    await Review.insertMany([
-      {
-        userId: customer1._id,
-        productId: product1._id,
-        rating: 5,
-        comment: "Excellent quality",
-      },
-      {
-        userId: customer2._id,
-        productId: product2._id,
-        rating: 4,
-        comment: "Good product",
-      },
-      {
-        userId: customer3._id,
-        productId: product3._id,
-        rating: 5,
-        comment: "Worth the money",
-      },
-      {
-        userId: customer4._id,
-        productId: product4._id,
-        rating: 4,
-        comment: "Fast delivery and nice fit",
-      },
-    ]);
+    /* ================= NOTIFICATIONS ================= */
+    await Notification.insertMany(
+      range(20).map(i => ({
+        userId: customers[i % customers.length]._id,
+        type: pick(NOTIFICATION_TYPES, i),
+        title: "V SHOP Update",
+        message: `Order #${1000 + i} updated successfully`,
+        notificationCategory: "order",
+        targetRole: "customer",
+        sender: "V SHOP",
+        preview: "System update",
+        isRead: false,
+      }))
+    );
 
-    // CART
-    await Cart.insertMany([
-      {
-        userId: customer1._id,
-        items: [
-          {
-            productId: product1._id,
-            quantity: 1,
-          },
-          {
-            productId: product3._id,
-            quantity: 2,
-          },
-        ],
-      },
-      {
-        userId: customer2._id,
-        items: [
-          {
-            productId: product2._id,
-            quantity: 2,
-          },
-          {
-            productId: product4._id,
-            quantity: 1,
-          },
-        ],
-      },
-      {
-        userId: customer3._id,
-        items: [
-          {
-            productId: product4._id,
-            quantity: 1,
-          },
-          {
-            productId: product1._id,
-            quantity: 1,
-          },
-        ],
-      },
-      {
-        userId: customer4._id,
-        items: [
-          {
-            productId: product2._id,
-            quantity: 1,
-          },
-          {
-            productId: product3._id,
-            quantity: 1,
-          },
-        ],
-      },
-    ]);
+    /* ================= FINAL ================= */
+   console.log("🚀 STEP 5: SEED COMPLETED SUCCESSFULLY");
+   console.log("📊 Database seeded with realistic ecommerce data");
 
-    // WISHLIST
-    await Wishlist.insertMany([
-      {
-        userId: customer1._id,
-        savedProducts: [product2._id, product4._id],
-      },
-      {
-        userId: customer2._id,
-        savedProducts: [product1._id, product3._id],
-      },
-      {
-        userId: customer3._id,
-        savedProducts: [product2._id, product3._id],
-      },
-      {
-        userId: customer4._id,
-        savedProducts: [product1._id, product4._id],
-      },
-    ]);
+    process.exit(0);
 
-    // ORDERS
-    const orders = await Order.insertMany([
-      {
-        userId: customer1._id,
-        products: [
-          {
-            productId: product1._id,
-            quantity: 1,
-          },
-        ],
-        totalAmount: 999,
-        status: "PROCESSING",
-        deliveryAddress: "Hyderabad",
-        paymentStatus: "PENDING",
-      },
-      {
-        userId: customer2._id,
-        products: [
-          {
-            productId: product2._id,
-            quantity: 2,
-          },
-        ],
-        totalAmount: 3998,
-        status: "DELIVERED",
-        deliveryAddress: "Bangalore",
-        paymentStatus: "PAID",
-      },
-      {
-        userId: customer3._id,
-        products: [
-          {
-            productId: product3._id,
-            quantity: 1,
-          },
-        ],
-        totalAmount: 1499,
-        status: "SHIPPED",
-        deliveryAddress: "Chennai",
-        paymentStatus: "PAID",
-      },
-      {
-        userId: customer4._id,
-        products: [
-          {
-            productId: product4._id,
-            quantity: 2,
-          },
-        ],
-        totalAmount: 3598,
-        status: "PACKED",
-        deliveryAddress: "Mumbai",
-        paymentStatus: "PENDING",
-      },
-    ]);
-
-    const order1 = orders[0];
-    const order2 = orders[1];
-    const order3 = orders[2];
-    const order4 = orders[3];
-
-    // PAYMENTS
-    await Payment.insertMany([
-      {
-        orderId: order1._id,
-        method: "COD",
-        status: "PENDING",
-        transactionId: "",
-        amount: 999,
-      },
-      {
-        orderId: order2._id,
-        method: "NETBANKING",
-        status: "SUCCESS",
-        transactionId: "TXN123456",
-        amount: 3998,
-      },
-      {
-        orderId: order3._id,
-        method: "CARD",
-        status: "SUCCESS",
-        transactionId: "TXN789456",
-        amount: 1499,
-      },
-      {
-        orderId: order4._id,
-        method: "COD",
-        status: "PENDING",
-        transactionId: "",
-        amount: 3598,
-      },
-    ]);
-
-    // NOTIFICATIONS
-    await Notification.insertMany([
-      {
-        userId: customer1._id,
-        type: "ORDER",
-        message: "Your order has been placed successfully",
-      },
-      {
-        userId: customer2._id,
-        type: "PAYMENT",
-        message: "Payment completed successfully",
-      },
-      {
-        userId: customer3._id,
-        type: "ORDER",
-        message: "Your order has been shipped",
-      },
-      {
-        userId: customer4._id,
-        type: "SYSTEM",
-        message: "Your order is out for delivery",
-      },
-      {
-        userId: vendor1._id,
-        type: "STORE",
-        message: "New order received in your store",
-      },
-      {
-        userId: vendor2._id,
-        type: "REVIEW",
-        message: "A customer added a new review",
-      },
-    ]);
-
-    console.log("Ecommerce Workflow Seed Completed Successfully 🚀");
-    process.exit();
   } catch (error) {
-    console.log("Seed Error:", error);
+    console.log("❌ Seed Error:", error);
     process.exit(1);
   }
 };
 
-// DB CONNECT
-mongoose
-  .connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB Connected");
     seedData();
   })
-  .catch((err) => console.log(err));
+  .catch(err => console.log(err));
