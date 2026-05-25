@@ -3,6 +3,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getProducts } from "../services/productService";
 import { getStores } from "../services/storeService";
+import defaultProduct from "../assets/default-product.png";
+import defaultStore from "../assets/default-store.jpg";
 import { getProductImage } from "../utils/productImages";
 import "./Home.css";
 
@@ -12,7 +14,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ FETCH PRODUCTS FROM API
+  // FETCH PRODUCTS + STORES
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -23,13 +25,15 @@ function Home() {
           getStores(),
         ]);
 
-        const productsArray =
-          Array.isArray(productsData?.products)
-            ? productsData.products
-            : Array.isArray(productsData)
-            ? productsData
-            : [];
-        const storesArray = Array.isArray(storesData) ? storesData : [];
+        const productsArray = Array.isArray(productsData?.products)
+          ? productsData.products
+          : Array.isArray(productsData)
+          ? productsData
+          : [];
+
+        const storesArray = Array.isArray(storesData)
+          ? storesData
+          : [];
 
         setProducts(productsArray);
         setStores(storesArray);
@@ -55,7 +59,9 @@ function Home() {
           <div className="hero__glow hero__glow--soft" />
 
           <div className="hero__content">
-            <p className="eyebrow">Premium multi-vendor ecommerce</p>
+            <p className="eyebrow">
+              Premium multi-vendor ecommerce
+            </p>
 
             <h1>
               Discover fashion from stores built to stand out.
@@ -66,11 +72,17 @@ function Home() {
             </p>
 
             <div className="hero__actions">
-              <a className="btn btn--primary" href="#collections">
+              <a
+                className="btn btn--primary"
+                href="#collections"
+              >
                 Shop Now
               </a>
 
-              <a className="btn btn--secondary" href="/register">
+              <a
+                className="btn btn--secondary"
+                href="/register"
+              >
                 Become Vendor
               </a>
             </div>
@@ -78,19 +90,45 @@ function Home() {
         </section>
 
         {/* PRODUCTS */}
-        <section className="section" id="collections">
+        <section
+          className="section"
+          id="collections"
+        >
           <div className="section__header">
-            <p className="eyebrow">Featured products</p>
-            <h2>Fresh drops from premium vendors</h2>
+            <p className="eyebrow">
+              Featured products
+            </p>
+
+            <h2>
+              Fresh drops from premium vendors
+            </h2>
           </div>
 
-          {/* ✅ STATES */}
-          {loading && <p>Loading products...</p>}
+          {loading && (
+            <p>Loading products...</p>
+          )}
+
           {error && <p>{error}</p>}
 
           {!loading && !error && (
             <div className="product-grid">
               {products.length > 0 ? (
+                products
+                  .slice(0, 6)
+                  .map((product) => (
+                    <article
+                      className="product-card"
+                      key={product._id}
+                    >
+                      <div className="product-card__image">
+                        <img
+                          src={
+                            product.images?.[0] ||
+                            product.image ||
+                            defaultProduct
+                          }
+                          alt={product.name}
+                        />
                 products.slice(0, 6).map((product) => (
                   <article
                     className="product-card"
@@ -109,48 +147,87 @@ function Home() {
                         <p>{product.brand || "V SHOP"}</p>
                       </div>
 
-                      <div className="product-card__meta">
-                        <span>
-                          ₹
-                          {new Intl.NumberFormat("en-IN").format(
-                            product.price || 0
-                          )}
-                        </span>
-                        <span>★ {product.rating || 4}</span>
+                      <div className="product-card__body">
+                        <div>
+                          <h3>
+                            {product.name}
+                          </h3>
+
+                          <p>
+                            {product.brand ||
+                              "V SHOP"}
+                          </p>
+                        </div>
+
+                        <div className="product-card__meta">
+                          <span>
+                            ₹
+                            {new Intl.NumberFormat(
+                              "en-IN"
+                            ).format(
+                              product.price || 0
+                            )}
+                          </span>
+
+                          <span>
+                            ★{" "}
+                            {product.rating ||
+                              4}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))
+                    </article>
+                  ))
               ) : (
-                <p>No products available</p>
+                <p>
+                  No products available
+                </p>
               )}
             </div>
           )}
         </section>
 
-        {/* ✅ KEEP VENDORS STATIC */}
-        <section className="section section--vendors" id="top-vendors">
+        {/* VENDORS */}
+        <section
+          className="section section--vendors"
+          id="top-vendors"
+        >
           <div className="section__header">
-            <p className="eyebrow">Top vendors</p>
-            <h2>Stores customers keep coming back to</h2>
+            <p className="eyebrow">
+              Top vendors
+            </p>
+
+            <h2>
+              Stores customers keep coming back to
+            </h2>
           </div>
 
           <div className="vendor-grid">
             {stores.map((store) => (
-              <article className="vendor-card" key={store._id}>
+              <article
+                className="vendor-card"
+                key={store._id}
+              >
                 <div className="vendor-card__image">
                   <img
                     src={
                       store.storeBanner ||
                       store.storeLogo ||
-                      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80"
+                      defaultStore
                     }
                     alt={store.storeName}
                   />
                 </div>
+
                 <div>
-                  <h3>{store.storeName}</h3>
-                  <p>{store.storeDescription || store.storeCategory}</p>
+                  <h3>
+                    {store.storeName}
+                  </h3>
+
+                  <p>
+                    {store.storeDescription ||
+                      store.storeCategory}
+                  </p>
                 </div>
               </article>
             ))}
@@ -158,20 +235,42 @@ function Home() {
         </section>
 
         {/* CONNECT */}
-        <section className="connect-strip" id="connect">
+        <section
+          className="connect-strip"
+          id="connect"
+        >
           <div>
-            <p className="eyebrow">Connect</p>
+            <p className="eyebrow">
+              Connect
+            </p>
+
             <h2>
-              Launch, shop, and scale inside one premium marketplace.
+              Launch, shop, and scale inside one
+              premium marketplace.
             </h2>
-            <div className="connect-details" aria-label="Contact details">
-              <a href="mailto:support@vshop.com">support@vshop.com</a>
-              <a href="tel:+919000000000">+91 90000 00000</a>
-              <span>Partner support: Hyderabad, India</span>
+
+            <div
+              className="connect-details"
+              aria-label="Contact details"
+            >
+              <a href="mailto:support@vshop.com">
+                support@vshop.com
+              </a>
+
+              <a href="tel:+919000000000">
+                +91 90000 00000
+              </a>
+
+              <span>
+                Partner support: Hyderabad, India
+              </span>
             </div>
           </div>
 
-          <a className="btn btn--primary" href="/register">
+          <a
+            className="btn btn--primary"
+            href="/register"
+          >
             Join V SHOP
           </a>
         </section>
