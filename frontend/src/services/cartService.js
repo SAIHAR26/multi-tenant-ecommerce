@@ -19,14 +19,21 @@ export const getCartItems = async () => {
 };
 
 export const addToCart = async (product, quantity = 1) => {
+  // FIX: If product is a string, use it directly. Otherwise, extract the ID.
+  const resolvedProductId = typeof product === "string" 
+    ? product 
+    : (product?._id || product?.id || product?.productId);
+
   return apiRequest(
     "/api/cart",
     {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
-        productId: product?._id || product?.id || product?.productId,
+        productId: resolvedProductId,
         quantity,
-        product,
       }),
     },
     "Unable to add item to cart."

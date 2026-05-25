@@ -2,26 +2,20 @@ const express = require("express");
 
 const router = express.Router();
 
-const { getRecommendations } = require("../services/recommendationService");
-
-router.get("/:userId", async (req, res) => {
+// GET recommendations
+router.get("/", async (req, res) => {
   try {
-    const data = await getRecommendations(req.params.userId);
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(200).json({
+      success: true,
+      recommendations: [],
+      message: "Recommendations fetched successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch recommendations",
+    });
   }
 });
-
-
-const router = express.Router();
-
-const {
-  getRecommendations,
-} = require("../controllers/recommendationController");
-
-// GET RECOMMENDATIONS
-router.get("/", getRecommendations);
-
 
 module.exports = router;

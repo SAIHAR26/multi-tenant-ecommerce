@@ -1,53 +1,22 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+
 require("dotenv").config();
+
 const connectDB = require("./config/db");
 
 const app = express();
+
 let databaseStatus = "connecting";
 
-// Middleware
+// ================= MIDDLEWARE =================
+
 app.use(cors());
 app.use(express.json());
 
+// ================= ROUTES IMPORT =================
 
-// ================= ROUTES =================
-const authRoutes = require("./routes/authRoutes");
-const adminVendorRoutes = require("./routes/adminVendorRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
-const orderRoutes = require("./routes/orderRoutes");
-const productRoutes = require("./routes/productRoutes");
-const reportRoutes = require("./routes/reportRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
-const storeRoutes = require("./routes/storeRoutes");
-const userRoutes = require("./routes/userRoutes");
-
-// ✅ RECOMMENDATION ROUTE (NEW ADD)
-const recommendationRoutes = require("./routes/recommendationRoutes");
-
-// ================= BASIC ROUTE =================
-
-// Test route
-
-app.get("/", (req, res) => {
-  res.send("V SHOP Backend Running");
-});
-
-// Health check
-
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    database: databaseStatus,
-    uptime: process.uptime(),
-  });
-});
-
-
-// ================= ROUTE MIDDLEWARE =================
-
-// 🔥 ROUTES IMPORT
 const authRoutes = require("./routes/authRoutes");
 const adminVendorRoutes = require("./routes/adminVendorRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
@@ -64,53 +33,117 @@ const vendorStatsRoutes = require("./routes/vendorStatsRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 
-// 🔥 ROUTES USE
+// ================= BASIC ROUTES =================
+
+// Root Route
+app.get("/", (req, res) => {
+  res.send("V SHOP Backend Running");
+});
+
+// Health Check Route
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    database: databaseStatus,
+    uptime: process.uptime(),
+  });
+});
+
+// ================= API ROUTES =================
 
 app.use("/api/auth", authRoutes);
-app.use("/api/admin/vendors", adminVendorRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/segments", segmentRoutes);
-app.use("/api/store", storeRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/reports", reportRoutes);
 
+app.use(
+  "/api/admin/vendors",
+  adminVendorRoutes
+);
 
-// ✅ RECOMMENDATION API
-app.use("/api/recommendations", recommendationRoutes);
+app.use(
+  "/api/products",
+  productRoutes
+);
+
+app.use(
+  "/api/cart",
+  cartRoutes
+);
+
+app.use(
+  "/api/wishlist",
+  wishlistRoutes
+);
+
+app.use(
+  "/api/users",
+  userRoutes
+);
+
+app.use(
+  "/api/orders",
+  orderRoutes
+);
+
+app.use(
+  "/api/reviews",
+  reviewRoutes
+);
+
+app.use(
+  "/api/segments",
+  segmentRoutes
+);
+
+app.use(
+  "/api/store",
+  storeRoutes
+);
+
+app.use(
+  "/api/notifications",
+  notificationRoutes
+);
+
+app.use(
+  "/api/reports",
+  reportRoutes
+);
+
+app.use(
+  "/api/vendor/stats",
+  vendorStatsRoutes
+);
+
+app.use(
+  "/api/vendors",
+  vendorRoutes
+);
+
+app.use(
+  "/api/recommendations",
+  recommendationRoutes
+);
 
 // ================= ERROR HANDLER =================
 
-app.use("/api/admin/report", reportRoutes);
-app.use("/api/vendor/stats", vendorStatsRoutes);
-app.use("/api/recommendations", recommendationRoutes);
-
-// ERROR HANDLER
-
 app.use((err, req, res, next) => {
   console.error(err.stack);
+
   res.status(500).json({
     message: "Something went wrong.",
   });
 });
 
+// ================= SERVER START =================
 
-// ================= START SERVER =================
-
-// Server start
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Server running on port ${PORT}`
+  );
 });
 
-
-
-// DB connect
+// ================= DATABASE CONNECTION =================
 
 connectDB({ exitOnFailure: false })
   .then(() => {
@@ -120,10 +153,16 @@ connectDB({ exitOnFailure: false })
     databaseStatus = "disconnected";
   });
 
-mongoose.connection.on("disconnected", () => {
-  databaseStatus = "disconnected";
-});
+mongoose.connection.on(
+  "disconnected",
+  () => {
+    databaseStatus = "disconnected";
+  }
+);
 
-mongoose.connection.on("reconnected", () => {
-  databaseStatus = "connected";
-});
+mongoose.connection.on(
+  "reconnected",
+  () => {
+    databaseStatus = "connected";
+  }
+);

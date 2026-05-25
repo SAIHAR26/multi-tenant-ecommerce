@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
@@ -11,17 +11,18 @@ import {
 } from "../../services/cartService";
 
 const getItemId = (item) =>
-  item._id ||
-  item.id ||
-  item.productId ||
-  item.product?._id;
+  item?._id ||
+  item?.id ||
+  item?.productId ||
+  item?.product?._id ||
+  item?.product?.id;
 
 const getProduct = (item) =>
-  item.product || item;
+  item?.product || item;
 
 function CartPage() {
-  const { showToast } =
-    useToast();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [cartItems, setCartItems] =
     useState([]);
@@ -80,6 +81,10 @@ function CartPage() {
   const handleRemove = async (
     id
   ) => {
+    if (!id) {
+      showToast({ message: "Invalid item identifier", type: "error" });
+      return;
+    }
     try {
       await removeFromCart(id);
 
@@ -90,15 +95,12 @@ function CartPage() {
         )
       );
 
-      showToast(
-        "Item removed from cart"
-      );
+      showToast({ message: "Item removed from cart", type: "success" });
     } catch (err) {
-      showToast(
-        err.message ||
-          "Could not remove item",
-        "error"
-      );
+      showToast({
+        message: err.message || "Could not remove item",
+        type: "error"
+      });
     }
   };
 
@@ -148,35 +150,25 @@ function CartPage() {
     );
   }
 
-  // EMPTY CART
-  if (
-    !cartItems ||
-    cartItems.length === 0
-  ) {
+  // EMPTY CART STATE
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div className="customer-page">
         <section className="customer-hero customer-hero--compact">
-          <div>
-            <p className="customer-eyebrow">
-              Cart Status
+          <div style={{ textAlign: "center", padding: "40px 20px", width: "100%" }}>
+            <div style={{ fontSize: "64px", marginBottom: "16px" }}>🛒</div>
+            <h1 style={{ marginBottom: "8px" }}>Your V SHOP cart is empty</h1>
+            <p style={{ color: "#666", marginBottom: "24px" }}>
+              Looks like you haven't added any luxury drops to your cart yet.
             </p>
-
-            <h1>
-              Your cart is empty
-            </h1>
-
-            <p>
-              Add products to begin
-              shopping.
-            </p>
+            <button
+              onClick={() => navigate("/customer")}
+              className="customer-primary-button"
+              type="button"
+            >
+              Explore Trending Products
+            </button>
           </div>
-
-          <Link
-            to="/customer"
-            className="customer-primary-button"
-          >
-            Browse Products
-          </Link>
         </section>
       </div>
     );
@@ -242,7 +234,8 @@ function CartPage() {
                   className="wishlist-card"
                   key={
                     id ||
-                    product?.name
+                    product?.name ||
+                    Math.random()
                   }
                 >
                   {/* PRODUCT IMAGE */}
