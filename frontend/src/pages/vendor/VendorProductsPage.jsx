@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
+import { getSavedUser } from "../../api/auth";
 import { getProducts } from "../../services/productService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
@@ -18,8 +19,9 @@ function VendorProductsPage() {
 
   useEffect(() => {
     let isMounted = true;
+    const user = getSavedUser();
 
-    getProducts()
+    getProducts(user?.role === "vendor" ? { vendor: user.id } : {})
       .then((data) => {
         const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
         if (isMounted) {
