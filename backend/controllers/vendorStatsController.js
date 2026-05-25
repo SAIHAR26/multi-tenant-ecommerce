@@ -1,51 +1,48 @@
-const Product = require("../models/Product");
 const Order = require("../models/Order");
-const Review = require("../models/Review");
+const Product = require("../models/Product");
 
-// GET VENDOR STATS
-const getVendorStats = async (req, res) => {
-
+exports.getVendorStats = async (req, res) => {
   try {
+    // 🔥 SAFE CHECK (THIS PREVENTS CRASH)
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - login required",
+      });
+    }
 
-    // TOTAL PRODUCTS
-    const totalProducts = await Product.countDocuments();
+    const vendorId = req.user._id;
 
-    // TOTAL ORDERS
-    const totalOrders = await Order.countDocuments();
+    const products = await Product.find({ vendor: vendorId });
 
-    // TOTAL REVIEWS
-    const totalReviews = await Review.countDocuments();
-
-    // TOTAL REVENUE
     const orders = await Order.find();
 
-    let totalRevenue = 0;
+    let revenue = 0;
 
     orders.forEach((order) => {
-      totalRevenue += order.totalAmount || 0;
+      order.products.forEach((p) => {
+        const match = products.find(
+          (prod) => prod._id.toString() === p.productId.toString()
+        );
+
+        if (match) {
+          revenue += match.price * p.quantity;
+        }
+      });
     });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      data: {
-        totalProducts,
-        totalOrders,
-        totalReviews,
-        totalRevenue,
+      stats: {
+        totalProducts: products.length,
+        totalOrders: orders.length,
+        revenue,
       },
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
-
-};
-
-module.exports = {
-  getVendorStats,
 };

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+
 const conditionSchema = new mongoose.Schema(
   {
     connector: {
@@ -25,11 +26,35 @@ const conditionSchema = new mongoose.Schema(
   { _id: false }
 );
 
+
 const segmentSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
+
+    },
+
+    description: {
+      type: String,
+    },
+
+    users: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
+    category: {
+      type: String,
+    },
+
+    type: {
+      type: String,
+      enum: ["VIP", "NEW", "FREQUENT", "INACTIVE"],
+      default: "NEW",
+
       trim: true,
     },
     description: {
@@ -55,6 +80,7 @@ const segmentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+
     },
   },
   {
@@ -62,4 +88,8 @@ const segmentSchema = new mongoose.Schema(
   }
 );
 
+
 module.exports = mongoose.model("Segment", segmentSchema);
+
+module.exports = mongoose.model("Segment", segmentSchema);
+

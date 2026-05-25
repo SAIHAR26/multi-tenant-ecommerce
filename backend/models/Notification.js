@@ -7,42 +7,60 @@ const notificationSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+
+    type: {
+      type: String,
+      enum: ["ORDER", "PAYMENT", "STORE", "REVIEW", "SYSTEM"],
+      required: true,
+    },
+
     title: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+      default: "",
     },
+
     message: {
       type: String,
       required: true,
       trim: true,
     },
-    type: {
+
+    notificationCategory: {
       type: String,
-      enum: ["vendor", "order", "review", "payment", "customer", "system"],
+      enum: [
+        "vendor",
+        "order",
+        "review",
+        "payment",
+        "customer",
+        "system",
+      ],
       default: "system",
-      index: true,
     },
+
     targetRole: {
       type: String,
       enum: ["admin", "vendor", "customer", "all"],
       default: "all",
-      index: true,
     },
+
     sender: {
       type: String,
       trim: true,
       default: "V SHOP",
     },
+
     preview: {
       type: String,
       trim: true,
       default: "",
     },
+
     isRead: {
       type: Boolean,
       default: false,
-      index: true,
     },
   },
   {
