@@ -63,6 +63,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/admin/report", reportRoutes);
 
 // ================= 404 HANDLER =================
 app.use((req, res) => {

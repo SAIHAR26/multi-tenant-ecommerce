@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import VendorNavbar from "../../components/VendorNavbar";
@@ -10,6 +11,7 @@ import { getFallbackVendorStats, getVendorStats } from "../../services/vendorSta
 import "../VendorDashboard.css";
 
 function VendorDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -137,9 +139,9 @@ function VendorDashboard() {
                 </div>
               </div>
 
-              <button type="button">Add Product</button>
-              <button type="button">Manage Inventory</button>
-              <button type="button">View Orders</button>
+              <button type="button" onClick={() => navigate("/vendor/add-product")}>Add Product</button>
+              <button type="button" onClick={() => navigate("/vendor/products")}>Manage Inventory</button>
+              <button type="button" onClick={() => navigate("/vendor/orders")}>View Orders</button>
             </div>
           </section>
         </main>

@@ -70,7 +70,7 @@ const getProducts = async (req, res) => {
       return res.status(200).json(fallbackProducts);
     }
 
-    const { category, search, storeId } = req.query;
+    const { category, search, storeId, vendor } = req.query;
 
     const filters = {};
 
@@ -82,6 +82,10 @@ const getProducts = async (req, res) => {
       filters.storeId = storeId;
     }
 
+    if (vendor) {
+      filters.vendor = vendor;
+    }
+
     if (search) {
       filters.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -91,6 +95,7 @@ const getProducts = async (req, res) => {
     }
 
     const products = await Product.find(filters)
+      .populate("vendor", "name email")
       .populate("storeId")
       .sort({ createdAt: -1 });
 

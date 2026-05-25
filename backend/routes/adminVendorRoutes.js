@@ -1,22 +1,28 @@
 const express = require("express");
-const router = express.Router();
 
+const {
+  approveVendor,
+  getVendorApprovalRequests,
+  getVendorDetails,
+  rejectVendor,
+} = require("../controllers/adminVendorController");
 const protect = require("../middlewares/authMiddleware");
 
-// TEMP: admin check (we will improve later)
+const router = express.Router();
+
 const adminOnly = (req, res, next) => {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Admin access required." });
+  }
+
   next();
 };
 
-// APPLY MIDDLEWARE
 router.use(protect, adminOnly);
 
-// TEST ROUTE
-router.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Admin/Vendor route working",
-  });
-});
+router.get("/pending", getVendorApprovalRequests);
+router.get("/:id", getVendorDetails);
+router.patch("/:id/approve", approveVendor);
+router.patch("/:id/reject", rejectVendor);
 
 module.exports = router;

@@ -1,8 +1,16 @@
 import { apiRequest } from "../api/client";
 
-export const getProducts = async () => {
+export const getProducts = async (filters = {}) => {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+
+  const query = params.toString();
+
   return apiRequest(
-    "/api/products",
+    `/api/products${query ? `?${query}` : ""}`,
     {},
     "Products could not be loaded."
   );

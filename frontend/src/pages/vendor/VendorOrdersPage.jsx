@@ -12,6 +12,24 @@ function VendorOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const loadOrders = () => {
+    setLoading(true);
+    setError("");
+
+    return getOrders()
+      .then((data) => {
+        const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
+        setOrders(ordersArray);
+        setError("");
+      })
+      .catch((err) => {
+        setError(err.message || "Orders could not be loaded.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -71,7 +89,9 @@ function VendorOrdersPage() {
             <p>Recent orders</p>
             <h2>Order tracking</h2>
           </div>
-          <button type="button">Sync courier</button>
+          <button type="button" onClick={loadOrders} disabled={loading}>
+            {loading ? "Syncing..." : "Sync courier"}
+          </button>
         </div>
 
         {loading ? <LoadingState message="Loading orders..." /> : null}

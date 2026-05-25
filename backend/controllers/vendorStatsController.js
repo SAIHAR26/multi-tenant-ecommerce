@@ -15,11 +15,18 @@ exports.getVendorStats = async (req, res) => {
 
     const products = await Product.find({ vendor: vendorId });
 
-    const orders = await Order.find();
+    const orders = await Order.find({ "products.productId": { $in: products.map((product) => product._id) } })
+      .populate("userId", "name email")
+      .lean();
 
     let revenue = 0;
+    const customerIds = new Set();
 
     orders.forEach((order) => {
+      if (order.userId?._id) {
+        customerIds.add(order.userId._id.toString());
+      }
+
       order.products.forEach((p) => {
         const match = products.find(
           (prod) => prod._id.toString() === p.productId.toString()
@@ -36,6 +43,7 @@ exports.getVendorStats = async (req, res) => {
       stats: {
         totalProducts: products.length,
         totalOrders: orders.length,
+        totalCustomers: customerIds.size,
         revenue,
       },
     });
