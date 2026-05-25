@@ -1,3 +1,5 @@
+import { getProductImage } from "../../utils/productImages";
+
 function WishlistCard({ item, onMoveToCart, onRemove }) {
   const product = item.product || item;
   const price =
@@ -7,7 +9,7 @@ function WishlistCard({ item, onMoveToCart, onRemove }) {
 
   return (
     <article className="wishlist-card">
-      <img src={product.image} alt={product.name} />
+      <img src={getProductImage(product)} alt={product.name} />
       <div>
         <h3>{product.name}</h3>
         <p>{product.vendor || product.brand}</p>

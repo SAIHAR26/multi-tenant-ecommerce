@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { getUserProfile } from "../../services/userService";
+import toast from "react-hot-toast";
+import { getUserProfile, updateUserProfile } from "../../services/userService";
 import { getSavedUser } from "../../api/auth";
 
 function ProfilePage() {
   const [profile, setProfile] = useState(null);
+  const [form, setForm] = useState({ name: "", phone: "", location: "", age: "" });
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -12,11 +16,23 @@ function ProfilePage() {
       try {
         const data = await getUserProfile();
         setProfile(data);
+        setForm({
+          name: data?.name || "",
+          phone: data?.phone || "",
+          location: data?.location || "",
+          age: data?.age || "",
+        });
         setLoading(false);
       } catch (err) {
         const backupUser = getSavedUser();
         if (backupUser) {
           setProfile(backupUser);
+          setForm({
+            name: backupUser.name || "",
+            phone: backupUser.phone || "",
+            location: backupUser.location || "",
+            age: backupUser.age || "",
+          });
         } else {
           setError("Failed to fetch user registration identities. " + (err.message || ""));
         }
@@ -25,6 +41,30 @@ function ProfilePage() {
     }
     fetchProfile();
   }, []);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }));
+  };
+
+  const handleSave = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+
+    try {
+      const updatedProfile = await updateUserProfile(form);
+      setProfile(updatedProfile);
+      setEditing(false);
+      toast.success("Profile updated");
+    } catch (err) {
+      toast.error(err.message || "Profile could not be updated.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return <div className="customer-page"><p className="customer-eyebrow">Syncing secure profile dashboard...</p></div>;
@@ -52,31 +92,55 @@ function ProfilePage() {
           <h1>Your V SHOP identity.</h1>
           <p>Manage personal details, saved addresses, reward tier, and shopping preferences.</p>
         </div>
-        <button className="customer-primary-button" type="button">Edit Profile</button>
+        <button className="customer-primary-button" type="button" onClick={() => setEditing((value) => !value)}>
+          {editing ? "Cancel" : "Edit Profile"}
+        </button>
       </section>
 
       <section className="customer-content-grid">
         <article className="customer-panel">
-          <div className="customer-profile-large">
-            <span className="customer-profile-large__avatar">{initials}</span>
-            <div>
-              <p className="customer-eyebrow">{profile?.tier || "Gold member"}</p>
-              <h2>{customerName}</h2>
-              <span>{customerEmail}</span>
+          {editing ? (
+            <form className="checkout-form-grid" onSubmit={handleSave}>
+              <Field label="Full Name" name="name" value={form.name} onChange={handleChange} />
+              <Field label="Phone" name="phone" value={form.phone} onChange={handleChange} />
+              <Field label="Location" name="location" value={form.location} onChange={handleChange} />
+              <Field label="Age" name="age" type="number" value={form.age} onChange={handleChange} />
+              <button className="customer-primary-button" type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save Profile"}
+              </button>
+            </form>
+          ) : (
+            <div className="customer-profile-large">
+              <span className="customer-profile-large__avatar">{initials}</span>
+              <div>
+                <p className="customer-eyebrow">{profile?.tier || "Gold member"}</p>
+                <h2>{customerName}</h2>
+                <span>{customerEmail}</span>
+                <span>{profile?.phone || "Phone not added"}</span>
+              </div>
             </div>
-          </div>
+          )}
         </article>
 
         <article className="customer-panel">
           <div className="customer-panel__header"><div><p className="customer-eyebrow">Saved addresses</p><h2>Delivery locations</h2></div></div>
           <div className="address-card">
             <h3>Home</h3>
-            <p>{profile?.address || "Indiranagar, Bengaluru, Karnataka 560038"}</p>
-            <span>Default address</span>
+            <p>{profile?.location || "No delivery location saved yet."}</p>
+            <span>{profile?.location ? "Default location" : "Add your location from Edit Profile"}</span>
           </div>
         </article>
       </section>
     </div>
+  );
+}
+
+function Field({ label, name, value, onChange, type = "text" }) {
+  return (
+    <label className="checkout-field">
+      <span>{label}</span>
+      <input name={name} type={type} value={value} onChange={onChange} />
+    </label>
   );
 }
 

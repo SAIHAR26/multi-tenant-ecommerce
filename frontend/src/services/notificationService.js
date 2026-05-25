@@ -20,7 +20,18 @@ export const getNotifications = async (filter = "all") => {
   const params = getAudienceParams();
   params.set("filter", filter);
 
-  return apiRequest(`/api/notifications?${params.toString()}`, {}, "Notifications could not be loaded.");
+  const data = await apiRequest(`/api/notifications?${params.toString()}`, {}, "Notifications could not be loaded.");
+
+  return {
+    notifications: Array.isArray(data?.notifications)
+      ? data.notifications
+      : Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data)
+      ? data
+      : [],
+    unreadCount: data?.unreadCount || 0,
+  };
 };
 
 export const createNotification = async (payload) => {

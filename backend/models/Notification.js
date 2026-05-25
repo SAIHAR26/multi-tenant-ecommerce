@@ -31,14 +31,34 @@ const notificationSchema = new mongoose.Schema(
 
     title: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+      default: "",
     },
 
     message: {
       type: String,
       required: true,
       trim: true,
+    },
+
+    notificationCategory: {
+      type: String,
+      enum: [
+        "vendor",
+        "order",
+        "review",
+        "payment",
+        "customer",
+        "system",
+      ],
+      default: "system",
+    },
+
+    targetRole: {
+      type: String,
+      enum: ["admin", "vendor", "customer", "all"],
+      default: "all",
     },
 
     sender: {
@@ -68,3 +88,4 @@ module.exports = mongoose.model(
   "Notification",
   notificationSchema
 );
+module.exports = mongoose.model("Notification", notificationSchema);

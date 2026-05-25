@@ -5,6 +5,7 @@ import { getProducts } from "../services/productService";
 import { getStores } from "../services/storeService";
 import defaultProduct from "../assets/default-product.png";
 import defaultStore from "../assets/default-store.jpg";
+import { getProductImage } from "../utils/productImages";
 import "./Home.css";
 
 function Home() {
@@ -128,6 +129,22 @@ function Home() {
                           }
                           alt={product.name}
                         />
+                products.slice(0, 6).map((product) => (
+                  <article
+                    className="product-card"
+                    key={product._id}
+                  >
+                    <div className="product-card__image">
+                      <img
+                        src={getProductImage(product)}
+                        alt={product.name}
+                      />
+                    </div>
+
+                    <div className="product-card__body">
+                      <div>
+                        <h3>{product.name}</h3>
+                        <p>{product.brand || "V SHOP"}</p>
                       </div>
 
                       <div className="product-card__body">

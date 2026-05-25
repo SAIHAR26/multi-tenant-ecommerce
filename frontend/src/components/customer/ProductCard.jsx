@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import defaultProduct from "../../assets/default-product.png";
+import { useToast } from "../useToast";
+import { addToCart } from "../../services/cartService";
+import { addToWishlist } from "../../services/wishlistService";
+import { getProductImage, PRODUCT_IMAGE_FALLBACK } from "../../utils/productImages";
 
 function ProductCard({ product = {}, allProducts = [] }) {
   const navigate = useNavigate();
@@ -8,6 +12,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
   const [previewProduct, setPreviewProduct] = useState(null);
 
   const productId = product?._id || product?.id;
+  const productImage = getProductImage(product);
 
   const formattedPrice = new Intl.NumberFormat("en-IN").format(
     product?.price || 0
@@ -31,6 +36,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
         <div className="customer-product-card__image">
           <img
             src={product?.image || defaultProduct}
+            src={productImage}
             alt={product?.name || "Product"}
           />
 
@@ -72,6 +78,10 @@ function ProductCard({ product = {}, allProducts = [] }) {
 
 function QuickView({ product, onClose }) {
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  const productId = product?._id || product?.id;
+  const productImage = getProductImage(product);
 
   const formattedPrice = new Intl.NumberFormat("en-IN").format(
     product?.price || 0
@@ -83,6 +93,7 @@ function QuickView({ product, onClose }) {
 
       <img
         src={product?.image || defaultProduct}
+        src={productImage}
         alt={product?.name || "Product"}
         width="250"
       />
@@ -115,6 +126,29 @@ function QuickView({ product, onClose }) {
         >
           +
         </button>
+      <h3>Suggested Products</h3>
+
+      <div>
+        {suggestedProducts.length > 0 ? (
+          suggestedProducts.map((item) => (
+            <button
+              key={item?._id || item?.id}
+              type="button"
+              onClick={() => {
+                const id = item?._id || item?.id;
+                if (id) navigate(`/customer/product/${id}`);
+              }}
+            >
+              <img
+                src={getProductImage(item, PRODUCT_IMAGE_FALLBACK)}
+                alt={item?.name || "Product"}
+              />
+              <p>{item?.name}</p>
+            </button>
+          ))
+        ) : (
+          <p>No suggestions</p>
+        )}
       </div>
 
       <button>Add To Cart</button>

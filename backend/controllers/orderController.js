@@ -1,7 +1,8 @@
 const Notification = require("../models/Notification");
+const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 require("../models/User");
-require("../models/Product");
+const Product = require("../models/Product");
 require("../models/Store");
 
 const escapeCsv = (value) => {
@@ -90,12 +91,43 @@ const buildPdf = (rows) => {
   return `%PDF-1.4\n${objects.join("\n")}\ntrailer << /Root 1 0 R >>\n%%EOF`;
 };
 
+const populateOrderQuery = (query) =>
+  query
+    .populate("userId", "name email")
+    .populate({
+      path: "products.productId",
+      select: "name price images brand discount vendor storeId",
+      populate: [
+        { path: "vendor", select: "name email" },
+        { path: "storeId", select: "storeName" },
+      ],
+    });
+
+const getProductDiscount = (product, quantity) => {
+  const subtotal = Number(product.price || 0) * quantity;
+  const discountPercent = Math.min(Math.max(Number(product.discount || 0), 0), 100);
+  return Math.round((subtotal * discountPercent) / 100);
+};
+
+const getOrderFilters = async (req) => {
+  if (!req.user) return {};
+
+  if (req.user.role === "customer") {
+    return { userId: req.user._id };
+  }
+
+  if (req.user.role === "vendor") {
+    const products = await Product.find({ vendor: req.user._id }).select("_id").lean();
+    return { "products.productId": { $in: products.map((product) => product._id) } };
+  }
+
+  return {};
+};
+
 const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate("userId", "name email")
-      .populate("products.productId", "name price")
-      .sort({ createdAt: -1 });
+    const filters = await getOrderFilters(req);
+    const orders = await populateOrderQuery(Order.find(filters)).sort({ createdAt: -1 });
 
     res.status(200).json(orders);
   } catch (error) {
@@ -175,15 +207,99 @@ const exportOrders = async (req, res) => {
 
 const createOrder = async (req, res) => {
   try {
-    const order = await Order.create(req.body);
+    const requestedProducts = Array.isArray(req.body.products) ? req.body.products : [];
 
-    await Notification.create({
-      title: "New order received",
-      message: `Order ${order._id} was created for Rs ${order.totalAmount}.`,
-      type: "order",
+    if (!requestedProducts.length) {
+      return res.status(400).json({ message: "Order must contain at least one product." });
+    }
+
+    const productIds = requestedProducts.map((item) => item.productId).filter(Boolean);
+    const products = await Product.find({ _id: { $in: productIds } })
+      .populate("vendor", "name email")
+      .populate("storeId", "storeName");
+    const productMap = new Map(products.map((product) => [product._id.toString(), product]));
+
+    if (productMap.size !== productIds.length) {
+      return res.status(400).json({ message: "One or more products are no longer available." });
+    }
+
+    let subtotal = 0;
+    let discountAmount = 0;
+
+    const orderProducts = requestedProducts.map((item) => {
+      const quantity = Math.max(1, Number(item.quantity) || 1);
+      const product = productMap.get(item.productId.toString());
+      subtotal += Number(product.price || 0) * quantity;
+      discountAmount += getProductDiscount(product, quantity);
+
+      return {
+        productId: product._id,
+        quantity,
+      };
     });
 
-    res.status(201).json(order);
+    const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
+    const deliveryCharge = discountedSubtotal > 0 && discountedSubtotal < 999 ? 99 : 0;
+    const totalAmount = discountedSubtotal + deliveryCharge;
+
+    const order = await Order.create({
+      ...req.body,
+      products: orderProducts,
+      userId: req.user?._id || req.body.userId,
+      subtotal,
+      discountAmount,
+      deliveryCharge,
+      totalAmount,
+    });
+
+    await Notification.create({
+      title: "Order placed",
+      message: `Your order ${order._id} was created for Rs ${order.totalAmount}.`,
+      type: "order",
+      targetRole: "customer",
+      userId: req.user?._id || req.body.userId,
+      sender: "V SHOP",
+      preview: "Order confirmation",
+    });
+
+    const vendorGroups = new Map();
+
+    for (const item of orderProducts) {
+      const product = productMap.get(item.productId.toString());
+      const vendorId = product.vendor?._id?.toString() || product.vendor?.toString();
+
+      if (!vendorId) continue;
+
+      const current = vendorGroups.get(vendorId) || {
+        vendorId,
+        storeName: product.storeId?.storeName || product.vendor?.name || "Your store",
+        productNames: [],
+      };
+
+      current.productNames.push(product.name);
+      vendorGroups.set(vendorId, current);
+    }
+
+    await Notification.insertMany(
+      [...vendorGroups.values()].map((group) => ({
+        title: "New product purchase",
+        message: `${req.user?.name || "A customer"} bought ${group.productNames.join(", ")}. Order ${order._id}.`,
+        type: "order",
+        targetRole: "vendor",
+        userId: group.vendorId,
+        sender: "V SHOP",
+        preview: `${group.storeName} received a new order`,
+      }))
+    );
+
+    await Cart.findOneAndUpdate(
+      { userId: req.user?._id || req.body.userId },
+      { $pull: { items: { productId: { $in: orderProducts.map((item) => item.productId) } } } }
+    );
+
+    const populatedOrder = await populateOrderQuery(Order.findById(order._id));
+
+    res.status(201).json(populatedOrder);
   } catch (error) {
     res.status(400).json({
       message: error.message || "Failed to create order.",
@@ -193,14 +309,26 @@ const createOrder = async (req, res) => {
 
 const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
-      .populate("userId", "name email")
-      .populate("products.productId", "name price");
+    const order = await populateOrderQuery(Order.findById(req.params.id));
 
     if (!order) {
       return res.status(404).json({
         message: "Order not found.",
       });
+    }
+
+    if (req.user?.role === "customer" && order.userId?._id?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    if (req.user?.role === "vendor") {
+      const ownsProduct = order.products.some(
+        (item) => item.productId?.vendor?._id?.toString() === req.user._id.toString()
+      );
+
+      if (!ownsProduct) {
+        return res.status(403).json({ message: "Access denied." });
+      }
     }
 
     res.status(200).json(order);

@@ -1,6 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
+const { protect } = require("../middlewares/authMiddleware");
 
 const {
   createOrder,
@@ -15,13 +16,13 @@ router.get("/export", exportOrders);
 
 router
   .route("/")
-  .get(getOrders)
-  .post(createOrder);
+  .get(protect, getOrders)
+  .post(protect, createOrder);
 
 router
   .route("/:id")
-  .get(getOrderById)
-  .patch(updateOrder)
-  .delete(deleteOrder);
+  .get(protect, getOrderById)
+  .patch(protect, updateOrder)
+  .delete(protect, deleteOrder);
 
 module.exports = router;
