@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 require("../models/Store");
 const Store = require("../models/Store");
@@ -31,6 +32,7 @@ const normalizeProductPayload = async (body) => {
       (await User.findOne({ role: "vendor" }).sort({ createdAt: -1 })) ||
       (await User.findOne({ role: "admin" }).sort({ createdAt: -1 })) ||
       (await User.findOne().sort({ createdAt: -1 }));
+
     payload.vendor = vendor?._id;
   }
 
@@ -51,14 +53,22 @@ const normalizeProductPayload = async (body) => {
 
 const getCategoryImage = (category) => {
   const images = {
-    Accessories: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=80",
-    Footwear: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
-    Men: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
-    Shoes: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
-    Women: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
+    Accessories:
+      "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=80",
+    Footwear:
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    Men:
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+    Shoes:
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    Women:
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
   };
 
-  return images[category] || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80";
+  return (
+    images[category] ||
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80"
+  );
 };
 
 // GET ALL PRODUCTS
@@ -89,9 +99,9 @@ const getProducts = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.status(200).json(products);
-
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: error.message || "Failed to fetch products.",
     });
   }
@@ -100,18 +110,26 @@ const getProducts = async (req, res) => {
 // GET SINGLE PRODUCT
 const getProductById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
     const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({
+        success: false,
         message: "Product not found",
       });
     }
 
     res.status(200).json(product);
-
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: error.message || "Failed to fetch product.",
     });
   }
@@ -126,7 +144,13 @@ const getRecommendations = async (req, res) => {
 
     const categoryGroups = await Product.aggregate([
       { $match: { isActive: true } },
-      { $group: { _id: "$category", count: { $sum: 1 }, averageRating: { $avg: "$rating" } } },
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+          averageRating: { $avg: "$rating" },
+        },
+      },
       { $sort: { count: -1, averageRating: -1 } },
       { $limit: 4 },
     ]);
@@ -142,6 +166,7 @@ const getRecommendations = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: error.message || "Failed to load recommendations.",
     });
   }
@@ -151,15 +176,17 @@ const getRecommendations = async (req, res) => {
 const addProduct = async (req, res) => {
   try {
     const payload = await normalizeProductPayload(req.body);
+
     const product = await Product.create(payload);
 
     res.status(201).json({
+      success: true,
       message: "Product created successfully",
       product,
     });
-
   } catch (error) {
     res.status(400).json({
+      success: false,
       message: error.message || "Failed to add product.",
     });
   }
@@ -168,7 +195,15 @@ const addProduct = async (req, res) => {
 // UPDATE PRODUCT
 const updateProduct = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
     const payload = await normalizeProductPayload(req.body);
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       payload,
@@ -180,14 +215,18 @@ const updateProduct = async (req, res) => {
 
     if (!product) {
       return res.status(404).json({
+        success: false,
         message: "Product not found.",
       });
     }
 
-    res.status(200).json(product);
-
+    res.status(200).json({
+      success: true,
+      product,
+    });
   } catch (error) {
     res.status(400).json({
+      success: false,
       message: error.message || "Failed to update product.",
     });
   }
@@ -196,20 +235,29 @@ const updateProduct = async (req, res) => {
 // DELETE PRODUCT
 const deleteProduct = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
     const product = await Product.findByIdAndDelete(req.params.id);
 
     if (!product) {
       return res.status(404).json({
+        success: false,
         message: "Product not found.",
       });
     }
 
     res.status(200).json({
+      success: true,
       message: "Product deleted successfully.",
     });
-
   } catch (error) {
     res.status(400).json({
+      success: false,
       message: error.message || "Failed to delete product.",
     });
   }

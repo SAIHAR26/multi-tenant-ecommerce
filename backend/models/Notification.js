@@ -8,11 +8,10 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
 
-    type: {
-      type: String,
-      enum: ["ORDER", "PAYMENT", "STORE", "REVIEW", "SYSTEM"],
-      required: true,
-    },
+type: {
+  type: String,
+  required: true,
+},
 
     title: {
       type: String,
