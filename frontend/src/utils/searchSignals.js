@@ -22,7 +22,7 @@ export const saveSearchSignal = (value) => {
 
   const nextSignals = [
     query,
-    ...getSearchSignals().filter((item) => item !== query),
+    ...getSearchSignals(),
   ].slice(0, MAX_SEARCH_SIGNALS);
 
   localStorage.setItem(SEARCH_SIGNAL_KEY, JSON.stringify(nextSignals));
@@ -30,4 +30,3 @@ export const saveSearchSignal = (value) => {
 };
 
 export const hasEnoughSearchSignals = () => getSearchSignals().length >= 2;
-

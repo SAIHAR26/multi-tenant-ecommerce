@@ -9,30 +9,28 @@ function ProductCard({ product = {}, allProducts = [] }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
   void allProducts;
+
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
   const productId = product?._id || product?.id;
   const productImage = getProductImage(product);
-
-  const formattedPrice = new Intl.NumberFormat("en-IN").format(
-    product?.price || 0
-  );
-
-  const openQuickView = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    goToDetails();
-  };
+  const formattedPrice = new Intl.NumberFormat("en-IN").format(product?.price || 0);
 
   const goToDetails = () => {
     if (!productId) return;
     navigate(`/customer/product/${productId}`);
   };
 
-  const handleAddToWishlist = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const openQuickView = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    goToDetails();
+  };
+
+  const handleAddToWishlist = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
 
     try {
       setIsAddingToWishlist(true);
@@ -62,10 +60,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
     <article className="customer-product-card">
       <div className="customer-product-card__image">
         <button className="customer-product-card__image-button" type="button" onClick={goToDetails}>
-          <img
-            src={productImage}
-            alt={product?.name || "Product"}
-          />
+          <img src={productImage} alt={product?.name || "Product"} />
           <span>{product?.discount || 0}% off</span>
         </button>
 
@@ -82,14 +77,10 @@ function ProductCard({ product = {}, allProducts = [] }) {
 
       <div className="customer-product-card__body">
         <div>
-          <button
-            className="customer-product-card__title"
-            type="button"
-            onClick={goToDetails}
-          >
-            {product?.name}
+          <button className="customer-product-card__title" type="button" onClick={goToDetails}>
+            {product?.name || "Product"}
           </button>
-          <p>{product?.brand || "V SHOP"}</p>
+          <p>{product?.brand || product?.storeId?.storeName || "V SHOP"}</p>
         </div>
 
         <div className="customer-product-card__meta">
@@ -98,11 +89,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
         </div>
 
         <div className="customer-product-card__actions">
-          <button
-            className="customer-secondary-button"
-            type="button"
-            onClick={openQuickView}
-          >
+          <button className="customer-secondary-button" type="button" onClick={openQuickView}>
             Quick View
           </button>
 
@@ -116,7 +103,6 @@ function ProductCard({ product = {}, allProducts = [] }) {
           </button>
         </div>
       </div>
-
     </article>
   );
 }

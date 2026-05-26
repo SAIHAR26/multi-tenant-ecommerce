@@ -29,12 +29,21 @@ const getProductSearchText = (product) =>
 
 const getSearchBasedProducts = (products, signals) => {
   if (!signals.length) return [];
+  const uniqueSignals = [...new Set(signals)];
 
-  return products
+  const matchedProducts = products
     .filter((product) => {
       const searchableText = getProductSearchText(product);
-      return signals.some((signal) => searchableText.includes(signal));
+      return uniqueSignals.some((signal) => searchableText.includes(signal));
     })
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
+    .slice(0, 8);
+
+  if (matchedProducts.length) {
+    return matchedProducts;
+  }
+
+  return products
     .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
     .slice(0, 8);
 };

@@ -7,8 +7,8 @@ import { getCartItems, removeFromCart } from "../../services/cartService";
 import { getProductImage } from "../../utils/productImages";
 import { calculateOrderTotals, formatPrice, getLineDiscount } from "../../utils/orderTotals";
 
-const getItemId = (item) => String(item._id || item.id || item.productId || item.product?._id || "");
-const getProduct = (item) => item.product || item;
+const getItemId = (item) => String(item?._id || item?.id || item?.productId || item?.product?._id || "");
+const getProduct = (item) => item?.product || item || {};
 const getSellerName = (product) =>
   product?.storeId?.storeName ||
   product?.vendor?.name ||
@@ -84,7 +84,9 @@ function CartPage() {
             <h1>Your cart is empty.</h1>
             <p>Your premium selections will show up here once added. Explore our catalog to find exclusive picks.</p>
           </div>
-          <Link className="customer-primary-button" to="/customer">Browse Products</Link>
+          <Link className="customer-primary-button" to="/customer">
+            Browse Products
+          </Link>
         </section>
       </div>
     );
@@ -98,15 +100,21 @@ function CartPage() {
           <h1>Your selected products.</h1>
           <p>Review premium picks, apply offers, and continue to a secure V SHOP checkout.</p>
         </div>
-        <Link className="customer-primary-button cart-checkout-link" to="/customer/checkout">Checkout</Link>
+        <Link className="customer-primary-button cart-checkout-link" to="/customer/checkout">
+          Checkout
+        </Link>
       </section>
 
       <section className="customer-content-grid">
         <article className="customer-panel">
           <div className="customer-panel__header">
-            <div><p className="customer-eyebrow">Cart items</p><h2>Ready to buy</h2></div>
+            <div>
+              <p className="customer-eyebrow">Cart items</p>
+              <h2>Ready to buy</h2>
+            </div>
             <span className="customer-pill">{cartItems.length} items</span>
           </div>
+
           <div className="wishlist-list">
             {cartItems.map((item) => {
               const product = getProduct(item);
@@ -114,7 +122,7 @@ function CartPage() {
 
               return (
                 <div className="wishlist-card" key={id || product.name}>
-                  <img src={getProductImage(product)} alt={product.name} />
+                  <img src={getProductImage(product)} alt={product.name || "Product"} />
                   <div>
                     <h3>{product.name}</h3>
                     <p>{getSellerName(product)}</p>
@@ -138,12 +146,29 @@ function CartPage() {
         </article>
 
         <article className="customer-panel">
-          <div className="customer-panel__header"><div><p className="customer-eyebrow">Summary</p><h2>Order total</h2></div></div>
+          <div className="customer-panel__header">
+            <div>
+              <p className="customer-eyebrow">Summary</p>
+              <h2>Order total</h2>
+            </div>
+          </div>
           <div className="offer-stack">
-            <div><strong>Subtotal</strong><span>{formatPrice(totals.subtotal)}</span></div>
-            <div><strong>Product discount</strong><span>{formatPrice(totals.discount)} saved</span></div>
-            <div><strong>Delivery charge</strong><span>{totals.deliveryCharge ? formatPrice(totals.deliveryCharge) : "Free"}</span></div>
-            <div><strong>Total</strong><span>{formatPrice(totals.total)}</span></div>
+            <div>
+              <strong>Subtotal</strong>
+              <span>{formatPrice(totals.subtotal)}</span>
+            </div>
+            <div>
+              <strong>Product discount</strong>
+              <span>{formatPrice(totals.discount)} saved</span>
+            </div>
+            <div>
+              <strong>Delivery charge</strong>
+              <span>{totals.deliveryCharge ? formatPrice(totals.deliveryCharge) : "Free"}</span>
+            </div>
+            <div>
+              <strong>Total</strong>
+              <span>{formatPrice(totals.total)}</span>
+            </div>
           </div>
         </article>
       </section>

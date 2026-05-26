@@ -13,11 +13,11 @@ const notificationSchema = new mongoose.Schema(
       enum: ["vendor", "order", "review", "payment", "customer", "system"],
       required: true,
       default: "system",
+      index: true,
     },
 
     title: {
       type: String,
-      required: false,
       trim: true,
       default: "",
     },
@@ -30,14 +30,7 @@ const notificationSchema = new mongoose.Schema(
 
     notificationCategory: {
       type: String,
-      enum: [
-        "vendor",
-        "order",
-        "review",
-        "payment",
-        "customer",
-        "system",
-      ],
+      enum: ["vendor", "order", "review", "payment", "customer", "system"],
       default: "system",
     },
 
@@ -45,6 +38,7 @@ const notificationSchema = new mongoose.Schema(
       type: String,
       enum: ["admin", "vendor", "customer", "all"],
       default: "all",
+      index: true,
     },
 
     sender: {
@@ -62,6 +56,7 @@ const notificationSchema = new mongoose.Schema(
     isRead: {
       type: Boolean,
       default: false,
+      index: true,
     },
   },
   {

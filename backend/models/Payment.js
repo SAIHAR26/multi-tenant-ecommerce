@@ -11,7 +11,7 @@ const paymentSchema = new mongoose.Schema(
 
     method: {
       type: String,
-      enum: ["COD", "CARD", "NETBANKING"],
+      enum: ["COD", "CARD", "NETBANKING" , "UPI"],
       required: true,
     },
 
