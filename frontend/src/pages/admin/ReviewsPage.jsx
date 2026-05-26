@@ -88,7 +88,9 @@ function ReviewsPage() {
                 <tr>
                   <th>Product</th>
                   <th>Customer</th>
+                  <th>Email</th>
                   <th>Rating</th>
+                  <th>Comment</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -97,20 +99,29 @@ function ReviewsPage() {
                 {reviews.length > 0 ? (
                   reviews.map((review) => (
                     <tr
-                      key={
-                        review._id
-                      }
+                      key={review._id}
                     >
                       <td>
-                        {review.product}
+                        {review.productId
+                          ?.name || "No Product"}
                       </td>
 
                       <td>
-                        {review.customer}
+                        {review.userId
+                          ?.name || "No Customer"}
                       </td>
 
                       <td>
-                        {review.rating}
+                        {review.userId
+                          ?.email || "No Email"}
+                      </td>
+
+                      <td>
+                        ⭐ {review.rating}
+                      </td>
+
+                      <td>
+                        {review.comment}
                       </td>
 
                       <td>
@@ -124,7 +135,7 @@ function ReviewsPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="4"
+                      colSpan="6"
                     >
                       No reviews found
                     </td>
