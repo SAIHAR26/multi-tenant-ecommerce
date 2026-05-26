@@ -4,6 +4,7 @@ const router = express.Router();
 
 const {
   getReviews,
+  getReviewsByProduct,
   createReview,
   getReviewById,
   updateReview,
@@ -19,6 +20,8 @@ router.route("/")
 
 
 // GET SINGLE REVIEW + UPDATE + DELETE
+
+router.get("/product/:productId", getReviewsByProduct);
 
 router.route("/:id")
   .get(getReviewById)

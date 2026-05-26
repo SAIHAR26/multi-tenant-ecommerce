@@ -30,6 +30,24 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
 
+    subtotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    discountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    deliveryCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     status: {
       type: String,
       enum: ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"],
@@ -40,6 +58,12 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ["PENDING", "PAID", "FAILED"],
       default: "PENDING",
+    },
+
+    paymentMethod: {
+      type: String,
+      trim: true,
+      default: "UPI",
     },
 
     deliveryAddress: {

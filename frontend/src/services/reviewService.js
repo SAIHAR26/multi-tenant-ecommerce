@@ -4,8 +4,13 @@ const API_BASE_URL =
 
 export const getReviews =
   async (productId) => {
+    const path =
+      productId && productId !== "all"
+        ? `/api/reviews/product/${productId}`
+        : "/api/reviews";
+
     const response = await fetch(
-      `${API_BASE_URL}/api/reviews/${productId}`
+      `${API_BASE_URL}${path}`
     );
 
     if (!response.ok) {

@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
+import { useToast } from "../../components/useToast";
+import { addToCart } from "../../services/cartService";
 import {
   getProductById,
   getProducts,
 } from "../../services/productService";
+import { getReviews } from "../../services/reviewService";
+import { addToWishlist } from "../../services/wishlistService";
+import { getProductImage } from "../../utils/productImages";
 import "./ProductDetails.css";
 
 const sizes = ["S", "M", "L", "XL"];
@@ -12,9 +17,11 @@ const sizes = ["S", "M", "L", "XL"];
 function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState(null);
   const [products, setProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,14 +29,19 @@ function ProductDetails() {
   const [selectedSize, setSelectedSize] = useState("M");
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState("");
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
   useEffect(() => {
     const fetchProductData = async () => {
       try {
         setLoading(true);
 
-        const productData = await getProductById(id);
-        const allProducts = await getProducts();
+        const [productData, allProducts, productReviews] = await Promise.all([
+          getProductById(id),
+          getProducts(),
+          getReviews(id).catch(() => []),
+        ]);
 
         const currentProduct =
           productData.product || productData;
@@ -42,10 +54,10 @@ function ProductDetails() {
 
         setProduct(currentProduct);
         setProducts(productsArray);
+        setReviews(Array.isArray(productReviews) ? productReviews : []);
 
         setSelectedImage(
-          currentProduct?.image ||
-            "https://via.placeholder.com/400"
+          getProductImage(currentProduct)
         );
       } catch (err) {
         console.log(err);
@@ -63,22 +75,19 @@ function ProductDetails() {
 
     return products
       .filter((item) => item._id !== product._id)
+      .filter((item) => item.category === product.category || item.brand === product.brand)
       .slice(0, 4);
   }, [product, products]);
 
   const galleryImages = useMemo(() => {
     if (!product) return [];
 
-    return [
-      product.image ||
-        "https://via.placeholder.com/400",
-      ...similarProducts.map(
-        (item) =>
-          item.image ||
-          "https://via.placeholder.com/400"
-      ),
-    ];
-  }, [product, similarProducts]);
+    const images = Array.isArray(product.images) && product.images.length
+      ? product.images
+      : [getProductImage(product)];
+
+    return [...new Set(images.filter(Boolean))];
+  }, [product]);
 
   if (loading) {
     return (
@@ -113,11 +122,40 @@ function ProductDetails() {
 
   const formattedPrice = new Intl.NumberFormat("en-IN").format(product.price || 0);
   const stockCount = product.stock || 10;
+  const productSizes = product.sizes?.length ? product.sizes : sizes;
+  const vendorName = product.storeId?.storeName || product.brand || "V SHOP";
+  const vendorDescription =
+    product.storeId?.storeDescription ||
+    `${vendorName} is a verified V SHOP seller.`;
 
   const availability =
     stockCount > 10
       ? "In Stock"
       : "Only Few Left";
+
+  const handleAddToCart = async () => {
+    try {
+      setIsAddingToCart(true);
+      await addToCart(product, quantity);
+      showToast("Product added to cart");
+    } catch (err) {
+      showToast(err.message || "Unable to add product to cart", "error");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    try {
+      setIsAddingToWishlist(true);
+      await addToWishlist(product);
+      showToast("Product added to wishlist");
+    } catch (err) {
+      showToast(err.message || "Unable to add product to wishlist", "error");
+    } finally {
+      setIsAddingToWishlist(false);
+    }
+  };
 
   return (
     <div className="product-details-page">
@@ -130,22 +168,24 @@ function ProductDetails() {
             />
           </div>
 
-          <div className="product-gallery__thumbs">
-            {galleryImages.map((image, index) => (
-              <button
-                key={index}
-                type="button"
-                className={
-                  image === selectedImage
-                    ? "product-gallery__thumb is-active"
-                    : "product-gallery__thumb"
-                }
-                onClick={() => setSelectedImage(image)}
-              >
-                <img src={image} alt={`thumb-${index}`} />
-              </button>
-            ))}
-          </div>
+          {galleryImages.length > 1 && (
+            <div className="product-gallery__thumbs">
+              {galleryImages.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  className={
+                    image === selectedImage
+                      ? "product-gallery__thumb is-active"
+                      : "product-gallery__thumb"
+                  }
+                  onClick={() => setSelectedImage(image)}
+                >
+                  <img src={image} alt={`${product.name} view ${index + 1}`} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <article className="product-info-panel">
@@ -175,7 +215,7 @@ function ProductDetails() {
             <div>
               <span>Vendor</span>
               <strong>
-                {product.vendor?.storeName || "V SHOP"}
+                {vendorName}
               </strong>
               <small>Verified seller</small>
             </div>
@@ -189,10 +229,20 @@ function ProductDetails() {
             </p>
           </div>
 
+          <div className="product-vendor-panel">
+            <h2>Vendor Details</h2>
+            <div>
+              <strong>{vendorName}</strong>
+              <span>{product.storeId?.storeCategory || product.category || "Marketplace"}</span>
+            </div>
+            <p>{vendorDescription}</p>
+            <small>{product.storeId?.location || "India"} · Verified seller</small>
+          </div>
+
           <div className="product-size-section">
             <h2>Select Size</h2>
             <div className="product-size-options">
-              {sizes.map((size) => (
+              {productSizes.map((size) => (
                 <button
                   key={size}
                   type="button"
@@ -234,19 +284,66 @@ function ProductDetails() {
           </div>
 
           <div className="product-action-row">
-            <button className="product-action product-action--primary">
-              Add to Cart
+            <button
+              type="button"
+              className="product-action product-action--primary"
+              disabled={isAddingToCart}
+              onClick={handleAddToCart}
+            >
+              {isAddingToCart ? "Adding..." : "Add to Cart"}
             </button>
 
-            <button className="product-action product-action--solid">
+            <button
+              type="button"
+              className="product-action product-action--solid"
+              onClick={async () => {
+                await handleAddToCart();
+                navigate("/customer/cart");
+              }}
+            >
               Buy Now
             </button>
 
-            <button className="product-action product-action--outline">
-              Add to Wishlist
+            <button
+              type="button"
+              className="product-action product-action--outline"
+              disabled={isAddingToWishlist}
+              onClick={handleAddToWishlist}
+            >
+              {isAddingToWishlist ? "Saving..." : "Add to Wishlist"}
             </button>
           </div>
         </article>
+      </section>
+
+      <section className="similar-products-section">
+        <div className="customer-panel__header">
+          <div>
+            <p className="customer-eyebrow">Customer proof</p>
+            <h2>Reviews</h2>
+          </div>
+
+          <span>{reviews.length} reviews</span>
+        </div>
+
+        {reviews.length > 0 ? (
+          <div className="product-review-list">
+            {reviews.map((review) => (
+              <article key={review._id}>
+                <div>
+                  <strong>{review.userId?.name || "V SHOP customer"}</strong>
+                  <span>{review.rating} stars</span>
+                </div>
+                <p>{review.comment}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="product-details-state product-details-state--inline">
+            <h2>No reviews yet</h2>
+            <p>Reviews from customers in the database will appear here.</p>
+          </div>
+        )}
       </section>
 
       <section className="similar-products-section">
@@ -265,7 +362,7 @@ function ProductDetails() {
               <ProductCard
                 key={item._id}
                 product={item}
-                allProducts={products}  // ✅ THIS IS THE FIX
+                allProducts={products}
               />
             ))}
           </div>

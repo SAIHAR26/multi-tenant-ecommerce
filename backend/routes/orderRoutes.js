@@ -1,20 +1,28 @@
 const express = require("express");
+
 const router = express.Router();
+const { protect } = require("../middlewares/authMiddleware");
 
 const {
   createOrder,
-  getMyOrders,
+  deleteOrder,
+  exportOrders,
   getOrderById,
-  updateOrderStatus,
+  getOrders,
+  updateOrder,
 } = require("../controllers/orderController");
 
-const protect = require("../middlewares/authMiddleware");
+router.get("/export", exportOrders);
 
-router.use(protect);
+router
+  .route("/")
+  .get(protect, getOrders)
+  .post(protect, createOrder);
 
-router.post("/", createOrder);
-router.get("/", getMyOrders);
-router.get("/:id", getOrderById);
-router.put("/:id", updateOrderStatus);
+router
+  .route("/:id")
+  .get(protect, getOrderById)
+  .patch(protect, updateOrder)
+  .delete(protect, deleteOrder);
 
 module.exports = router;

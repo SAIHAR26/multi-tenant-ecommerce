@@ -8,14 +8,16 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
 
-type: {
-  type: String,
-  required: true,
-},
+    type: {
+      type: String,
+      enum: ["vendor", "order", "review", "payment", "customer", "system"],
+      required: true,
+      default: "system",
+      index: true,
+    },
 
     title: {
       type: String,
-      required: false,
       trim: true,
       default: "",
     },
@@ -28,14 +30,7 @@ type: {
 
     notificationCategory: {
       type: String,
-      enum: [
-        "vendor",
-        "order",
-        "review",
-        "payment",
-        "customer",
-        "system",
-      ],
+      enum: ["vendor", "order", "review", "payment", "customer", "system"],
       default: "system",
     },
 
@@ -43,6 +38,7 @@ type: {
       type: String,
       enum: ["admin", "vendor", "customer", "all"],
       default: "all",
+      index: true,
     },
 
     sender: {
@@ -60,6 +56,7 @@ type: {
     isRead: {
       type: Boolean,
       default: false,
+      index: true,
     },
   },
   {

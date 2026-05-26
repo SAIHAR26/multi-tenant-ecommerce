@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 require("../models/Store");
+
 const Store = require("../models/Store");
 const User = require("../models/User");
+const { fallbackProducts } = require("../data/fallbackCatalog");
 
 const normalizeProductPayload = async (body) => {
   const payload = {
@@ -74,7 +76,11 @@ const getCategoryImage = (category) => {
 // GET ALL PRODUCTS
 const getProducts = async (req, res) => {
   try {
-    const { category, search, storeId } = req.query;
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json(fallbackProducts);
+    }
+
+    const { category, search, storeId, vendor } = req.query;
 
     const filters = {};
 
@@ -86,6 +92,10 @@ const getProducts = async (req, res) => {
       filters.storeId = storeId;
     }
 
+    if (vendor) {
+      filters.vendor = vendor;
+    }
+
     if (search) {
       filters.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -95,6 +105,7 @@ const getProducts = async (req, res) => {
     }
 
     const products = await Product.find(filters)
+      .populate("vendor", "name email")
       .populate("storeId")
       .sort({ createdAt: -1 });
 
@@ -117,7 +128,24 @@ const getProductById = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(req.params.id);
+    if (mongoose.connection.readyState !== 1) {
+      const product = fallbackProducts.find(
+        (item) => item._id === req.params.id
+      );
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
+      }
+
+      return res.status(200).json(product);
+    }
+
+    const product = await Product.findById(req.params.id)
+      .populate("vendor", "name email")
+      .populate("storeId");
 
     if (!product) {
       return res.status(404).json({

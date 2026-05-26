@@ -3,34 +3,34 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../useToast";
 import { addToCart } from "../../services/cartService";
 import { addToWishlist } from "../../services/wishlistService";
+import { getProductImage } from "../../utils/productImages";
 
 function ProductCard({ product = {}, allProducts = [] }) {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [previewProduct, setPreviewProduct] = useState(null);
+  void allProducts;
+
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
   const productId = product?._id || product?.id;
-
-  const formattedPrice = new Intl.NumberFormat("en-IN").format(
-    product?.price || 0
-  );
-
-  const handleQuickView = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setPreviewProduct((prev) => (prev ? null : product));
-  };
+  const productImage = getProductImage(product);
+  const formattedPrice = new Intl.NumberFormat("en-IN").format(product?.price || 0);
 
   const goToDetails = () => {
     if (!productId) return;
     navigate(`/customer/product/${productId}`);
   };
 
-  const handleAddToWishlist = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const openQuickView = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    goToDetails();
+  };
+
+  const handleAddToWishlist = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
 
     try {
       setIsAddingToWishlist(true);
@@ -59,11 +59,8 @@ function ProductCard({ product = {}, allProducts = [] }) {
   return (
     <article className="customer-product-card">
       <div className="customer-product-card__image">
-        <button type="button" onClick={goToDetails}>
-          <img
-            src={product?.image || "https://via.placeholder.com/300"}
-            alt={product?.name || "Product"}
-          />
+        <button className="customer-product-card__image-button" type="button" onClick={goToDetails}>
+          <img src={productImage} alt={product?.name || "Product"} />
           <span>{product?.discount || 0}% off</span>
         </button>
 
@@ -80,14 +77,10 @@ function ProductCard({ product = {}, allProducts = [] }) {
 
       <div className="customer-product-card__body">
         <div>
-          <button
-            className="customer-product-card__title"
-            type="button"
-            onClick={goToDetails}
-          >
-            {product?.name}
+          <button className="customer-product-card__title" type="button" onClick={goToDetails}>
+            {product?.name || "Product"}
           </button>
-          <p>{product?.brand || "V SHOP"}</p>
+          <p>{product?.brand || product?.storeId?.storeName || "V SHOP"}</p>
         </div>
 
         <div className="customer-product-card__meta">
@@ -96,11 +89,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
         </div>
 
         <div className="customer-product-card__actions">
-          <button
-            className="customer-secondary-button"
-            type="button"
-            onClick={handleQuickView}
-          >
+          <button className="customer-secondary-button" type="button" onClick={openQuickView}>
             Quick View
           </button>
 
@@ -114,110 +103,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
           </button>
         </div>
       </div>
-
-      {previewProduct && (
-        <QuickView
-          product={previewProduct}
-          allProducts={allProducts}
-          onClose={() => setPreviewProduct(null)}
-          navigate={navigate}
-        />
-      )}
     </article>
-  );
-}
-
-function QuickView({ product = {}, allProducts = [], onClose, navigate }) {
-  const { showToast } = useToast();
-  const [quantity, setQuantity] = useState(1);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
-
-  const productId = product?._id || product?.id;
-
-  const formattedPrice = new Intl.NumberFormat("en-IN").format(
-    product?.price || 0
-  );
-
-  const suggestedProducts =
-    allProducts
-      ?.filter((item) => (item?._id || item?.id) !== productId)
-      ?.slice(0, 3) || [];
-
-  const handleAddToCart = async () => {
-    try {
-      setIsAddingToCart(true);
-      await addToCart(product, quantity);
-      showToast("Product added to cart");
-      navigate("/customer/cart");
-    } catch (err) {
-      showToast(err.message || "Unable to add product to cart", "error");
-    } finally {
-      setIsAddingToCart(false);
-    }
-  };
-
-  return (
-    <section className="quick-view-popover">
-      <button type="button" onClick={onClose}>X</button>
-
-      <img
-        src={product?.image || "https://via.placeholder.com/300"}
-        alt={product?.name || "Product"}
-      />
-
-      <h2>{product?.name}</h2>
-      <p>{product?.description || "No description available"}</p>
-
-      <strong>Rs {formattedPrice}</strong>
-      <p>{product?.rating || 4} stars rating</p>
-
-      <div>
-        <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
-          -
-        </button>
-        <span>{quantity}</span>
-        <button type="button" onClick={() => setQuantity((q) => q + 1)}>+</button>
-      </div>
-
-      <button type="button" disabled={isAddingToCart} onClick={handleAddToCart}>
-        {isAddingToCart ? "Adding..." : "Add to Cart"}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => {
-          if (!productId) return;
-          navigate(`/customer/product/${productId}`);
-        }}
-      >
-        View Details
-      </button>
-
-      <h3>Suggested Products</h3>
-
-      <div>
-        {suggestedProducts.length > 0 ? (
-          suggestedProducts.map((item) => (
-            <button
-              key={item?._id || item?.id}
-              type="button"
-              onClick={() => {
-                const id = item?._id || item?.id;
-                if (id) navigate(`/customer/product/${id}`);
-              }}
-            >
-              <img
-                src={item?.image || "https://via.placeholder.com/100"}
-                alt={item?.name || "Product"}
-              />
-              <p>{item?.name}</p>
-            </button>
-          ))
-        ) : (
-          <p>No suggestions</p>
-        )}
-      </div>
-    </section>
   );
 }
 

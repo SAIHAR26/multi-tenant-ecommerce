@@ -15,6 +15,10 @@ const normalizeRecommendations =
         data?.products
       )
         ? data.products
+        : Array.isArray(data?.recommendations)
+        ? data.recommendations
+        : Array.isArray(data?.data?.products)
+        ? data.data.products
         : Array.isArray(data)
         ? data
         : [],
@@ -23,6 +27,8 @@ const normalizeRecommendations =
         data?.categories
       )
         ? data.categories
+        : Array.isArray(data?.data?.categories)
+        ? data.data.categories
         : [],
     };
   };
@@ -34,7 +40,7 @@ export const getRecommendations =
       const data =
         await apiRequest(
           "/api/products/recommendations",
-          {},
+          { skipAuthRedirect: true },
           "Unable to load recommendations."
         );
 
