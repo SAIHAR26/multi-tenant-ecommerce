@@ -91,7 +91,7 @@ function WishlistPage() {
       }
       setWishlistItems([]);
       showToast({ message: "All items moved to cart successfully", type: "success" });
-    } catch (err) {
+    } catch {
       showToast({ message: "Error moving items to cart", type: "error" });
     }
   };
@@ -159,7 +159,7 @@ function WishlistPage() {
           {wishlistItems.map((item) => (
             <WishlistCard
               item={item}
-              key={getItemId(item) || item?.name || Math.random()}
+              key={getItemId(item) || item?.name}
               onMoveToCart={handleMoveToCart}
               onRemove={handleRemove}
             />

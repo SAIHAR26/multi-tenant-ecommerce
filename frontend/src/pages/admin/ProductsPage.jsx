@@ -92,7 +92,7 @@ function ProductsPage() {
                     <td>{product.name}</td>
 
                     <td>
-                      {product.vendor?.storeName || "V SHOP"}
+                      {product.storeId?.storeName || product.brand || "V SHOP"}
                     </td>
 
                     <td>{product.stock || 0}</td>
@@ -130,7 +130,7 @@ function ProductsPage() {
                   <h3>{product.name}</h3>
 
                   <p>
-                    {product.vendor?.storeName || "V SHOP"}
+                    {product.storeId?.storeName || product.brand || "V SHOP"}
                   </p>
                 </div>
 

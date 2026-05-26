@@ -40,7 +40,7 @@ export const getRecommendations =
       const data =
         await apiRequest(
           "/api/products/recommendations",
-          {},
+          { skipAuthRedirect: true },
           "Unable to load recommendations."
         );
 

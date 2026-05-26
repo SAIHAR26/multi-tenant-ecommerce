@@ -16,11 +16,15 @@ const getAudienceParams = () => {
   return params;
 };
 
-export const getNotifications = async (filter = "all") => {
+export const getNotifications = async (filter = "all", options = {}) => {
   const params = getAudienceParams();
   params.set("filter", filter);
 
-  const data = await apiRequest(`/api/notifications?${params.toString()}`, {}, "Notifications could not be loaded.");
+  const data = await apiRequest(
+    `/api/notifications?${params.toString()}`,
+    options,
+    "Notifications could not be loaded."
+  );
 
   return {
     notifications: Array.isArray(data?.notifications)

@@ -3,10 +3,6 @@ import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
-import {
-  categoryTabs,
-  priceRanges,
-} from "./customerData";
 import { getProductImage } from "../../utils/productImages";
 import { categoryTabs, priceRanges } from "./customerData";
 
@@ -20,14 +16,22 @@ const discountFilters = [
   50,
 ];
 
-const normalizeText = (value) =>
-  value?.toString().toLowerCase().trim() ||
-  "";
 const normalizeText = (value) => value?.toString().toLowerCase().trim() || "";
 
 const categoryAliases = {
   shoes: ["shoes", "shoe", "footwear", "sneaker", "sneakers", "runner", "running"],
 };
+
+const exactCategoryTabs = new Set([
+  "men",
+  "women",
+  "dresses",
+  "kids",
+  "electronics",
+  "shoes",
+  "accessories",
+  "books",
+]);
 
 const normalizeProduct = (product) => ({
   ...product,
@@ -176,8 +180,11 @@ function CustomerDashboard() {
 
         const categoryTerms = categoryAliases[normalizedCategory] || [normalizedCategory];
         const matchesCategory =
-          activeCategory === "Trending"
+          activeCategory === "Trending" || activeCategory === "New Arrivals"
             ? true
+            : exactCategoryTabs.has(normalizedCategory)
+            ? productCategory === normalizedCategory ||
+              categoryTerms.includes(productCategory)
             : categoryTerms.some((term) => searchableText.includes(term));
 
         const matchesSearch =
@@ -353,10 +360,6 @@ function CustomerDashboard() {
       {/* MAIN LAYOUT */}
       <section className="marketplace-layout">
         {/* FILTER PANEL */}
-        <aside
-          className="filter-panel"
-          aria-label="Product filters"
-        >
         <aside className="filter-panel" aria-label="Product filters">
           <div className="filter-panel__header">
             <p className="customer-eyebrow">
@@ -568,8 +571,6 @@ function CustomerDashboard() {
                 </h3>
 
                 <p>
-                  Try changing filters
-                  or search.
                   Try changing filters.
                 </p>
               </div>
