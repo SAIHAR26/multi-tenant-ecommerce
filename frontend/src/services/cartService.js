@@ -9,10 +9,10 @@ const normalizeCartPayload = (data) => {
   return [];
 };
 
-export const getCartItems = async () => {
+export const getCartItems = async (options = {}) => {
   const data = await apiRequest(
     "/api/cart",
-    {},
+    options,
     "Unable to load cart."
   );
 

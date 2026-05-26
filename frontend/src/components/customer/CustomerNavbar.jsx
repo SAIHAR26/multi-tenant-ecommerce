@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getSavedUser } from "../../api/auth";
 import { getCartItems } from "../../services/cartService";
 import { getNotifications } from "../../services/notificationService";
+import { saveSearchSignal } from "../../utils/searchSignals";
 
 function CustomerNavbar() {
   const navigate = useNavigate();
@@ -23,13 +24,20 @@ function CustomerNavbar() {
 
     const query = searchValue.trim();
 
+    if (query) {
+      saveSearchSignal(query);
+    }
+
     navigate(query ? `/customer?search=${encodeURIComponent(query)}` : "/customer");
   };
 
   useEffect(() => {
     let isMounted = true;
 
-    Promise.allSettled([getCartItems(), getNotifications()])
+    Promise.allSettled([
+      getCartItems({ skipAuthRedirect: true }),
+      getNotifications("all", { skipAuthRedirect: true }),
+    ])
       .then(([cartResult, notificationResult]) => {
         if (!isMounted) return;
 

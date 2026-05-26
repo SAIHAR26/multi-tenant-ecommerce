@@ -123,7 +123,9 @@ const getProductById = async (req, res) => {
       return res.status(200).json(product);
     }
 
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id)
+      .populate("vendor", "name email")
+      .populate("storeId");
 
     if (!product) {
       return res.status(404).json({

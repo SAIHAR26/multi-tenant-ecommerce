@@ -1,5 +1,10 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
+const clearSavedSession = () => {
+  localStorage.removeItem("vshopToken");
+  localStorage.removeItem("vshopUser");
+};
+
 const getErrorMessage = async (response, fallbackMessage) => {
   const contentType = response.headers.get("content-type") || "";
 
@@ -24,7 +29,21 @@ export const apiRequest = async (path, options = {}, fallbackMessage = "Request 
     });
 
     if (!response.ok) {
-      throw new Error(await getErrorMessage(response, fallbackMessage));
+      const message = await getErrorMessage(response, fallbackMessage);
+
+      const isAuthRequest = path.startsWith("/api/auth/");
+      const skipAuthRedirect = options.skipAuthRedirect === true;
+
+      if (response.status === 401 && !isAuthRequest && !skipAuthRedirect) {
+        clearSavedSession();
+        window.dispatchEvent(new Event("vshop:session-expired"));
+      }
+
+      throw new Error(
+        response.status === 401 && !isAuthRequest && !skipAuthRedirect
+          ? "Session expired. Please login again."
+          : message
+      );
     }
 
     if (response.status === 204) {

@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 const navItems = [
   { label: "Dashboard", icon: "D", path: "/customer", end: true },
@@ -14,6 +14,14 @@ const navItems = [
 ];
 
 function CustomerSidebar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("vshopToken");
+    localStorage.removeItem("vshopUser");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <aside className="customer-sidebar">
       <Link className="customer-brand" to="/">
@@ -40,7 +48,7 @@ function CustomerSidebar() {
         ))}
       </nav>
 
-      <button className="customer-logout" type="button">
+      <button className="customer-logout" type="button" onClick={handleLogout}>
         <span>L</span>
         Logout
       </button>

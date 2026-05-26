@@ -91,7 +91,7 @@ function Home() {
           {!loading && !error && (
             <div className="product-grid">
               {products.length > 0 ? (
-                products.slice(0, 6).map((product) => (
+                products.slice(0, 3).map((product) => (
                   <article
                     className="product-card"
                     key={product._id}
@@ -136,7 +136,7 @@ function Home() {
           </div>
 
           <div className="vendor-grid">
-            {stores.map((store) => (
+            {stores.slice(0, 3).map((store) => (
               <article className="vendor-card" key={store._id}>
                 <div className="vendor-card__image">
                   <img

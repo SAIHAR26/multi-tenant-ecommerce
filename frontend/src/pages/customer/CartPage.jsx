@@ -7,8 +7,14 @@ import { getCartItems, removeFromCart } from "../../services/cartService";
 import { getProductImage } from "../../utils/productImages";
 import { calculateOrderTotals, formatPrice, getLineDiscount } from "../../utils/orderTotals";
 
-const getItemId = (item) => item._id || item.id || item.productId || item.product?._id;
+const getItemId = (item) => String(item._id || item.id || item.productId || item.product?._id || "");
 const getProduct = (item) => item.product || item;
+const getSellerName = (product) =>
+  product?.storeId?.storeName ||
+  product?.vendor?.name ||
+  product?.vendor?.storeName ||
+  product?.brand ||
+  "V SHOP";
 
 function CartPage() {
   const { showToast } = useToast();
@@ -44,7 +50,7 @@ function CartPage() {
   const handleRemove = async (id) => {
     try {
       await removeFromCart(id);
-      setCartItems((prev) => prev.filter((item) => getItemId(item) !== id));
+      setCartItems((prev) => prev.filter((item) => getItemId(item) !== String(id)));
       showToast("Item removed from cart");
     } catch (err) {
       showToast(err.message || "Could not remove item. Try again.", "error");
@@ -111,7 +117,7 @@ function CartPage() {
                   <img src={getProductImage(product)} alt={product.name} />
                   <div>
                     <h3>{product.name}</h3>
-                    <p>{product.vendor || product.brand}</p>
+                    <p>{getSellerName(product)}</p>
                     <div className="cart-line-meta">
                       <strong>{formatPrice(Number(product.price || 0) * (Number(item.quantity) || 1))}</strong>
                       <span>Qty: {item.quantity || 1}</span>

@@ -10,6 +10,34 @@ import ProductCard from "../../components/customer/ProductCard";
 import RecommendationCard from "../../components/customer/RecommendationCard";
 
 import { getRecommendations } from "../../services/recommendationService";
+import { getProducts } from "../../services/productService";
+import { getSearchSignals, hasEnoughSearchSignals } from "../../utils/searchSignals";
+
+const normalizeText = (value) => value?.toString().toLowerCase().trim() || "";
+
+const getProductSearchText = (product) =>
+  [
+    product?.name,
+    product?.brand,
+    product?.category,
+    product?.description,
+    product?.storeId?.storeName,
+    product?.storeId?.storeCategory,
+  ]
+    .map(normalizeText)
+    .join(" ");
+
+const getSearchBasedProducts = (products, signals) => {
+  if (!signals.length) return [];
+
+  return products
+    .filter((product) => {
+      const searchableText = getProductSearchText(product);
+      return signals.some((signal) => searchableText.includes(signal));
+    })
+    .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
+    .slice(0, 8);
+};
 
 function RecommendationsPage() {
   const [
@@ -28,22 +56,40 @@ function RecommendationsPage() {
   const [error, setError] =
     useState("");
 
+  const [
+    searchSignals,
+    setSearchSignals,
+  ] = useState(getSearchSignals());
+
   // FETCH RECOMMENDATIONS
   const fetchRecommendations =
     async () => {
       try {
         setLoading(true);
 
-        const data =
-          await getRecommendations();
+        const [data, productsData] =
+          await Promise.all([
+            getRecommendations(),
+            hasEnoughSearchSignals() ? getProducts() : Promise.resolve([]),
+          ]);
+
+        const signals = getSearchSignals();
+        const productsArray = Array.isArray(productsData?.products)
+          ? productsData.products
+          : Array.isArray(productsData)
+          ? productsData
+          : [];
+        const searchProducts = getSearchBasedProducts(productsArray, signals);
 
         setRecommendedProducts(
-          data?.products || []
+          searchProducts.length ? searchProducts : data?.products || []
         );
 
         setCategories(
           data?.categories || []
         );
+
+        setSearchSignals(signals);
 
         setError("");
       } catch (err) {
@@ -64,18 +110,31 @@ function RecommendationsPage() {
       try {
         setLoading(true);
 
-        const data =
-          await getRecommendations();
+        const [data, productsData] =
+          await Promise.all([
+            getRecommendations(),
+            hasEnoughSearchSignals() ? getProducts() : Promise.resolve([]),
+          ]);
 
         if (!isMounted) return;
 
+        const signals = getSearchSignals();
+        const productsArray = Array.isArray(productsData?.products)
+          ? productsData.products
+          : Array.isArray(productsData)
+          ? productsData
+          : [];
+        const searchProducts = getSearchBasedProducts(productsArray, signals);
+
         setRecommendedProducts(
-          data?.products || []
+          searchProducts.length ? searchProducts : data?.products || []
         );
 
         setCategories(
           data?.categories || []
         );
+
+        setSearchSignals(signals);
 
         setError("");
       } catch (err) {
@@ -150,6 +209,18 @@ function RecommendationsPage() {
             selected from your
             shopping signals.
           </p>
+
+          {searchSignals.length >= 2 ? (
+            <small
+              style={{
+                color: "#bdbdbd",
+                display: "block",
+                marginTop: "8px",
+              }}
+            >
+              Based on searches: {searchSignals.slice(0, 3).join(", ")}
+            </small>
+          ) : null}
 
           {error ? (
             <small

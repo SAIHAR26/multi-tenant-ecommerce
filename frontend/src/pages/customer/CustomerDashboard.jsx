@@ -15,6 +15,17 @@ const categoryAliases = {
   shoes: ["shoes", "shoe", "footwear", "sneaker", "sneakers", "runner", "running"],
 };
 
+const exactCategoryTabs = new Set([
+  "men",
+  "women",
+  "dresses",
+  "kids",
+  "electronics",
+  "shoes",
+  "accessories",
+  "books",
+]);
+
 const normalizeProduct = (product) => ({
   ...product,
   id: product.id || product._id,
@@ -154,8 +165,11 @@ function CustomerDashboard() {
 
         const categoryTerms = categoryAliases[normalizedCategory] || [normalizedCategory];
         const matchesCategory =
-          activeCategory === "Trending"
+          activeCategory === "Trending" || activeCategory === "New Arrivals"
             ? true
+            : exactCategoryTabs.has(normalizedCategory)
+            ? productCategory === normalizedCategory ||
+              categoryTerms.includes(productCategory)
             : categoryTerms.some((term) => searchableText.includes(term));
 
         const matchesSearch =
