@@ -5,13 +5,18 @@ import { getProducts } from "../services/productService";
 import { getStores } from "../services/storeService";
 import defaultStore from "../assets/default-store.jpg";
 import { getProductImage } from "../utils/productImages";
+import { getDiverseProducts } from "../utils/productSelection";
 import "./Home.css";
+
+const HOME_PRODUCT_LIMIT = 3;
+const HOME_VENDOR_LIMIT = 3;
 
 function Home() {
   const [products, setProducts] = useState([]);
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const featuredProducts = getDiverseProducts(products, HOME_PRODUCT_LIMIT);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,8 +84,8 @@ function Home() {
 
           {!loading && !error && (
             <div className="product-grid">
-              {products.length > 0 ? (
-                products.slice(0, 3).map((product) => (
+              {featuredProducts.length > 0 ? (
+                featuredProducts.map((product) => (
                   <article className="product-card" key={product._id}>
                     <div className="product-card__image">
                       <img src={getProductImage(product)} alt={product.name} />
@@ -115,7 +120,7 @@ function Home() {
           </div>
 
           <div className="vendor-grid">
-            {stores.slice(0, 3).map((store) => (
+            {stores.slice(0, HOME_VENDOR_LIMIT).map((store) => (
               <article className="vendor-card" key={store._id}>
                 <div className="vendor-card__image">
                   <img

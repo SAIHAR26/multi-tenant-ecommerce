@@ -75,16 +75,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-connectDB({ exitOnFailure: false })
-  .then(() => {
-    databaseStatus = "connected";
-    databaseMessage = "";
-  })
-  .catch((error) => {
-    databaseStatus = "disconnected";
-    databaseMessage = error.message;
-  });
-
 mongoose.connection.on("disconnected", () => {
   databaseStatus = "disconnected";
 });
@@ -101,6 +91,21 @@ mongoose.connection.on("connected", () => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    databaseStatus = "connected";
+    databaseMessage = "";
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    databaseStatus = "disconnected";
+    databaseMessage = error.message;
+    console.error("Server not started because MongoDB is not connected.");
+    process.exit(1);
+  }
+};
+
+startServer();

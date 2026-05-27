@@ -4,7 +4,13 @@ require("../models/Store");
 
 const Store = require("../models/Store");
 const User = require("../models/User");
-const { fallbackProducts } = require("../data/fallbackCatalog");
+
+const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+
+const sendDatabaseUnavailable = (res) =>
+  res.status(503).json({
+    message: "Database is not connected. Check backend/.env MONGO_URI and restart the backend.",
+  });
 
 const normalizeProductPayload = async (body) => {
   const payload = {
@@ -76,8 +82,8 @@ const getCategoryImage = (category) => {
 // GET ALL PRODUCTS
 const getProducts = async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(200).json(fallbackProducts);
+    if (!isDatabaseConnected()) {
+      return sendDatabaseUnavailable(res);
     }
 
     const { category, search, storeId, vendor } = req.query;
@@ -121,6 +127,7 @@ const getProducts = async (req, res) => {
 // GET SINGLE PRODUCT
 const getProductById = async (req, res) => {
   try {
+<<<<<<< HEAD
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
@@ -141,6 +148,10 @@ const getProductById = async (req, res) => {
       }
 
       return res.status(200).json(product);
+=======
+    if (!isDatabaseConnected()) {
+      return sendDatabaseUnavailable(res);
+>>>>>>> 22dec965a2e39f1af32a53efe2bc78057a97537c
     }
 
     const product = await Product.findById(req.params.id)

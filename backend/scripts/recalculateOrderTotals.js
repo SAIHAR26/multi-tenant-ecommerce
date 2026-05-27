@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
+const connectDB = require("../config/db");
 const Order = require("../models/Order");
 require("../models/Product");
 
@@ -11,9 +12,7 @@ const getProductDiscount = (product, quantity) => {
 };
 
 const run = async () => {
-  await mongoose.connect(process.env.MONGO_URI, {
-    dbName: process.env.MONGO_DB_NAME || "vshop",
-  });
+  await connectDB();
 
   const orders = await Order.find().populate("products.productId");
 
