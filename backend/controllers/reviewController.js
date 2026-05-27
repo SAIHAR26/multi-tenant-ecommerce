@@ -16,6 +16,21 @@ const getReviews = async (req, res) => {
   }
 };
 
+const getReviewsByProduct = async (req, res) => {
+  try {
+    const reviews = await Review.find({ productId: req.params.productId })
+      .populate("userId", "name email")
+      .populate("productId", "name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message || "Failed to fetch product reviews.",
+    });
+  }
+};
+
 const createReview = async (req, res) => {
   try {
     const review = await Review.create(req.body);
@@ -99,6 +114,7 @@ module.exports = {
   createReview,
   deleteReview,
   getReviewById,
+  getReviewsByProduct,
   getReviews,
   updateReview,
 };

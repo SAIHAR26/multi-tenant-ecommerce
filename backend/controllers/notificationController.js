@@ -3,11 +3,15 @@ const Notification = require("../models/Notification");
 const allowedRoles = ["admin", "vendor", "customer"];
 const allowedTypes = ["vendor", "order", "review", "payment", "customer", "system"];
 
-const getAudienceQuery = (role) => {
+const getAudienceQuery = (role, userId) => {
   const query = {};
 
   if (allowedRoles.includes(role)) {
     query.targetRole = { $in: [role, "all"] };
+  }
+
+  if (userId) {
+    query.$or = [{ userId }, { userId: null }];
   }
 
   return query;
@@ -15,8 +19,8 @@ const getAudienceQuery = (role) => {
 
 const getNotifications = async (req, res) => {
   try {
-    const { filter = "all", role = "" } = req.query;
-    const query = getAudienceQuery(role);
+    const { filter = "all", role = "", userId = "" } = req.query;
+    const query = getAudienceQuery(role, userId);
 
     if (filter === "unread") {
       query.isRead = false;
@@ -29,6 +33,7 @@ const getNotifications = async (req, res) => {
       .sort({ createdAt: -1 });
     const unreadCount = await Notification.countDocuments({
       ...getAudienceQuery(role),
+      ...(userId ? { $or: [{ userId }, { userId: null }] } : {}),
       isRead: false,
     });
 
@@ -99,11 +104,11 @@ const markNotificationRead = async (req, res) => {
 
 const markAllNotificationsRead = async (req, res) => {
   try {
-    const { role = "" } = req.query;
+    const { role = "", userId = "" } = req.query;
 
     await Notification.updateMany(
       {
-        ...getAudienceQuery(role),
+        ...getAudienceQuery(role, userId),
         isRead: false,
       },
       { isRead: true }

@@ -1,7 +1,15 @@
 const Product = require("../models/Product");
 require("../models/Store");
+const mongoose = require("mongoose");
 const Store = require("../models/Store");
 const User = require("../models/User");
+
+const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+
+const sendDatabaseUnavailable = (res) =>
+  res.status(503).json({
+    message: "Database is not connected. Check backend/.env MONGO_URI and restart the backend.",
+  });
 
 const normalizeProductPayload = async (body) => {
   const payload = {
@@ -64,7 +72,11 @@ const getCategoryImage = (category) => {
 // GET ALL PRODUCTS
 const getProducts = async (req, res) => {
   try {
-    const { category, search, storeId } = req.query;
+    if (!isDatabaseConnected()) {
+      return sendDatabaseUnavailable(res);
+    }
+
+    const { category, search, storeId, vendor } = req.query;
 
     const filters = {};
 
@@ -76,6 +88,10 @@ const getProducts = async (req, res) => {
       filters.storeId = storeId;
     }
 
+    if (vendor) {
+      filters.vendor = vendor;
+    }
+
     if (search) {
       filters.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -85,6 +101,7 @@ const getProducts = async (req, res) => {
     }
 
     const products = await Product.find(filters)
+      .populate("vendor", "name email")
       .populate("storeId")
       .sort({ createdAt: -1 });
 
@@ -100,7 +117,13 @@ const getProducts = async (req, res) => {
 // GET SINGLE PRODUCT
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    if (!isDatabaseConnected()) {
+      return sendDatabaseUnavailable(res);
+    }
+
+    const product = await Product.findById(req.params.id)
+      .populate("vendor", "name email")
+      .populate("storeId");
 
     if (!product) {
       return res.status(404).json({

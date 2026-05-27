@@ -1,15 +1,24 @@
 const express = require("express");
+
 const {
   approveVendor,
   getVendorApprovalRequests,
   getVendorDetails,
   rejectVendor,
 } = require("../controllers/adminVendorController");
-const { authorizeRoles, protect } = require("../middlewares/authMiddleware");
+const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.use(protect, authorizeRoles("admin"));
+const adminOnly = (req, res, next) => {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({ message: "Admin access required." });
+  }
+
+  next();
+};
+
+router.use(protect, adminOnly);
 
 router.get("/pending", getVendorApprovalRequests);
 router.get("/:id", getVendorDetails);

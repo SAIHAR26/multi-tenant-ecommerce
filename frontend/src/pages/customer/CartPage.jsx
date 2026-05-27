@@ -4,9 +4,17 @@ import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import { useToast } from "../../components/useToast";
 import { getCartItems, removeFromCart } from "../../services/cartService";
+import { getProductImage } from "../../utils/productImages";
+import { calculateOrderTotals, formatPrice, getLineDiscount } from "../../utils/orderTotals";
 
-const getItemId = (item) => item._id || item.id || item.productId || item.product?._id;
-const getProduct = (item) => item.product || item;
+const getItemId = (item) => String(item?._id || item?.id || item?.productId || item?.product?._id || "");
+const getProduct = (item) => item?.product || item || {};
+const getSellerName = (product) =>
+  product?.storeId?.storeName ||
+  product?.vendor?.name ||
+  product?.vendor?.storeName ||
+  product?.brand ||
+  "V SHOP";
 
 function CartPage() {
   const { showToast } = useToast();
@@ -42,19 +50,14 @@ function CartPage() {
   const handleRemove = async (id) => {
     try {
       await removeFromCart(id);
-      setCartItems((prev) => prev.filter((item) => getItemId(item) !== id));
+      setCartItems((prev) => prev.filter((item) => getItemId(item) !== String(id)));
       showToast("Item removed from cart");
     } catch (err) {
       showToast(err.message || "Could not remove item. Try again.", "error");
     }
   };
 
-  const subtotal = cartItems.reduce((acc, item) => {
-    const product = getProduct(item);
-    return acc + (Number(product.price) || 0) * (Number(item.quantity) || 1);
-  }, 0);
-  const discount = subtotal > 0 ? 3200 : 0;
-  const total = subtotal - discount;
+  const totals = calculateOrderTotals(cartItems);
 
   if (loading) {
     return (
@@ -81,7 +84,9 @@ function CartPage() {
             <h1>Your cart is empty.</h1>
             <p>Your premium selections will show up here once added. Explore our catalog to find exclusive picks.</p>
           </div>
-          <Link className="customer-primary-button" to="/customer">Browse Products</Link>
+          <Link className="customer-primary-button" to="/customer">
+            Browse Products
+          </Link>
         </section>
       </div>
     );
@@ -95,15 +100,21 @@ function CartPage() {
           <h1>Your selected products.</h1>
           <p>Review premium picks, apply offers, and continue to a secure V SHOP checkout.</p>
         </div>
-        <Link className="customer-primary-button cart-checkout-link" to="/customer/checkout">Checkout</Link>
+        <Link className="customer-primary-button cart-checkout-link" to="/customer/checkout">
+          Checkout
+        </Link>
       </section>
 
       <section className="customer-content-grid">
         <article className="customer-panel">
           <div className="customer-panel__header">
-            <div><p className="customer-eyebrow">Cart items</p><h2>Ready to buy</h2></div>
+            <div>
+              <p className="customer-eyebrow">Cart items</p>
+              <h2>Ready to buy</h2>
+            </div>
             <span className="customer-pill">{cartItems.length} items</span>
           </div>
+
           <div className="wishlist-list">
             {cartItems.map((item) => {
               const product = getProduct(item);
@@ -111,12 +122,15 @@ function CartPage() {
 
               return (
                 <div className="wishlist-card" key={id || product.name}>
-                  <img src={product.image} alt={product.name} />
+                  <img src={getProductImage(product)} alt={product.name || "Product"} />
                   <div>
                     <h3>{product.name}</h3>
-                    <p>{product.vendor || product.brand}</p>
-                    <strong>Rs {Number(product.price || 0).toLocaleString("en-IN")}</strong>
-                    <span>Qty: {item.quantity || 1}</span>
+                    <p>{getSellerName(product)}</p>
+                    <div className="cart-line-meta">
+                      <strong>{formatPrice(Number(product.price || 0) * (Number(item.quantity) || 1))}</strong>
+                      <span>Qty: {item.quantity || 1}</span>
+                      {getLineDiscount(item) > 0 ? <span>{formatPrice(getLineDiscount(item))} off</span> : null}
+                    </div>
                   </div>
                   <button
                     className="customer-secondary-button"
@@ -132,11 +146,29 @@ function CartPage() {
         </article>
 
         <article className="customer-panel">
-          <div className="customer-panel__header"><div><p className="customer-eyebrow">Summary</p><h2>Order total</h2></div></div>
+          <div className="customer-panel__header">
+            <div>
+              <p className="customer-eyebrow">Summary</p>
+              <h2>Order total</h2>
+            </div>
+          </div>
           <div className="offer-stack">
-            <div><strong>Subtotal</strong><span>Rs {subtotal.toLocaleString("en-IN")}</span></div>
-            <div><strong>Discount</strong><span>Rs {discount.toLocaleString("en-IN")} saved</span></div>
-            <div><strong>Total</strong><span>Rs {total > 0 ? total.toLocaleString("en-IN") : 0}</span></div>
+            <div>
+              <strong>Subtotal</strong>
+              <span>{formatPrice(totals.subtotal)}</span>
+            </div>
+            <div>
+              <strong>Product discount</strong>
+              <span>{formatPrice(totals.discount)} saved</span>
+            </div>
+            <div>
+              <strong>Delivery charge</strong>
+              <span>{totals.deliveryCharge ? formatPrice(totals.deliveryCharge) : "Free"}</span>
+            </div>
+            <div>
+              <strong>Total</strong>
+              <span>{formatPrice(totals.total)}</span>
+            </div>
           </div>
         </article>
       </section>

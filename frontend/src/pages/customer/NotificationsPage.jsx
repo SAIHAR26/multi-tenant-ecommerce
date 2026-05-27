@@ -22,7 +22,7 @@ function NotificationsPage() {
         const data = await getNotifications();
 
         const notificationsArray = Array.isArray(
-          data.notifications
+          data?.notifications
         )
           ? data.notifications
           : Array.isArray(data)
@@ -72,7 +72,7 @@ function NotificationsPage() {
   if (loading) {
     return (
       <div className="customer-page">
-        <h2>Loading notifications...</h2>
+        <h2 style={{ padding: "20px" }}>Loading notifications...</h2>
       </div>
     );
   }
@@ -80,7 +80,7 @@ function NotificationsPage() {
   if (error) {
     return (
       <div className="customer-page">
-        <h2>{error}</h2>
+        <h2 style={{ padding: "20px", color: "red" }}>{error}</h2>
       </div>
     );
   }
@@ -161,8 +161,12 @@ function NotificationsPage() {
               </button>
             ))
           ) : (
-            <div className="notification-empty">
-              <h3>No notifications found</h3>
+            <div className="notification-empty" style={{ textAlign: "center", padding: "40px 10px" }}>
+              <div style={{ fontSize: "48px", marginBottom: "12px" }}>🔔</div>
+              <h3>All caught up!</h3>
+              <p style={{ color: "#888", fontSize: "14px" }}>
+                You don't have any new alerts or system updates right now.
+              </p>
             </div>
           )}
         </article>

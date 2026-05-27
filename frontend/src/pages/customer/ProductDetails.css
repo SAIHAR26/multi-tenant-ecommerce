@@ -28,6 +28,7 @@
   display: grid;
   gap: 16px;
   padding: 18px;
+  align-self: start;
 }
 
 .product-gallery__main {
@@ -151,7 +152,8 @@
 .product-status-grid div,
 .product-description,
 .product-size-section,
-.product-quantity-section {
+.product-quantity-section,
+.product-vendor-panel {
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.085);
   border-radius: 18px;
@@ -167,7 +169,8 @@
 
 .product-description h2,
 .product-size-section h2,
-.product-quantity-section h2 {
+.product-quantity-section h2,
+.product-vendor-panel h2 {
   margin: 0 0 12px;
   color: #ffffff;
   font-size: 1.05rem;
@@ -176,6 +179,52 @@
 .product-description p {
   margin: 0;
   line-height: 1.75;
+}
+
+.product-vendor-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.product-vendor-panel div,
+.product-review-list article div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.product-vendor-panel strong,
+.product-review-list strong {
+  color: #ffffff;
+}
+
+.product-vendor-panel span,
+.product-vendor-panel small,
+.product-vendor-panel p,
+.product-review-list span,
+.product-review-list p {
+  margin: 0;
+  color: #b9b4b4;
+  line-height: 1.65;
+}
+
+.product-review-list {
+  display: grid;
+  gap: 12px;
+}
+
+.product-review-list article {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.product-review-list span {
+  color: #ff3b46;
+  font-weight: 900;
 }
 
 .product-size-options,
