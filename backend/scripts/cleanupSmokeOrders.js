@@ -1,14 +1,13 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
+const connectDB = require("../config/db");
 const Notification = require("../models/Notification");
 const Order = require("../models/Order");
 require("../models/Product");
 
 const run = async () => {
-  await mongoose.connect(process.env.MONGO_URI, {
-    dbName: process.env.MONGO_DB_NAME || "vshop",
-  });
+  await connectDB();
 
   const orders = await Order.find({ deliveryAddress: "Smoke Test Address" })
     .sort({ createdAt: -1 })

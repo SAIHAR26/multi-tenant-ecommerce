@@ -4,9 +4,11 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
 import { getProductImage } from "../../utils/productImages";
+import { getDiverseProducts } from "../../utils/productSelection";
 import { categoryTabs, priceRanges } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
+const CUSTOMER_DASHBOARD_PRODUCT_LIMIT = 3;
 
 const discountFilters = [
   10,
@@ -257,6 +259,11 @@ function CustomerDashboard() {
     brandFilter,
     sortBy,
   ]);
+
+  const visibleProducts = getDiverseProducts(
+    filteredProducts,
+    CUSTOMER_DASHBOARD_PRODUCT_LIMIT
+  );
 
   return (
     <div className="customer-page">
@@ -547,9 +554,9 @@ function CustomerDashboard() {
           {/* PRODUCTS */}
           {!loading &&
             !error &&
-            (filteredProducts.length > 0 ? (
+            (visibleProducts.length > 0 ? (
               <div className="marketplace-product-grid">
-                {filteredProducts.map(
+                {visibleProducts.map(
                   (product) => (
                     <ProductCard
                       key={

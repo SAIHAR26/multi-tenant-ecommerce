@@ -1,6 +1,12 @@
 const Store = require("../models/Store");
 const mongoose = require("mongoose");
-const { fallbackStores } = require("../data/fallbackCatalog");
+
+const isDatabaseConnected = () => mongoose.connection.readyState === 1;
+
+const sendDatabaseUnavailable = (res) =>
+  res.status(503).json({
+    message: "Database is not connected. Check backend/.env MONGO_URI and restart the backend.",
+  });
 
 const createStore = async (req, res) => {
   try {
@@ -34,8 +40,8 @@ const createStore = async (req, res) => {
 
 const getStores = async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(200).json(fallbackStores);
+    if (!isDatabaseConnected()) {
+      return sendDatabaseUnavailable(res);
     }
 
     const stores = await Store.find();
