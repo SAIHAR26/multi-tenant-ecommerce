@@ -1990,6 +1990,66 @@
   display: grid;
 }
 
+.quick-view__review-form {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.quick-view__rating-options {
+  display: grid;
+  grid-template-columns: repeat(5, 42px);
+  gap: 8px;
+}
+
+.quick-view__rating-options button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #8d8787;
+  background: rgba(5, 5, 5, 0.6);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.quick-view__rating-options button.is-selected {
+  border-color: rgba(255, 210, 92, 0.72);
+  color: #ffd25c;
+  background: rgba(255, 210, 92, 0.14);
+}
+
+.quick-view__comment-field {
+  display: grid;
+  gap: 8px;
+}
+
+.quick-view__comment-field span {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.quick-view__comment-field textarea {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  color: #ffffff;
+  background: rgba(5, 5, 5, 0.58);
+  padding: 12px 14px;
+  font: inherit;
+  outline: 0;
+}
+
+.quick-view__comment-field textarea:focus {
+  border-color: rgba(255, 46, 58, 0.62);
+  box-shadow: 0 0 0 3px rgba(255, 46, 58, 0.16);
+}
+
 .quick-view__review {
   padding: 14px;
 }
