@@ -127,31 +127,15 @@ const getProducts = async (req, res) => {
 // GET SINGLE PRODUCT
 const getProductById = async (req, res) => {
   try {
-<<<<<<< HEAD
+    if (!isDatabaseConnected()) {
+      return sendDatabaseUnavailable(res);
+    }
+
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
         message: "Invalid product ID",
       });
-    }
-
-    if (mongoose.connection.readyState !== 1) {
-      const product = fallbackProducts.find(
-        (item) => item._id === req.params.id
-      );
-
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
-
-      return res.status(200).json(product);
-=======
-    if (!isDatabaseConnected()) {
-      return sendDatabaseUnavailable(res);
->>>>>>> 22dec965a2e39f1af32a53efe2bc78057a97537c
     }
 
     const product = await Product.findById(req.params.id)
