@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ActivityPanel from "./ActivityPanel";
 import DashboardCard from "./DashboardCard";
 import OrdersTable from "./OrdersTable";
@@ -28,6 +29,7 @@ const fallbackVendors = [
 const formatCurrency = (value = 0) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
 
 function AdminOverview() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(fallbackStats);
   const [topProducts, setTopProducts] = useState(fallbackTopProducts);
   const [vendors, setVendors] = useState(fallbackVendors);
@@ -192,7 +194,7 @@ function AdminOverview() {
               <p className="admin-eyebrow">Product management</p>
               <h2>Top selling products</h2>
             </div>
-            <Button className="text-button" text="View all" />
+            <Button className="text-button" text="View all" onClick={() => navigate("/admin/products")} />
           </div>
 
           <div className="product-list">
@@ -218,7 +220,7 @@ function AdminOverview() {
               <p className="admin-eyebrow">Vendor management</p>
               <h2>Store health</h2>
             </div>
-            <Button className="text-button" text="Approve" />
+            <Button className="text-button" text="Approve" onClick={() => navigate("/admin/vendor-approvals")} />
           </div>
 
           <div className="vendor-list">

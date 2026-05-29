@@ -19,7 +19,9 @@ const getAudienceQuery = (role, userId) => {
 
 const getNotifications = async (req, res) => {
   try {
-    const { filter = "all", role = "", userId = "" } = req.query;
+    const { filter = "all" } = req.query;
+    const role = req.user?.role || "";
+    const userId = req.user?._id || "";
     const query = getAudienceQuery(role, userId);
 
     if (filter === "unread") {
@@ -32,8 +34,7 @@ const getNotifications = async (req, res) => {
       .populate("userId", "name email")
       .sort({ createdAt: -1 });
     const unreadCount = await Notification.countDocuments({
-      ...getAudienceQuery(role),
-      ...(userId ? { $or: [{ userId }, { userId: null }] } : {}),
+      ...getAudienceQuery(role, userId),
       isRead: false,
     });
 
@@ -84,8 +85,13 @@ const createNotification = async (req, res) => {
 
 const markNotificationRead = async (req, res) => {
   try {
-    const notification = await Notification.findByIdAndUpdate(
-      req.params.id,
+    const role = req.user?.role || "";
+    const userId = req.user?._id || "";
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        ...getAudienceQuery(role, userId),
+      },
       { isRead: true },
       { new: true }
     );
@@ -104,7 +110,8 @@ const markNotificationRead = async (req, res) => {
 
 const markAllNotificationsRead = async (req, res) => {
   try {
-    const { role = "", userId = "" } = req.query;
+    const role = req.user?.role || "";
+    const userId = req.user?._id || "";
 
     await Notification.updateMany(
       {
@@ -124,7 +131,12 @@ const markAllNotificationsRead = async (req, res) => {
 
 const deleteNotification = async (req, res) => {
   try {
-    const notification = await Notification.findByIdAndDelete(req.params.id);
+    const role = req.user?.role || "";
+    const userId = req.user?._id || "";
+    const notification = await Notification.findOneAndDelete({
+      _id: req.params.id,
+      ...(role === "admin" ? {} : getAudienceQuery(role, userId)),
+    });
 
     if (!notification) {
       return res.status(404).json({ message: "Notification not found." });

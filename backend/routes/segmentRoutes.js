@@ -8,6 +8,9 @@ const {
 } = require("../controllers/segmentController");
 
 const router = express.Router();
+const { protect, authorizeRoles } = require("../middlewares/authMiddleware");
+
+router.use(protect, authorizeRoles("admin"));
 
 router.post("/", createSegment);
 router.get("/", getSegments);

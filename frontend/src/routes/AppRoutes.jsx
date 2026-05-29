@@ -20,6 +20,7 @@ import OrdersPage from "../pages/admin/OrdersPage";
 import AnalyticsPage from "../pages/admin/AnalyticsPage";
 import ReviewsPage from "../pages/admin/ReviewsPage";
 import PaymentsPage from "../pages/admin/PaymentsPage";
+import ReportsPage from "../pages/admin/ReportsPage";
 import SettingsPage from "../pages/admin/SettingsPage";
 import AdminNotificationsPage from "../pages/admin/NotificationsPage";
 
@@ -83,17 +84,17 @@ function AppRoutes() {
         <Route path="/register" element={<Register />} />
 
         {/* ================= ADMIN ROUTES ================= */}
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route
+          path="/admin"
+          element={
+            <AdminProtectedRoute>
+              <AdminLayout />
+            </AdminProtectedRoute>
+          }
+        >
           <Route index element={<AdminOverview />} />
           <Route path="vendors" element={<VendorsPage />} />
-          <Route
-            path="vendor-approvals"
-            element={
-              <AdminProtectedRoute>
-                <VendorApprovalCenter />
-              </AdminProtectedRoute>
-            }
-          />
+          <Route path="vendor-approvals" element={<VendorApprovalCenter />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="customer-segments" element={<CreateSegmentPage />} />
           <Route path="customer-segments/:segmentId" element={<CreateSegmentPage />} />
@@ -102,6 +103,7 @@ function AppRoutes() {
           <Route path="orders" element={<OrdersPage />} />
           <Route path="export-orders" element={<ExportOrdersCenter />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />

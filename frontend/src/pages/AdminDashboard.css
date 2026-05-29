@@ -74,22 +74,28 @@
 
 .admin-nav {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 2px;
-  scrollbar-width: none;
+  padding-right: 6px;
+  scrollbar-color: rgba(255, 46, 58, 0.5) transparent;
+  scrollbar-width: thin;
 }
 
 .admin-nav::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+}
+
+.admin-nav::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 46, 58, 0.42);
 }
 
 .admin-nav__item {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 46px;
+  min-height: 42px;
   padding: 0 12px;
   border: 1px solid transparent;
   border-radius: 16px;

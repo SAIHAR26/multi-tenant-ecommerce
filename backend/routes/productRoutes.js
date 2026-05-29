@@ -1,6 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
+const { protect, authorizeRoles } = require("../middlewares/authMiddleware");
 
 const {
   getProducts,
@@ -24,13 +25,13 @@ router.get("/", getProducts);
 router.get("/:id", getProductById);
 
 // CREATE PRODUCT
-router.post("/", addProduct);
+router.post("/", protect, authorizeRoles("admin", "vendor"), addProduct);
 
 // UPDATE PRODUCT
-router.patch("/:id", updateProduct);
-router.put("/:id", updateProduct);
+router.patch("/:id", protect, authorizeRoles("admin", "vendor"), updateProduct);
+router.put("/:id", protect, authorizeRoles("admin", "vendor"), updateProduct);
 
 // DELETE PRODUCT
-router.delete("/:id", deleteProduct);
+router.delete("/:id", protect, authorizeRoles("admin", "vendor"), deleteProduct);
 
 module.exports = router;

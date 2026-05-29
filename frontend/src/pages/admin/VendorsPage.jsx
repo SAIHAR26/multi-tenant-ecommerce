@@ -5,6 +5,7 @@ import { getStores } from "../../services/storeService";
 function VendorsPage() {
   const navigate = useNavigate();
   const [stores, setStores] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -27,6 +28,22 @@ function VendorsPage() {
     () => stores.filter((store) => store.storeName),
     [stores]
   );
+
+  const visibleStores = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    if (!normalizedSearch) {
+      return activeStores;
+    }
+
+    return activeStores.filter((store) =>
+      [store.storeName, store.storeCategory, store.location]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedSearch)
+    );
+  }, [activeStores, searchTerm]);
 
   const missingMediaCount = activeStores.filter(
     (store) => !store.storeBanner || !store.storeLogo
@@ -82,7 +99,13 @@ function VendorsPage() {
               <p className="admin-eyebrow">Store directory</p>
               <h2>Connected marketplace stores</h2>
             </div>
-            <input className="panel-search" type="search" placeholder="Search stores..." />
+            <input
+              className="panel-search"
+              type="search"
+              placeholder="Search stores..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
           </div>
           <div className="orders-table-wrap">
             <table className="orders-table">
@@ -100,7 +123,7 @@ function VendorsPage() {
                     <td colSpan="5">{error}</td>
                   </tr>
                 )}
-                {!loading && !error && activeStores.map((store) => (
+                {!loading && !error && visibleStores.map((store) => (
                   <tr key={store._id}>
                     <td>{store.storeName}</td>
                     <td>{store.storeCategory}</td>
@@ -109,9 +132,9 @@ function VendorsPage() {
                     <td>{store.averageRating || 4.5}/5</td>
                   </tr>
                 ))}
-                {!loading && !error && activeStores.length === 0 && (
+                {!loading && !error && visibleStores.length === 0 && (
                   <tr>
-                    <td colSpan="5">No stores found</td>
+                    <td colSpan="5">No stores matched this view</td>
                   </tr>
                 )}
               </tbody>
