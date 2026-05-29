@@ -6,6 +6,39 @@ const Notification = require("../models/Notification");
 
 const getVendorId = (req) => req.user?._id;
 
+const normalizeProductPayload = (body = {}, overrides = {}) => ({
+  ...body,
+  ...overrides,
+  price: Number(body.price || 0),
+  discount: Number(body.discount || 0),
+  stock: Number(body.stock || 0),
+  images: Array.isArray(body.images)
+    ? body.images.filter(Boolean)
+    : String(body.images || "")
+        .split(",")
+        .map((image) => image.trim())
+        .filter(Boolean),
+  sizes: Array.isArray(body.sizes)
+    ? body.sizes.filter(Boolean)
+    : String(body.sizes || "")
+        .split(",")
+        .map((size) => size.trim())
+        .filter(Boolean),
+  colors: Array.isArray(body.colors)
+    ? body.colors.filter(Boolean)
+    : String(body.colors || "")
+        .split(",")
+        .map((color) => color.trim())
+        .filter(Boolean),
+  tags: Array.isArray(body.tags)
+    ? body.tags.filter(Boolean)
+    : String(body.tags || "")
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+  isActive: body.status ? body.status === "Live" : body.isActive !== false,
+});
+
 const ensureVendorStore = async (vendorId, defaults = {}) => {
   let store = await Store.findOne({ vendorId }).sort({ createdAt: -1 });
 
@@ -30,6 +63,17 @@ const getVendorProductIds = async (vendorId) => {
 const getVendorOrdersQuery = (productIds) => ({
   "products.productId": { $in: productIds },
 });
+
+const populateVendorOrderQuery = (query) =>
+  query
+    .populate("userId", "name email location")
+    .populate({
+      path: "products.productId",
+      populate: [
+        { path: "vendor", select: "name email" },
+        { path: "storeId", select: "storeName location storeCategory" },
+      ],
+    });
 
 const getVendorOrderAmount = (order, vendorProductIds) => {
   const vendorIds = new Set(vendorProductIds.map((id) => id.toString()));
@@ -74,10 +118,7 @@ const getVendorDashboardData = async (vendorId) => {
   const products = await Product.find({ vendor: vendorId }).sort({ createdAt: -1 });
   const productIds = products.map((product) => product._id);
   const orders = productIds.length
-    ? await Order.find(getVendorOrdersQuery(productIds))
-        .populate("userId", "name email")
-        .populate("products.productId")
-        .sort({ createdAt: -1 })
+    ? await populateVendorOrderQuery(Order.find(getVendorOrdersQuery(productIds))).sort({ createdAt: -1 })
     : [];
   const reviews = productIds.length
     ? await Review.find({ productId: { $in: productIds } })
@@ -155,27 +196,63 @@ exports.createProduct = async (req, res) => {
   try {
     const vendorId = getVendorId(req);
     const store = await ensureVendorStore(vendorId, req.body);
-    const payload = {
-      ...req.body,
+    const payload = normalizeProductPayload(req.body, {
       vendor: vendorId,
       storeId: store._id,
-      images: Array.isArray(req.body.images)
-        ? req.body.images
-        : String(req.body.images || "")
-            .split(",")
-            .map((image) => image.trim())
-            .filter(Boolean),
-      tags: Array.isArray(req.body.tags)
-        ? req.body.tags
-        : String(req.body.tags || "")
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
-      isActive: req.body.status ? req.body.status === "Live" : true,
-    };
+    });
 
     const product = await Product.create(payload);
     res.status(201).json({ success: true, product });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const vendorId = getVendorId(req);
+    const product = await Product.findOne({ _id: req.params.id, vendor: vendorId });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found for this vendor.",
+      });
+    }
+
+    const store = await ensureVendorStore(vendorId, req.body);
+    const payload = normalizeProductPayload(req.body, {
+      vendor: vendorId,
+      storeId: store._id,
+    });
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: req.params.id, vendor: vendorId },
+      payload,
+      { new: true, runValidators: true }
+    ).populate("storeId");
+
+    res.json({ success: true, product: updatedProduct });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findOneAndDelete({
+      _id: req.params.id,
+      vendor: getVendorId(req),
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found for this vendor.",
+      });
+    }
+
+    res.json({ success: true, message: "Product deleted successfully." });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -185,10 +262,7 @@ exports.getOrders = async (req, res) => {
   try {
     const productIds = await getVendorProductIds(getVendorId(req));
     const orders = productIds.length
-      ? await Order.find(getVendorOrdersQuery(productIds))
-          .populate("userId", "name email")
-          .populate("products.productId")
-          .sort({ createdAt: -1 })
+      ? await populateVendorOrderQuery(Order.find(getVendorOrdersQuery(productIds))).sort({ createdAt: -1 })
       : [];
 
     res.json({ success: true, orders });

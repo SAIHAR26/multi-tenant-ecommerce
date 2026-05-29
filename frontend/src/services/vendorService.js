@@ -1,4 +1,5 @@
 import { apiRequest } from "../api/client";
+import { updateOrderStatus } from "./orderService";
 
 export const getVendorDashboard = async () =>
   apiRequest("/api/vendor/dashboard", {}, "Vendor dashboard could not be loaded.");
@@ -19,8 +20,30 @@ export const createVendorProduct = async (product) =>
     "Vendor product could not be created."
   );
 
+export const updateVendorProduct = async (id, product) =>
+  apiRequest(
+    `/api/vendor/products/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(product),
+    },
+    "Vendor product could not be updated."
+  );
+
+export const deleteVendorProduct = async (id) =>
+  apiRequest(
+    `/api/vendor/products/${id}`,
+    {
+      method: "DELETE",
+    },
+    "Vendor product could not be deleted."
+  );
+
 export const getVendorOrders = async () =>
   apiRequest("/api/vendor/orders", {}, "Vendor orders could not be loaded.");
+
+export const updateVendorOrderStatus = async (orderId, status) =>
+  updateOrderStatus(orderId, status, "Updated by vendor fulfillment");
 
 export const getVendorReviews = async () =>
   apiRequest("/api/vendor/reviews", {}, "Vendor reviews could not be loaded.");

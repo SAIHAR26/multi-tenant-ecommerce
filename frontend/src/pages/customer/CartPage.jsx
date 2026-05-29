@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import ErrorState from "../../components/ErrorState";
+import { Link, useNavigate } from "react-router-dom";
 import LoadingState from "../../components/LoadingState";
 import { useToast } from "../../components/useToast";
 import { getCartItems, removeFromCart } from "../../services/cartService";
@@ -17,6 +16,7 @@ const getSellerName = (product) =>
   "V SHOP";
 
 function CartPage() {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,9 +68,28 @@ function CartPage() {
   }
 
   if (error) {
+    const needsLogin = error.toLowerCase().includes("session expired");
+
     return (
       <div className="customer-page">
-        <ErrorState title="Unable to load cart" message={error} />
+        <section className="customer-hero customer-hero--compact">
+          <div>
+            <p className="customer-eyebrow">Cart access</p>
+            <h1>{needsLogin ? "Please login to view your cart." : "Unable to load cart"}</h1>
+            <p>
+              {needsLogin
+                ? "Your previous session is no longer valid. Login as customer again and your database cart will load."
+                : error}
+            </p>
+          </div>
+          <button
+            className="customer-primary-button"
+            type="button"
+            onClick={() => navigate(needsLogin ? "/login" : "/customer")}
+          >
+            {needsLogin ? "Login" : "Browse Products"}
+          </button>
+        </section>
       </div>
     );
   }

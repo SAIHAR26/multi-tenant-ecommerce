@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login, saveSession } from "../api/auth";
+import { login, logout, saveSession } from "../api/auth";
 import AuthPasswordField from "../components/AuthPasswordField";
 import "./Auth.css";
 
@@ -17,6 +17,7 @@ function Login() {
 
     setIsSubmitting(true);
     setStatus({ type: "", message: "" });
+    logout();
 
     try {
       const session = await login(payload);

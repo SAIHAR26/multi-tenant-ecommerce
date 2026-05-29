@@ -30,3 +30,8 @@ export const getSavedUser = () => {
     return null;
   }
 };
+
+export const logout = () => {
+  localStorage.removeItem("vshopToken");
+  localStorage.removeItem("vshopUser");
+};

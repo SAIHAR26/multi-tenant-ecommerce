@@ -12,6 +12,8 @@ const {
   getStats,
   getStore,
   markNotificationRead,
+  deleteProduct,
+  updateProduct,
   updateStore,
 } = require("../controllers/vendorController");
 
@@ -23,6 +25,9 @@ router.get("/dashboard", getDashboard);
 router.get("/stats", getStats);
 router.get("/products", getProducts);
 router.post("/products", createProduct);
+router.put("/products/:id", updateProduct);
+router.patch("/products/:id", updateProduct);
+router.delete("/products/:id", deleteProduct);
 router.get("/orders", getOrders);
 router.get("/reviews", getReviews);
 router.get("/revenue", getRevenue);

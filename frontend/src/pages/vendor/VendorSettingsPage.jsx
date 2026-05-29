@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../../api/auth";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import { getVendorStore, updateVendorStore } from "../../services/vendorService";
@@ -70,6 +71,11 @@ function VendorSettingsPage() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <>
       <section className="vendor-page-header">
@@ -94,6 +100,7 @@ function VendorSettingsPage() {
           <label className="vendor-field"><span>Store Logo URL</span><input value={form.storeLogo} onChange={(event) => updateField("storeLogo", event.target.value)} /></label>
           <label className="vendor-field"><span>Store Banner URL</span><input value={form.storeBanner} onChange={(event) => updateField("storeBanner", event.target.value)} /></label>
           <div className="vendor-form-actions">
+            <button type="button" onClick={handleLogout}>Logout</button>
             <button type="button" onClick={() => navigate("/vendor/store-profile")}>Preview Store</button>
             <button disabled={saving} type="submit">{saving ? "Saving..." : "Save Settings"}</button>
           </div>

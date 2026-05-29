@@ -18,22 +18,25 @@ const getErrorMessage = async (response, fallbackMessage) => {
 
 export const apiRequest = async (path, options = {}, fallbackMessage = "Request could not be completed.") => {
   try {
+    const {
+      headers: optionHeaders = {},
+      skipAuthRedirect = false,
+      ...requestOptions
+    } = options;
     const token = localStorage.getItem("vshopToken");
     const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...requestOptions,
       headers: {
         "Content-Type": "application/json",
+        ...optionHeaders,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
       },
-      ...options,
     });
 
     if (!response.ok) {
       const message = await getErrorMessage(response, fallbackMessage);
 
       const isAuthRequest = path.startsWith("/api/auth/");
-      const skipAuthRedirect = options.skipAuthRedirect === true;
-
       if (response.status === 401 && !isAuthRequest && !skipAuthRedirect) {
         clearSavedSession();
         window.dispatchEvent(new Event("vshop:session-expired"));

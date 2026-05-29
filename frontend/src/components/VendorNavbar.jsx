@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSavedUser } from "../api/auth";
+import { getSavedUser, logout } from "../api/auth";
 import {
   getVendorNotifications,
   getVendorStore,
@@ -83,6 +83,10 @@ function VendorNavbar() {
   };
 
   const storeName = store?.storeName || user?.store?.name || user?.name || "Vendor Store";
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <header className="vendor-navbar">
@@ -156,6 +160,7 @@ function VendorNavbar() {
               <span>Premium seller account</span>
               <button type="button" onClick={() => navigate("/vendor/store-profile")}>View Store</button>
               <button type="button" onClick={() => navigate("/vendor/settings")}>Account Settings</button>
+              <button type="button" onClick={handleLogout}>Logout</button>
             </div>
           ) : null}
         </div>

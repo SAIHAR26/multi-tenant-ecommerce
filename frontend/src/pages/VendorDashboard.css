@@ -990,6 +990,40 @@
   color: #9a9a9a;
 }
 
+.vendor-image-preview-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 12px;
+}
+
+.vendor-image-preview {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.vendor-image-preview img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.vendor-image-preview button,
+.vendor-modal-heading button {
+  min-height: 36px;
+  border: 1px solid rgba(255, 78, 100, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .vendor-form-actions {
   display: flex;
   justify-content: flex-end;
@@ -1016,6 +1050,60 @@
   transform: translateY(-2px);
   border-color: rgba(255, 96, 115, 0.72);
   box-shadow: 0 0 26px rgba(188, 28, 51, 0.24);
+}
+
+.vendor-order-status-select {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 78, 100, 0.24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #ffffff;
+  font-weight: 850;
+  color-scheme: dark;
+}
+
+.vendor-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.vendor-modal {
+  width: min(980px, 100%);
+  max-height: min(90vh, 920px);
+  overflow: auto;
+  border: 1px solid rgba(174, 27, 48, 0.32);
+  border-radius: 24px;
+  background: #111111;
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.58);
+}
+
+.vendor-product-edit-modal {
+  padding: 22px;
+}
+
+.vendor-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.vendor-modal-heading h2 {
+  margin: 4px 0 0;
+  color: #ffffff;
+}
+
+.vendor-form-compact {
+  margin-top: 18px;
+  border-radius: 18px;
+  box-shadow: none;
 }
 
 .vendor-full-panel {

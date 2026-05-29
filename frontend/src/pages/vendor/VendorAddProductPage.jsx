@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createVendorProduct } from "../../services/vendorService";
+import { fileToOptimizedDataUrl } from "../../utils/imageUpload";
 
 const initialForm = {
   name: "",
@@ -11,7 +12,7 @@ const initialForm = {
   brand: "",
   stock: "",
   sku: "",
-  images: "",
+  images: [],
   sizes: "",
   colors: "",
   tags: "",
@@ -28,6 +29,30 @@ function VendorAddProductPage() {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    try {
+      const uploadedImages = await Promise.all(files.map((file) => fileToOptimizedDataUrl(file)));
+      setForm((current) => ({
+        ...current,
+        images: [...current.images, ...uploadedImages],
+      }));
+    } catch {
+      setError("Product images could not be loaded. Please try another file.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const removeImage = (imageToRemove) => {
+    setForm((current) => ({
+      ...current,
+      images: current.images.filter((image) => image !== imageToRemove),
+    }));
+  };
+
   const handleSubmit = async (event, status = form.status) => {
     event.preventDefault();
     setSaving(true);
@@ -40,7 +65,7 @@ function VendorAddProductPage() {
         price: Number(form.price || 0),
         discount: Number(form.discount || 0),
         stock: Number(form.stock || 0),
-        images: form.images.split(/[\n,]/).map((item) => item.trim()).filter(Boolean),
+        images: form.images,
         sizes: form.sizes.split(",").map((item) => item.trim()).filter(Boolean),
         colors: form.colors.split(",").map((item) => item.trim()).filter(Boolean),
         tags: form.tags.split(",").map((item) => item.trim()).filter(Boolean),
@@ -125,10 +150,23 @@ function VendorAddProductPage() {
           <input value={form.colors} placeholder="Black, Red" onChange={(event) => updateField("colors", event.target.value)} />
         </label>
 
-        <label className="vendor-field vendor-field-wide">
-          <span>Image URLs</span>
-          <textarea value={form.images} placeholder="Paste one image URL per line" onChange={(event) => updateField("images", event.target.value)} />
+        <label className="vendor-upload">
+          <span>Product Images</span>
+          <strong>Upload product photos</strong>
+          <small>Choose one or more JPG, PNG, or WebP images.</small>
+          <input accept="image/*" multiple type="file" onChange={handleImageUpload} />
         </label>
+
+        {form.images.length > 0 ? (
+          <div className="vendor-image-preview-grid">
+            {form.images.map((image) => (
+              <div className="vendor-image-preview" key={image}>
+                <img src={image} alt="Product preview" />
+                <button type="button" onClick={() => removeImage(image)}>Remove</button>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <label className="vendor-field vendor-field-wide">
           <span>Tags</span>

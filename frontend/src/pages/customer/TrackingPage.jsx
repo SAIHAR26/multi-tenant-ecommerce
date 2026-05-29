@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getSavedUser } from "../../api/auth";
-import { getOrderTracking } from "../../services/orderService";
+import { cancelOrder, getOrderTracking } from "../../services/orderService";
 import { formatPrice } from "../../utils/orderTotals";
 import { getProductImage } from "../../utils/productImages";
 
@@ -21,6 +21,7 @@ function TrackingPage() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -65,9 +66,30 @@ function TrackingPage() {
 
   const products = order.products || [];
   const firstProduct = products[0]?.productId || {};
-  const productNames = products.map((item) => item.productId?.name).filter(Boolean).join(", ");
+  const productNames = products
+    .map((item) => `${item.productId?.name || "Product"} x${item.quantity || 1}`)
+    .filter(Boolean)
+    .join(", ");
   const activeStep = statusStepMap[order.status] ?? 0;
   const progressPercent = Math.round(((activeStep + 1) / trackingSteps.length) * 100);
+  const canCancel = !["SHIPPED", "DELIVERED", "CANCELLED"].includes(order.status);
+  const eta = order.estimatedDeliveryDate
+    ? new Date(order.estimatedDeliveryDate).toLocaleDateString("en-IN")
+    : "ETA pending";
+
+  const handleCancelOrder = async () => {
+    const shouldCancel = window.confirm("Cancel this order?");
+    if (!shouldCancel) return;
+
+    try {
+      setCancelling(true);
+      setOrder(await cancelOrder(order._id || order.id));
+    } catch (err) {
+      setError(err.message || "Order could not be cancelled.");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   return (
     <div className="customer-page">
@@ -78,6 +100,11 @@ function TrackingPage() {
           <p>Follow every stage from processing to doorstep delivery with clear fulfillment updates.</p>
         </div>
         <div className="support-actions">
+          {canCancel ? (
+            <button className="customer-secondary-button" type="button" disabled={cancelling} onClick={handleCancelOrder}>
+              {cancelling ? "Cancelling..." : "Cancel Order"}
+            </button>
+          ) : null}
           <a className="customer-primary-button" href="tel:+919000000000">Call Support</a>
           <a className="customer-secondary-button" href="mailto:support@vshop.com">Email Support</a>
         </div>
@@ -97,6 +124,7 @@ function TrackingPage() {
           <div>
             <strong>{formatPrice(order.totalAmount)}</strong>
             <span>{products.length} item groups - Payment {order.paymentStatus}</span>
+            <span>Estimated delivery: {eta}</span>
           </div>
         </div>
 
@@ -121,7 +149,7 @@ function TrackingPage() {
           <div className="address-card">
             <h3>{customerName}</h3>
             <p>{order.deliveryAddress || "Address not available"}</p>
-            <span>Express delivery enabled</span>
+            <span>{order.deliveryDistanceKm || 0} km route - {order.deliveryEstimateDays || 3} day estimate</span>
           </div>
         </article>
         <article className="customer-panel">
@@ -131,7 +159,8 @@ function TrackingPage() {
           <div className="offer-stack">
             <div><strong>Status</strong><span>Current status verified as {order.status || "PROCESSING"}.</span></div>
             <div><strong>Products</strong><span>{productNames || "Order products"}</span></div>
-            <div><strong>Updates</strong><span>Latest fulfillment status is synced from MongoDB.</span></div>
+            <div><strong>Delivery ETA</strong><span>{eta}</span></div>
+            <div><strong>Updates</strong><span>Latest fulfillment status is synced from vendor updates in MongoDB.</span></div>
           </div>
         </article>
       </section>
