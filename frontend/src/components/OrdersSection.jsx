@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ErrorState from "./ErrorState";
 import LoadingState from "./LoadingState";
-import { getOrders } from "../services/orderService";
+import { getVendorOrders } from "../services/vendorService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
 const getOrderItems = (order) =>
@@ -17,7 +17,7 @@ function OrdersSection() {
   useEffect(() => {
     let isMounted = true;
 
-    getOrders()
+    getVendorOrders()
       .then((data) => {
         const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
         if (isMounted) {

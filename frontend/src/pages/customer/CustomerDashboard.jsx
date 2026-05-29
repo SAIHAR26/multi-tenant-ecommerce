@@ -46,7 +46,7 @@ function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [activeCategory, setActiveCategory] =
+  const [activeCategory] =
     useState("Trending");
 
   const [priceFilter, setPriceFilter] =

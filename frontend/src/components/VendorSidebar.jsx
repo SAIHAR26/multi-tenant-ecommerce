@@ -8,6 +8,7 @@ const sidebarItems = [
   { label: "Reviews", icon: "RW", to: "/vendor/reviews" },
   { label: "Revenue", icon: "RV", to: "/vendor/revenue" },
   { label: "Analytics", icon: "AN", to: "/vendor/analytics" },
+  { label: "Notifications", icon: "NT", to: "/vendor/notifications" },
   { label: "Settings", icon: "ST", to: "/vendor/settings" },
   { label: "Logout", icon: "LO", to: "/login" },
 ];
