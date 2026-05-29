@@ -15,6 +15,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const adminVendorRoutes = require("./routes/adminVendorRoutes");
 const adminSettingsRoutes = require("./routes/adminSettingsRoutes");
 const cartRoutes = require("./routes/cartRoutes");
@@ -45,6 +46,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/admin/vendors", adminVendorRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
 app.use("/api/products", productRoutes);

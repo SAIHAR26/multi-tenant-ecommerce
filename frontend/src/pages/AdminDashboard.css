@@ -171,6 +171,7 @@
 }
 
 .admin-search {
+  position: relative;
   display: flex;
   align-items: center;
   width: min(560px, 100%);
@@ -180,6 +181,63 @@
   border-radius: 18px;
   background: rgba(28, 28, 28, 0.7);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.admin-search-results,
+.profile-dropdown {
+  position: absolute;
+  z-index: 20;
+  border: 1px solid rgba(255, 46, 58, 0.16);
+  border-radius: 18px;
+  background: rgba(12, 12, 12, 0.96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(18px);
+}
+
+.admin-search-results {
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+}
+
+.admin-search-results button,
+.profile-dropdown button {
+  width: 100%;
+  border: 0;
+  color: #ffffff;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-search-results button {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.admin-search-results button:hover,
+.profile-dropdown button:hover {
+  background: rgba(210, 31, 43, 0.14);
+}
+
+.admin-search-results button span,
+.admin-search-state {
+  color: #aaa6a6;
+  font-size: 0.82rem;
+}
+
+.admin-search-state {
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.admin-search-state--error {
+  color: #ff8f96;
 }
 
 .admin-search span {
@@ -301,6 +359,30 @@
   border-radius: 18px;
   background: rgba(28, 28, 28, 0.78);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.profile-card--button {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.profile-menu {
+  position: relative;
+}
+
+.profile-dropdown {
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  min-width: 180px;
+  padding: 8px;
+}
+
+.profile-dropdown button {
+  padding: 11px 12px;
+  border-radius: 12px;
+  font-weight: 850;
 }
 
 .profile-card strong,

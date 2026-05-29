@@ -71,6 +71,38 @@ const userSchema = new mongoose.Schema(
       },
     },
 
+    business: {
+      gstNumber: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessRegistrationNumber: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessType: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessAddress: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessDocuments: {
+        type: [String],
+        default: [],
+      },
+      panNumber: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+    },
+
     avatar: {
       type: String,
       default: "",

@@ -58,9 +58,16 @@ const formatVendor = async (vendor) => {
       description: store?.storeDescription || "",
       category: store?.storeCategory || vendor.store?.category || "",
       location: store?.location || vendor.location || "",
-      gst: "",
-      businessId: "",
-      documents: [],
+      gst: store?.business?.gstNumber || vendor.business?.gstNumber || "",
+      businessId:
+        store?.business?.businessRegistrationNumber ||
+        vendor.business?.businessRegistrationNumber ||
+        "",
+      businessType: store?.business?.businessType || vendor.business?.businessType || "",
+      businessAddress:
+        store?.business?.businessAddress || vendor.business?.businessAddress || "",
+      panNumber: store?.business?.panNumber || vendor.business?.panNumber || "",
+      documents: store?.business?.businessDocuments || vendor.business?.businessDocuments || [],
       createdAt: store?.createdAt || null,
     },
     analytics: metrics,

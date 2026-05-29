@@ -38,14 +38,76 @@ function AnalyticsPage() {
   const summary = report?.summary || {};
   const reviewsSummary = report?.reviewsSummary || {};
   const topProducts = useMemo(() => report?.topSellingProducts || [], [report]);
+  const revenueTrend = useMemo(() => report?.charts?.revenueTrend || [], [report]);
 
   const chartHeights = useMemo(() => {
-    const maxRevenue = Math.max(...topProducts.map((product) => Number(product.revenue || 0)), 1);
+    const values = revenueTrend.length
+      ? revenueTrend.map((point) => Number(point.revenue || 0))
+      : topProducts.map((product) => Number(product.revenue || 0));
+    const maxRevenue = Math.max(...values, 1);
 
-    return topProducts.length
-      ? topProducts.map((product) => Math.max(16, Math.round((Number(product.revenue || 0) / maxRevenue) * 100)))
-      : [24, 32, 28, 40, 36];
-  }, [topProducts]);
+    return values.length ? values.map((value) => Math.max(16, Math.round((value / maxRevenue) * 100))) : [0];
+  }, [revenueTrend, topProducts]);
+
+  const metricGroups = [
+    {
+      title: "Revenue Analytics",
+      items: [
+        ["Total Revenue", formatCurrency(summary.totalRevenue)],
+        ["Revenue Today", formatCurrency(summary.revenueToday)],
+        ["Revenue This Week", formatCurrency(summary.revenueThisWeek)],
+        ["Revenue This Month", formatCurrency(summary.revenueThisMonth)],
+        ["Revenue Growth %", `${summary.revenueGrowthPercent || 0}%`],
+      ],
+    },
+    {
+      title: "Order Analytics",
+      items: [
+        ["Total Orders", summary.totalOrders || 0],
+        ["Pending Orders", summary.pendingOrders || 0],
+        ["Completed Orders", summary.completedOrders || 0],
+        ["Cancelled Orders", summary.cancelledOrders || 0],
+        ["Refund Requests", summary.refundRequests || 0],
+      ],
+    },
+    {
+      title: "Customer Analytics",
+      items: [
+        ["Total Customers", summary.totalCustomers || 0],
+        ["Active Customers", summary.activeCustomers || 0],
+        ["New Customers", summary.newCustomers || 0],
+        ["Repeat Customers", summary.repeatCustomers || 0],
+        ["Customer Growth %", `${summary.customerGrowthPercent || 0}%`],
+      ],
+    },
+    {
+      title: "Vendor Analytics",
+      items: [
+        ["Total Vendors", summary.totalVendors || 0],
+        ["Approved Vendors", summary.approvedVendors || 0],
+        ["Pending Vendors", summary.pendingVendorApprovals || 0],
+        ["Rejected Vendors", summary.rejectedVendors || 0],
+      ],
+    },
+    {
+      title: "Product Analytics",
+      items: [
+        ["Total Products", summary.totalProducts || 0],
+        ["Active Products", summary.activeProducts || 0],
+        ["Out Of Stock Products", summary.outOfStockProducts || 0],
+        ["Low Stock Products", summary.lowStockProducts || 0],
+      ],
+    },
+    {
+      title: "Review Analytics",
+      items: [
+        ["Total Reviews", reviewsSummary.totalReviews || 0],
+        ["Average Rating", reviewsSummary.averageRating || 0],
+        ["Negative Reviews", reviewsSummary.lowRatingReviews || 0],
+        ["Positive Reviews", reviewsSummary.positiveReviews || 0],
+      ],
+    },
+  ];
 
   return (
     <div className="admin-page">
@@ -75,17 +137,30 @@ function AnalyticsPage() {
         <article className="dashboard-card dashboard-card--violet"><div className="dashboard-card__top"><span>Avg Rating</span><strong>Reviews</strong></div><h2>{reviewsSummary.averageRating || 0}</h2><p>{reviewsSummary.totalReviews || 0} reviews tracked</p></article>
       </section>
 
+      <section className="management-grid">
+        {metricGroups.map((group) => (
+          <article className="glass-panel" key={group.title}>
+            <div className="panel-header"><div><p className="admin-eyebrow">Live MongoDB</p><h2>{group.title}</h2></div></div>
+            <dl className="vendor-detail-list">
+              {group.items.map(([label, value]) => (
+                <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+              ))}
+            </dl>
+          </article>
+        ))}
+      </section>
+
       <section className="analytics-grid">
         <article className="glass-panel revenue-panel">
-          <div className="panel-header"><div><p className="admin-eyebrow">Revenue charts</p><h2>Top product revenue</h2></div><span className="panel-pill">Live report</span></div>
+          <div className="panel-header"><div><p className="admin-eyebrow">Revenue charts</p><h2>Revenue trend</h2></div><span className="panel-pill">Live report</span></div>
           <div className="bar-chart" aria-label="Top product revenue chart">
             {chartHeights.map((height, index) => (
               <span key={`${height}-${index}`} style={{ "--bar-height": `${height}%` }} />
             ))}
           </div>
           <div className="chart-labels">
-            {(topProducts.length ? topProducts : [{ name: "No data" }]).slice(0, 4).map((product) => (
-              <span key={product.name}>{product.name}</span>
+            {(revenueTrend.length ? revenueTrend : [{ _id: "No data" }]).slice(0, 7).map((point) => (
+              <span key={point._id}>{point._id}</span>
             ))}
           </div>
         </article>
