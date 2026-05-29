@@ -1,7 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
-const { protect } = require("../middlewares/authMiddleware");
+const { protect, authorizeRoles } = require("../middlewares/authMiddleware");
 
 const {
   createOrder,
@@ -12,7 +12,7 @@ const {
   updateOrder,
 } = require("../controllers/orderController");
 
-router.get("/export", exportOrders);
+router.get("/export", protect, authorizeRoles("admin"), exportOrders);
 
 router
   .route("/")

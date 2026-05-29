@@ -59,6 +59,20 @@ const normalizeProductPayload = async (body) => {
   return payload;
 };
 
+const ownsProduct = (product, user) =>
+  user?.role === "admin" || product.vendor?.toString() === user?._id?.toString();
+
+const applyVendorWriteScope = (payload, user) => {
+  if (user?.role !== "vendor") {
+    return payload;
+  }
+
+  return {
+    ...payload,
+    vendor: user._id,
+  };
+};
+
 const getCategoryImage = (category) => {
   const images = {
     Accessories:
@@ -198,6 +212,17 @@ const getRecommendations = async (req, res) => {
 // CREATE PRODUCT
 const addProduct = async (req, res) => {
   try {
+    const payload = applyVendorWriteScope(await normalizeProductPayload(req.body), req.user);
+
+    if (req.user?.role === "vendor") {
+      const store = await Store.findById(payload.storeId);
+
+      if (!store || store.vendorId?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          message: "Vendors can only create products for their own store.",
+        });
+      }
+    }
     const payload = await normalizeProductPayload(req.body);
 
     const product = await Product.create(payload);
@@ -218,14 +243,31 @@ const addProduct = async (req, res) => {
 // UPDATE PRODUCT
 const updateProduct = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid product ID",
+    const existingProduct = await Product.findById(req.params.id);
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        message: "Product not found.",
       });
     }
 
-    const payload = await normalizeProductPayload(req.body);
+    if (!ownsProduct(existingProduct, req.user)) {
+      return res.status(403).json({
+        message: "You can only update your own products.",
+      });
+    }
+
+    const payload = applyVendorWriteScope(await normalizeProductPayload(req.body), req.user);
+
+    if (req.user?.role === "vendor") {
+      const store = await Store.findById(payload.storeId);
+
+      if (!store || store.vendorId?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          message: "Vendors can only assign products to their own store.",
+        });
+      }
+    }
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
@@ -267,12 +309,20 @@ const deleteProduct = async (req, res) => {
 
     const product = await Product.findByIdAndDelete(req.params.id);
 
-    if (!product) {
+    if (!existingProduct) {
       return res.status(404).json({
         success: false,
         message: "Product not found.",
       });
     }
+
+    if (!ownsProduct(existingProduct, req.user)) {
+      return res.status(403).json({
+        message: "You can only delete your own products.",
+      });
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,

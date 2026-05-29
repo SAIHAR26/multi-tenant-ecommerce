@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getNotifications } from "../../services/notificationService";
 
 function Navbar() {
+  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -27,10 +29,25 @@ function Navbar() {
 
   return (
     <header className="admin-navbar">
-      <label className="admin-search" htmlFor="admin-search">
+      <form
+        className="admin-search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const query = searchTerm.trim();
+          if (query) {
+            navigate(`/admin/products?search=${encodeURIComponent(query)}`);
+          }
+        }}
+      >
         <span>Search</span>
-        <input id="admin-search" type="search" placeholder="Search orders, vendors, products..." />
-      </label>
+        <input
+          id="admin-search"
+          type="search"
+          placeholder="Search orders, vendors, products..."
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+        />
+      </form>
 
       <div className="navbar-actions">
         <Link className="icon-button" to="/admin/notifications" aria-label="Open notifications">
