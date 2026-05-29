@@ -34,6 +34,8 @@ import VendorReviewsPage from "../pages/vendor/VendorReviewsPage";
 import VendorRevenuePage from "../pages/vendor/VendorRevenuePage";
 import VendorAnalyticsPage from "../pages/vendor/VendorAnalyticsPage";
 import VendorSettingsPage from "../pages/vendor/VendorSettingsPage";
+import VendorStoreProfilePage from "../pages/vendor/VendorStoreProfilePage";
+import VendorNotificationsPage from "../pages/vendor/VendorNotificationsPage";
 
 /* ================= CUSTOMER ================= */
 import CustomerLayout from "../layouts/CustomerLayout";
@@ -117,7 +119,9 @@ function AppRoutes() {
           <Route path="reviews" element={<VendorReviewsPage />} />
           <Route path="revenue" element={<VendorRevenuePage />} />
           <Route path="analytics" element={<VendorAnalyticsPage />} />
+          <Route path="notifications" element={<VendorNotificationsPage />} />
           <Route path="settings" element={<VendorSettingsPage />} />
+          <Route path="store-profile" element={<VendorStoreProfilePage />} />
         </Route>
 
         {/* ================= CUSTOMER ROUTES ================= */}

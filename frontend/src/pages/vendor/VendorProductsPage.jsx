@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
-import { getSavedUser } from "../../api/auth";
-import { getProducts } from "../../services/productService";
+import { getVendorProducts } from "../../services/vendorService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
+
 const getStatus = (product) => {
   if (!product.isActive || Number(product.stock || 0) <= 0) return "Paused";
   if (Number(product.stock || 0) <= 10) return "Low Stock";
@@ -19,11 +19,10 @@ function VendorProductsPage() {
 
   useEffect(() => {
     let isMounted = true;
-    const user = getSavedUser();
 
-    getProducts(user?.role === "vendor" ? { vendor: user.id } : {})
+    getVendorProducts()
       .then((data) => {
-        const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+        const productsArray = Array.isArray(data?.products) ? data.products : [];
         if (isMounted) {
           setProducts(productsArray);
           setError("");
@@ -46,7 +45,7 @@ function VendorProductsPage() {
     if (!term) return products;
 
     return products.filter((product) =>
-      [product.name, product.category, product.brand, product._id]
+      [product.name, product.category, product.brand, product.sku, product._id]
         .join(" ")
         .toLowerCase()
         .includes(term)
@@ -84,10 +83,16 @@ function VendorProductsPage() {
 
               return (
                 <article className="vendor-product-card" key={product._id || product.id}>
-                  <div className="product-image">{product.name?.slice(0, 2).toUpperCase()}</div>
+                  <div className="product-image">
+                    {product.images?.[0] ? (
+                      <img src={product.images[0]} alt={product.name} />
+                    ) : (
+                      product.name?.slice(0, 2).toUpperCase()
+                    )}
+                  </div>
                   <div>
                     <h2>{product.name}</h2>
-                    <p>{product.category} - {product._id?.slice(-6).toUpperCase()}</p>
+                    <p>{product.category} - {(product.sku || product._id?.slice(-6) || "").toUpperCase()}</p>
                     <strong>{formatPrice(product.price)}</strong>
                   </div>
                   <span className={`product-status ${status.toLowerCase().replace(" ", "-")}`}>
@@ -117,6 +122,8 @@ function VendorProductsPage() {
                     <th>Price</th>
                     <th>Stock</th>
                     <th>Status</th>
+                    <th>Rating</th>
+                    <th>Orders</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -127,7 +134,7 @@ function VendorProductsPage() {
                     return (
                       <tr key={product._id || product.id}>
                         <td>{product.name}</td>
-                        <td>{product._id?.slice(-6).toUpperCase()}</td>
+                        <td>{(product.sku || product._id?.slice(-6) || "").toUpperCase()}</td>
                         <td>{product.category}</td>
                         <td>{formatPrice(product.price)}</td>
                         <td>{product.stock}</td>
@@ -136,6 +143,8 @@ function VendorProductsPage() {
                             {status}
                           </span>
                         </td>
+                        <td>{Number(product.rating || 0).toFixed(1)}</td>
+                        <td>{product.ordersCount || 0}</td>
                         <td className="vendor-table-actions">
                           <button type="button" className="table-action">Edit</button>
                           <button type="button" className="table-action">Delete</button>

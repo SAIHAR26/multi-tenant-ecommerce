@@ -1,98 +1,40 @@
-import { apiRequest } from "../api/client";
+import { getVendorStats as fetchVendorStats } from "./vendorService";
 
-// FALLBACK STATS
-export const getFallbackVendorStats =
-  () => [
-    {
-      label: "Total Revenue",
-      value: "₹2.4L",
-      change: "+18%",
-    },
+const formatCurrency = (value = 0) =>
+  `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
 
-    {
-      label: "Orders",
-      value: "1,284",
-      change: "+12%",
-    },
+const formatRating = (value = 0) => Number(value || 0).toFixed(1);
 
-    {
-      label: "Products",
-      value: "86",
-      change: "+6%",
-    },
-
-    {
-      label: "Customers",
-      value: "542",
-      change: "+21%",
-    },
-  ];
-
-const formatCurrency = (value = 0) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
-
-const normalizeVendorStats = (stats = {}) => [
+export const mapVendorStats = (stats = {}) => [
   {
-    label: "Total Revenue",
-    value: formatCurrency(stats.revenue),
-    trend: "From vendor orders",
-    icon: "RV",
-  },
-  {
-    label: "Orders",
-    value: String(stats.totalOrders || 0),
-    trend: "Fulfillment queue",
-    icon: "OR",
-  },
-  {
-    label: "Products",
+    label: "Total Products",
     value: String(stats.totalProducts || 0),
-    trend: "Live catalog",
+    trend: `${stats.lowStockProducts || 0} low stock`,
     icon: "PR",
   },
   {
-    label: "Customers",
-    value: String(stats.totalCustomers || 0),
-    trend: "Unique buyers",
-    icon: "CU",
+    label: "Total Orders",
+    value: String(stats.totalOrders || 0),
+    trend: `${stats.pendingOrders || 0} pending`,
+    icon: "OR",
+  },
+  {
+    label: "Total Revenue",
+    value: formatCurrency(stats.totalRevenue),
+    trend: "Live MongoDB total",
+    icon: "RV",
+  },
+  {
+    label: "Average Rating",
+    value: formatRating(stats.averageRating),
+    trend: `${stats.totalReviews || 0} reviews`,
+    icon: "RT",
   },
 ];
 
-// GET VENDOR STATS
-export const getVendorStats =
-  async () => {
-    try {
-      const data =
-        await apiRequest(
-          "/api/vendor/stats",
-          {},
-          "Unable to load vendor statistics."
-        );
+export const getFallbackVendorStats = () => mapVendorStats({});
 
-      if (
-        Array.isArray(data)
-      ) {
-        return data;
-      }
-
-      if (
-        Array.isArray(
-          data?.stats
-        )
-      ) {
-        return data.stats;
-      }
-
-      if (data?.stats && typeof data.stats === "object") {
-        return normalizeVendorStats(data.stats);
-      }
-
-      return getFallbackVendorStats();
-    } catch (error) {
-      console.error(
-        "Vendor stats error:",
-        error
-      );
-
-      return getFallbackVendorStats();
-    }
-  };
+export const getVendorStats = async () => {
+  const data = await fetchVendorStats();
+  return mapVendorStats(data?.stats);
+};

@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
 import { getProductImage } from "../../utils/productImages";
-import { categoryTabs, priceRanges } from "./customerData";
+import { priceRanges } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
 
@@ -46,7 +46,7 @@ function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [activeCategory, setActiveCategory] =
+  const [activeCategory] =
     useState("Trending");
 
   const [priceFilter, setPriceFilter] =

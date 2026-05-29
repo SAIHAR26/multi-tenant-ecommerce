@@ -1,30 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
-import { getSavedUser } from "../../api/auth";
-import { getProducts } from "../../services/productService";
+import { getVendorAnalytics } from "../../services/vendorService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
 
 function VendorAnalyticsPage() {
-  const [products, setProducts] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
-    const user = getSavedUser();
 
-    getProducts(user?.role === "vendor" ? { vendor: user.id } : {})
+    getVendorAnalytics()
       .then((data) => {
-        const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
         if (isMounted) {
-          setProducts(productsArray);
+          setAnalytics(data?.analytics || {});
           setError("");
         }
       })
       .catch((err) => {
-        if (isMounted) setError(err.message || "Analytics products could not be loaded.");
+        if (isMounted) setError(err.message || "Analytics could not be loaded.");
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -35,13 +32,10 @@ function VendorAnalyticsPage() {
     };
   }, []);
 
-  const rankedProducts = useMemo(
-    () =>
-      [...products]
-        .sort((first, second) => Number(second.rating || 0) - Number(first.rating || 0))
-        .slice(0, 4),
-    [products]
-  );
+  const products = useMemo(() => analytics?.topProducts || [], [analytics]);
+  const monthlyRevenue = analytics?.monthlyRevenue || [];
+  const maxMonthly = Math.max(...monthlyRevenue.map((item) => item.total), 1);
+  const rankedProducts = useMemo(() => products.slice(0, 4), [products]);
 
   return (
     <>
@@ -60,14 +54,18 @@ function VendorAnalyticsPage() {
         <section className="vendor-insights-grid">
           <div className="vendor-panel revenue-panel">
             <div className="vendor-section-heading"><div><p>Sales charts</p><h2>Monthly performance</h2></div><span>Live</span></div>
-            <div className="revenue-chart"><span style={{ height: "38%" }} /><span style={{ height: "63%" }} /><span style={{ height: "56%" }} /><span style={{ height: "82%" }} /><span style={{ height: "74%" }} /><span style={{ height: "95%" }} /></div>
+            <div className="revenue-chart">
+              {monthlyRevenue.map((item) => (
+                <span key={item.label} title={`${item.label}: ${formatPrice(item.total)}`} style={{ height: `${Math.max((item.total / maxMonthly) * 100, 8)}%` }} />
+              ))}
+            </div>
           </div>
           <div className="vendor-panel">
             <div className="vendor-section-heading"><div><p>Customer insights</p><h2>Audience quality</h2></div><span>MongoDB</span></div>
             <ul className="vendor-metric-list">
-              <li><span>Catalog items</span><strong>{products.length}</strong></li>
-              <li><span>Average rating</span><strong>{getAverageRating(products)}</strong></li>
-              <li><span>Low stock</span><strong>{products.filter((product) => Number(product.stock || 0) <= 10).length}</strong></li>
+              <li><span>Catalog items</span><strong>{analytics?.totalProducts || 0}</strong></li>
+              <li><span>Average rating</span><strong>{Number(analytics?.averageRating || 0).toFixed(1)}</strong></li>
+              <li><span>Low stock</span><strong>{analytics?.lowStockProducts || 0}</strong></li>
             </ul>
           </div>
           <div className="vendor-panel">
@@ -89,12 +87,6 @@ function VendorAnalyticsPage() {
       ) : null}
     </>
   );
-}
-
-function getAverageRating(products) {
-  if (!products.length) return "0.0";
-  const total = products.reduce((sum, product) => sum + Number(product.rating || 0), 0);
-  return (total / products.length).toFixed(1);
 }
 
 export default VendorAnalyticsPage;

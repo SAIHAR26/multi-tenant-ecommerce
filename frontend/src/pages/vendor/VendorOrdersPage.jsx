@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
-import { getOrders } from "../../services/orderService";
+import { getVendorOrders } from "../../services/vendorService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
 const getOrderItems = (order) =>
@@ -16,7 +16,7 @@ function VendorOrdersPage() {
     setLoading(true);
     setError("");
 
-    return getOrders()
+    return getVendorOrders()
       .then((data) => {
         const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
         setOrders(ordersArray);
@@ -33,7 +33,7 @@ function VendorOrdersPage() {
   useEffect(() => {
     let isMounted = true;
 
-    getOrders()
+    getVendorOrders()
       .then((data) => {
         const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
         if (isMounted) {

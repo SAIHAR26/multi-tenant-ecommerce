@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
-import VendorNavbar from "../../components/VendorNavbar";
-import VendorSidebar from "../../components/VendorSidebar";
 import VendorStatsCard from "../../components/VendorStatsCard";
 import ProductsTable from "../../components/ProductsTable";
 import OrdersSection from "../../components/OrdersSection";
@@ -44,20 +42,14 @@ function VendorDashboard() {
 
   if (loading) {
     return (
-      <div className="vendor-dashboard" style={{ padding: "40px", color: "#fff" }}>
+      <div style={{ padding: "40px", color: "#fff" }}>
         <LoadingState message="Loading seller workspace..." />
       </div>
     );
   }
 
   return (
-    <div className="vendor-dashboard">
-      <VendorSidebar />
-
-      <div className="vendor-shell">
-        <VendorNavbar />
-
-        <main className="vendor-main">
+    <>
           <section className="vendor-hero">
             <div>
               <p className="vendor-kicker">V SHOP seller workspace</p>
@@ -144,9 +136,7 @@ function VendorDashboard() {
               <button type="button" onClick={() => navigate("/vendor/orders")}>View Orders</button>
             </div>
           </section>
-        </main>
-      </div>
-    </div>
+    </>
   );
 }
 
