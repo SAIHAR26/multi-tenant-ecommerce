@@ -196,7 +196,42 @@ function VendorFields() {
 
       <label className="auth-field">
         <span>Shop Location</span>
-        <input name="location" type="text" placeholder="City, State" />
+        <input name="location" type="text" placeholder="City, State" required />
+      </label>
+
+      <label className="auth-field auth-field--wide">
+        <span>Store Description</span>
+        <input name="storeDescription" type="text" placeholder="Describe your store" required />
+      </label>
+
+      <label className="auth-field">
+        <span>GST Number</span>
+        <input name="gstNumber" type="text" placeholder="GSTIN" />
+      </label>
+
+      <label className="auth-field">
+        <span>Business Registration Number</span>
+        <input name="businessRegistrationNumber" type="text" placeholder="Registration number" required />
+      </label>
+
+      <label className="auth-field">
+        <span>Business Type</span>
+        <input name="businessType" type="text" placeholder="Proprietorship, LLP, Pvt Ltd" required />
+      </label>
+
+      <label className="auth-field auth-field--wide">
+        <span>Business Address</span>
+        <input name="businessAddress" type="text" placeholder="Registered business address" required />
+      </label>
+
+      <label className="auth-field">
+        <span>PAN Number</span>
+        <input name="panNumber" type="text" placeholder="PAN number" />
+      </label>
+
+      <label className="auth-field auth-field--wide">
+        <span>Business Documents</span>
+        <input name="businessDocuments" type="text" placeholder="Document URLs or names, comma separated" required />
       </label>
 
       <label className="auth-field auth-field--wide">

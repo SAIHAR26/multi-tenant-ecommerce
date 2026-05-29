@@ -23,6 +23,7 @@ import PaymentsPage from "../pages/admin/PaymentsPage";
 import ReportsPage from "../pages/admin/ReportsPage";
 import SettingsPage from "../pages/admin/SettingsPage";
 import AdminNotificationsPage from "../pages/admin/NotificationsPage";
+import AdminProfilePage from "../pages/admin/AdminProfilePage";
 
 /* ================= VENDOR ================= */
 import VendorLayout from "../layouts/VendorLayout";
@@ -109,6 +110,7 @@ function AppRoutes() {
           <Route path="reviews" element={<ReviewsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
+          <Route path="profile" element={<AdminProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 

@@ -42,6 +42,38 @@ const storeSchema = new mongoose.Schema(
       required: false,
     },
 
+    business: {
+      gstNumber: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessRegistrationNumber: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessType: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessAddress: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      businessDocuments: {
+        type: [String],
+        default: [],
+      },
+      panNumber: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+    },
+
     // Vendor Analytics Fields
 
     totalRevenue: {

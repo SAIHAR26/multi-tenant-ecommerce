@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getSavedUser } from "../../api/auth";
+import { searchAdmin } from "../../services/adminService";
 import { getNotifications } from "../../services/notificationService";
 
 function Navbar() {
   const navigate = useNavigate();
+  const savedUser = getSavedUser();
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -27,6 +34,48 @@ function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    const query = searchTerm.trim();
+
+    if (query.length < 2) {
+      setSearchResults([]);
+      setSearchError("");
+      setIsSearching(false);
+      return undefined;
+    }
+
+    setIsSearching(true);
+    const timer = window.setTimeout(() => {
+      searchAdmin(query)
+        .then((data) => {
+          setSearchResults(data.results || []);
+          setSearchError("");
+        })
+        .catch((error) => {
+          setSearchResults([]);
+          setSearchError(error.message || "Search failed.");
+        })
+        .finally(() => setIsSearching(false));
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [searchTerm]);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate("/login", { replace: true });
+  };
+
+  const initials =
+    savedUser?.name
+      ?.split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "VA";
+
   return (
     <header className="admin-navbar">
       <form
@@ -34,8 +83,9 @@ function Navbar() {
         onSubmit={(event) => {
           event.preventDefault();
           const query = searchTerm.trim();
-          if (query) {
-            navigate(`/admin/products?search=${encodeURIComponent(query)}`);
+          if (query && searchResults[0]?.url) {
+            navigate(searchResults[0].url);
+            setSearchTerm("");
           }
         }}
       >
@@ -47,6 +97,30 @@ function Navbar() {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
         />
+        {searchTerm.trim().length >= 2 ? (
+          <div className="admin-search-results">
+            {isSearching ? <div className="admin-search-state">Searching...</div> : null}
+            {!isSearching && searchError ? <div className="admin-search-state admin-search-state--error">{searchError}</div> : null}
+            {!isSearching && !searchError && searchResults.length === 0 ? (
+              <div className="admin-search-state">No results found.</div>
+            ) : null}
+            {!isSearching &&
+              !searchError &&
+              searchResults.map((result) => (
+                <button
+                  key={`${result.type}-${result.id}`}
+                  type="button"
+                  onClick={() => {
+                    navigate(result.url);
+                    setSearchTerm("");
+                  }}
+                >
+                  <strong>{result.title}</strong>
+                  <span>{result.type} - {result.subtitle}</span>
+                </button>
+              ))}
+          </div>
+        ) : null}
       </form>
 
       <div className="navbar-actions">
@@ -57,12 +131,26 @@ function Navbar() {
           ) : null}
         </Link>
 
-        <div className="profile-card" aria-label="Admin profile">
-          <div className="profile-avatar">VH</div>
+        <div className="profile-menu">
+          <button
+            className="profile-card profile-card--button"
+            type="button"
+            aria-expanded={isProfileOpen}
+            aria-label="Admin profile"
+            onClick={() => setIsProfileOpen((current) => !current)}
+          >
+          <div className="profile-avatar">{initials}</div>
           <div>
-            <strong>V SHOP Admin</strong>
+            <strong>{savedUser?.name || "V SHOP Admin"}</strong>
             <span>Founder workspace</span>
           </div>
+          </button>
+          {isProfileOpen ? (
+            <div className="profile-dropdown">
+              <button type="button" onClick={() => navigate("/admin/profile")}>View Profile</button>
+              <button type="button" onClick={handleLogout}>Logout</button>
+            </div>
+          ) : null}
         </div>
       </div>
     </header>

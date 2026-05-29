@@ -115,6 +115,13 @@ const updateProfile = async (req, res) => {
       };
     }
 
+    if (req.body.business && (req.user.role === "vendor" || req.user.role === "admin")) {
+      updates.business = {
+        ...(req.user.business?.toObject ? req.user.business.toObject() : req.user.business || {}),
+        ...req.body.business,
+      };
+    }
+
     const user = await User.findByIdAndUpdate(userId, updates, {
       new: true,
       runValidators: true,
@@ -129,14 +136,15 @@ const updateProfile = async (req, res) => {
 
     }
 
-    if (user.role === "vendor" && req.body.store) {
+    if (user.role === "vendor" && (req.body.store || req.body.business)) {
       await Store.findOneAndUpdate(
         { vendorId: user._id },
         {
-          storeName: req.body.store.name || user.store?.name || user.name,
-          storeCategory: req.body.store.category || user.store?.category || "General",
-          storeDescription: req.body.store.description || "",
+          storeName: req.body.store?.name || user.store?.name || user.name,
+          storeCategory: req.body.store?.category || user.store?.category || "General",
+          storeDescription: req.body.store?.description || "",
           location: user.location || "",
+          ...(req.body.business ? { business: user.business } : {}),
         },
         { new: true, upsert: true, runValidators: true }
       );

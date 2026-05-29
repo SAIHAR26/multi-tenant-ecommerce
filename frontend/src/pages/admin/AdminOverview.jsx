@@ -7,32 +7,13 @@ import Button from "../../components/common/Button";
 import { getAdminReport } from "../../services/reportService";
 import { downloadAdminReportPdf } from "../../utils/reportPdf";
 
-const fallbackStats = [
-  { title: "Total Revenue", value: "Rs 1.28Cr", change: "+18.4%", tone: "purple", note: "Across all tenant stores" },
-  { title: "Total Orders", value: "8,492", change: "+12.7%", tone: "blue", note: "1,204 orders this week" },
-  { title: "Total Vendors", value: "342", change: "+9.1%", tone: "cyan", note: "28 pending approvals" },
-  { title: "Total Customers", value: "64.8K", change: "+24.2%", tone: "violet", note: "High retention segment" },
-];
-
-const fallbackTopProducts = [
-  { name: "Noir Leather Tote", vendor: "Luxe Lane", sold: 842, revenue: "Rs 24.8L" },
-  { name: "Urban Runner Pro", vendor: "Redline Studio", sold: 719, revenue: "Rs 18.6L" },
-  { name: "Matte Utility Jacket", vendor: "Urban Vault", sold: 604, revenue: "Rs 16.2L" },
-];
-
-const fallbackVendors = [
-  { name: "Urban Vault", status: "Live", stores: 4, score: "98%" },
-  { name: "Luxe Lane", status: "Review", stores: 2, score: "92%" },
-  { name: "Redline Studio", status: "Live", stores: 3, score: "96%" },
-];
-
 const formatCurrency = (value = 0) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
 
 function AdminOverview() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(fallbackStats);
-  const [topProducts, setTopProducts] = useState(fallbackTopProducts);
-  const [vendors, setVendors] = useState(fallbackVendors);
+  const [stats, setStats] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [error, setError] = useState("");
   const [reportStatus, setReportStatus] = useState({ type: "", message: "" });
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -73,19 +54,52 @@ function AdminOverview() {
             tone: "violet",
             note: "Registered customer accounts",
           },
+          {
+            title: "Total Products",
+            value: String(report.summary?.totalProducts || 0),
+            change: "Live",
+            tone: "purple",
+            note: `${report.summary?.activeProducts || 0} active products`,
+          },
+          {
+            title: "Total Reviews",
+            value: String(report.reviewsSummary?.totalReviews || 0),
+            change: "Live",
+            tone: "blue",
+            note: `${report.reviewsSummary?.averageRating || 0} average rating`,
+          },
+          {
+            title: "Payments",
+            value: String(report.summary?.totalPayments || 0),
+            change: "Live",
+            tone: "cyan",
+            note: "Payment records in MongoDB",
+          },
+          {
+            title: "Notifications",
+            value: String(report.summary?.unreadNotifications || 0),
+            change: "Live",
+            tone: "violet",
+            note: "Unread notifications",
+          },
         ]);
 
         setTopProducts(
-          report.topSellingProducts?.length
-            ? report.topSellingProducts.map((product) => ({
+          (report.topSellingProducts || []).map((product) => ({
                 name: product.name,
                 vendor: product.category || "V SHOP",
                 sold: product.sold || product.stock || 0,
                 revenue: formatCurrency(product.revenue || product.price || 0),
               }))
-            : fallbackTopProducts
         );
-        setVendors(fallbackVendors);
+        setVendors(
+          (report.charts?.vendorHealth || []).map((vendor) => ({
+            name: vendor.name,
+            status: "Live",
+            stores: vendor.orders || 0,
+            score: `${vendor.rating || 0}/5`,
+          }))
+        );
         setError("");
       })
       .catch((requestError) => {
@@ -171,13 +185,17 @@ function AdminOverview() {
               <p className="admin-eyebrow">Orders growth</p>
               <h2>Conversion lift</h2>
             </div>
-            <span className="panel-pill panel-pill--blue">+14.8%</span>
+            <span className="panel-pill panel-pill--blue">Live</span>
           </div>
 
           <div className="bar-chart" aria-label="Orders growth chart placeholder">
-            {[45, 62, 52, 74, 68, 88, 78].map((height, index) => (
+            {(stats.length ? stats.slice(0, 7).map((item) => Number(String(item.value).replace(/\D/g, "")) || 0) : [0]).map((value, index, values) => {
+              const maxValue = Math.max(...values, 1);
+              const height = Math.max(12, Math.round((value / maxValue) * 100));
+              return (
               <span key={height + index} style={{ "--bar-height": `${height}%` }} />
-            ))}
+            );
+            })}
           </div>
         </article>
       </section>
@@ -211,6 +229,7 @@ function AdminOverview() {
                 </div>
               </div>
             ))}
+            {topProducts.length === 0 ? <div className="notification-state">No product sales yet.</div> : null}
           </div>
         </article>
 
@@ -236,6 +255,7 @@ function AdminOverview() {
                 <strong>{vendor.score}</strong>
               </div>
             ))}
+            {vendors.length === 0 ? <div className="notification-state">No vendor activity yet.</div> : null}
           </div>
         </article>
       </section>

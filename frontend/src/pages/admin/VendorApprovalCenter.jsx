@@ -9,10 +9,10 @@ import {
 const filters = ["all", "pending", "approved", "rejected", "newest", "oldest"];
 
 const fallbackSummary = {
-  pending: 28,
-  approved: 342,
-  rejected: 15,
-  total: 385,
+  pending: 0,
+  approved: 0,
+  rejected: 0,
+  total: 0,
 };
 
 const formatDate = (date) => {
@@ -384,6 +384,9 @@ function ProfileModal({ onClose, vendor }) {
           items={[
             ["GST", vendor.store?.gst || "Not provided"],
             ["Business ID", vendor.store?.businessId || "Not provided"],
+            ["Business Type", vendor.store?.businessType || "Not provided"],
+            ["Business Address", vendor.store?.businessAddress || "Not provided"],
+            ["PAN", vendor.store?.panNumber || "Not provided"],
             ["Documents", vendor.store?.documents?.length ? vendor.store.documents.join(", ") : "Not uploaded"],
           ]}
         />

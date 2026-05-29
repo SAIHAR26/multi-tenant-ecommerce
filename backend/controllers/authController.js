@@ -53,6 +53,13 @@ const registerUser = async (req, res) => {
       age,
       storeName,
       storeCategory,
+      storeDescription,
+      businessType,
+      businessAddress,
+      businessRegistrationNumber,
+      businessDocuments,
+      gstNumber,
+      panNumber,
       bankDetails,
     } = req.body;
 
@@ -68,8 +75,14 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid registration role." });
     }
 
-    if (role === "vendor" && (!storeName || !storeCategory)) {
-      return res.status(400).json({ message: "Store name and category are required for vendor registration." });
+    if (
+      role === "vendor" &&
+      (!storeName || !storeCategory || !location || !businessType || !businessAddress || !businessRegistrationNumber)
+    ) {
+      return res.status(400).json({
+        message:
+          "Store name, category, location, business type, business address, and registration number are required for vendor registration.",
+      });
     }
 
     const existingUser = await User.findOne({ email });
@@ -94,6 +107,22 @@ const registerUser = async (req, res) => {
               bankDetails,
             }
           : undefined,
+      business:
+        role === "vendor"
+          ? {
+              gstNumber,
+              businessRegistrationNumber,
+              businessType,
+              businessAddress,
+              businessDocuments: Array.isArray(businessDocuments)
+                ? businessDocuments
+                : String(businessDocuments || "")
+                    .split(",")
+                    .map((document) => document.trim())
+                    .filter(Boolean),
+              panNumber,
+            }
+          : undefined,
     });
 
     if (role === "vendor") {
@@ -101,8 +130,9 @@ const registerUser = async (req, res) => {
         vendorId: user._id,
         storeName,
         storeCategory,
-        storeDescription: `${storeName} on V SHOP`,
+        storeDescription: storeDescription || `${storeName} on V SHOP`,
         location,
+        business: user.business,
       });
 
       user.store.storeId = store._id;
@@ -153,6 +183,9 @@ const loginUser = async (req, res) => {
     if (user.role !== role) {
       return res.status(403).json({ message: `This account is registered as ${user.role}.` });
     }
+
+    user.lastLogin = new Date();
+    await user.save();
 
     sendAuthResponse(res, 200, user);
   } catch (error) {
