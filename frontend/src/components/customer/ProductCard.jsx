@@ -22,10 +22,11 @@ function ProductCard({ product = {}, allProducts = [] }) {
     navigate(`/customer/product/${productId}`);
   };
 
-  const openQuickView = (event) => {
+  const goToQuickView = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    goToDetails();
+    if (!productId) return;
+    navigate(`/customer/product/${productId}`);
   };
 
   const handleAddToWishlist = async (event) => {
@@ -89,7 +90,7 @@ function ProductCard({ product = {}, allProducts = [] }) {
         </div>
 
         <div className="customer-product-card__actions">
-          <button className="customer-secondary-button" type="button" onClick={openQuickView}>
+          <button className="customer-secondary-button" type="button" onClick={goToQuickView}>
             Quick View
           </button>
 

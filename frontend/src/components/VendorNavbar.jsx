@@ -1,9 +1,98 @@
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getSavedUser, logout } from "../api/auth";
+import {
+  getVendorNotifications,
+  getVendorStore,
+  markVendorNotificationRead,
+} from "../services/vendorService";
+
+const getInitials = (value = "Vendor") =>
+  value
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+const formatNotificationTime = (value) => {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+};
+
 function VendorNavbar() {
+  const navigate = useNavigate();
+  const user = getSavedUser();
+  const profileRef = useRef(null);
+  const notificationRef = useRef(null);
+  const [store, setStore] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    Promise.all([getVendorStore(), getVendorNotifications()])
+      .then(([storeData, notificationData]) => {
+        if (!isMounted) return;
+        setStore(storeData?.store || null);
+        setNotifications(notificationData?.notifications || []);
+        setUnreadCount(notificationData?.unreadCount || 0);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setNotifications([]);
+          setUnreadCount(0);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const markAsRead = async (notificationId) => {
+    await markVendorNotificationRead(notificationId);
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification._id === notificationId ? { ...notification, isRead: true } : notification
+      )
+    );
+    setUnreadCount((current) => Math.max(current - 1, 0));
+  };
+
+  const storeName = store?.storeName || user?.store?.name || user?.name || "Vendor Store";
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <header className="vendor-navbar">
       <div className="vendor-store-info">
         <span>Store Name</span>
-        <strong>Crimson Atelier</strong>
+        <strong>{storeName}</strong>
       </div>
 
       <label className="vendor-search">
@@ -12,27 +101,69 @@ function VendorNavbar() {
       </label>
 
       <div className="vendor-navbar-actions">
-        <button className="vendor-notification" type="button" aria-label="Notifications">
-          NT
-          <span />
-        </button>
+        <div className="vendor-notification-menu" ref={notificationRef}>
+          <button
+            className="vendor-notification"
+            type="button"
+            aria-expanded={notificationsOpen}
+            aria-label="Notifications"
+            onClick={() => setNotificationsOpen((current) => !current)}
+          >
+            NT
+            {unreadCount > 0 ? <span>{unreadCount > 9 ? "9+" : unreadCount}</span> : null}
+          </button>
 
-        <details className="vendor-profile-menu">
-          <summary className="vendor-profile">
-            <span className="vendor-avatar">VA</span>
+          {notificationsOpen ? (
+            <div className="vendor-notification-dropdown">
+              <div className="vendor-dropdown-heading">
+                <strong>Notifications</strong>
+                <small>{unreadCount} unread</small>
+              </div>
+
+              {notifications.length === 0 ? (
+                <div className="vendor-empty-dropdown">No notifications yet.</div>
+              ) : (
+                notifications.map((notification) => (
+                  <button
+                    className={`vendor-notification-item ${notification.isRead ? "" : "is-unread"}`}
+                    key={notification._id}
+                    type="button"
+                    onClick={() => markAsRead(notification._id)}
+                  >
+                    <strong>{notification.title || notification.type}</strong>
+                    <span>{notification.message}</span>
+                    <small>{formatNotificationTime(notification.createdAt)}</small>
+                  </button>
+                ))
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="vendor-profile-menu" ref={profileRef}>
+          <button
+            className="vendor-profile"
+            type="button"
+            aria-expanded={profileOpen}
+            onClick={() => setProfileOpen((current) => !current)}
+          >
+            <span className="vendor-avatar">{getInitials(storeName)}</span>
             <span>
               <strong>Vendor Profile</strong>
-              <small>Crimson Atelier</small>
+              <small>{storeName}</small>
             </span>
-          </summary>
+          </button>
 
-          <div className="vendor-profile-dropdown">
-            <strong>Crimson Atelier</strong>
-            <span>Premium seller account</span>
-            <button type="button">View Store</button>
-            <button type="button">Account Settings</button>
-          </div>
-        </details>
+          {profileOpen ? (
+            <div className="vendor-profile-dropdown">
+              <strong>{storeName}</strong>
+              <span>Premium seller account</span>
+              <button type="button" onClick={() => navigate("/vendor/store-profile")}>View Store</button>
+              <button type="button" onClick={() => navigate("/vendor/settings")}>Account Settings</button>
+              <button type="button" onClick={handleLogout}>Logout</button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </header>
   );

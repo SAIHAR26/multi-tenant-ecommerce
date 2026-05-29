@@ -1,22 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
-import { getOrders } from "../../services/orderService";
+import { getVendorOrders, updateVendorOrderStatus } from "../../services/vendorService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
 const getOrderItems = (order) =>
-  order.products?.map((item) => item.productId?.name || item.name || "Product").join(", ") || "Order items";
+  order.products?.map((item) => `${item.productId?.name || item.name || "Product"} x${item.quantity || 1}`).join(", ") || "Order items";
+const fulfillmentStatuses = ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED"];
 
 function VendorOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingOrderId, setUpdatingOrderId] = useState("");
   const [error, setError] = useState("");
 
   const loadOrders = () => {
     setLoading(true);
     setError("");
 
-    return getOrders()
+    return getVendorOrders()
       .then((data) => {
         const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
         setOrders(ordersArray);
@@ -33,7 +35,7 @@ function VendorOrdersPage() {
   useEffect(() => {
     let isMounted = true;
 
-    getOrders()
+    getVendorOrders()
       .then((data) => {
         const ordersArray = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
         if (isMounted) {
@@ -52,6 +54,25 @@ function VendorOrdersPage() {
       isMounted = false;
     };
   }, []);
+
+  const handleStatusChange = async (order, status) => {
+    const orderId = order._id || order.id;
+    if (!orderId || status === order.status) return;
+
+    try {
+      setUpdatingOrderId(orderId);
+      const updatedOrder = await updateVendorOrderStatus(orderId, status);
+      setOrders((currentOrders) =>
+        currentOrders.map((currentOrder) =>
+          (currentOrder._id || currentOrder.id) === orderId ? updatedOrder : currentOrder
+        )
+      );
+    } catch (err) {
+      setError(err.message || "Order status could not be updated.");
+    } finally {
+      setUpdatingOrderId("");
+    }
+  };
 
   const stats = useMemo(() => {
     const packed = orders.filter((order) => order.status === "PACKED").length;
@@ -105,11 +126,27 @@ function VendorOrdersPage() {
                 <div>
                   <span>#{String(order._id || order.id).slice(-6).toUpperCase()}</span>
                   <strong>{order.userId?.name || order.customer || "Customer"}</strong>
-                  <small>{getOrderItems(order)} - ETA live</small>
+                  <small>{getOrderItems(order)}</small>
+                  <small>
+                    ETA {order.estimatedDeliveryDate ? new Date(order.estimatedDeliveryDate).toLocaleDateString("en-IN") : "pending"}
+                  </small>
                 </div>
                 <div>
                   <strong>{formatPrice(order.totalAmount)}</strong>
-                  <small>{order.status}</small>
+                  {order.status === "CANCELLED" ? (
+                    <small>CANCELLED</small>
+                  ) : (
+                    <select
+                      className="vendor-order-status-select"
+                      disabled={updatingOrderId === (order._id || order.id)}
+                      value={order.status}
+                      onChange={(event) => handleStatusChange(order, event.target.value)}
+                    >
+                      {fulfillmentStatuses.map((status) => (
+                        <option key={status} value={status}>{status}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </article>
             ))}

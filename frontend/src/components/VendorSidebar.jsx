@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { logout } from "../api/auth";
 
 const sidebarItems = [
   { label: "Dashboard", icon: "DB", to: "/vendor", end: true },
@@ -8,6 +9,7 @@ const sidebarItems = [
   { label: "Reviews", icon: "RW", to: "/vendor/reviews" },
   { label: "Revenue", icon: "RV", to: "/vendor/revenue" },
   { label: "Analytics", icon: "AN", to: "/vendor/analytics" },
+  { label: "Notifications", icon: "NT", to: "/vendor/notifications" },
   { label: "Settings", icon: "ST", to: "/vendor/settings" },
   { label: "Logout", icon: "LO", to: "/login" },
 ];
@@ -29,6 +31,7 @@ function VendorSidebar() {
             key={item.label}
             to={item.to}
             end={item.end}
+            onClick={item.label === "Logout" ? logout : undefined}
             className={({ isActive }) =>
               `vendor-sidebar-link ${isActive ? "is-active" : ""}`
             }

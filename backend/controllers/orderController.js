@@ -99,7 +99,7 @@ const populateOrderQuery = (query) =>
       select: "name price images brand discount vendor storeId",
       populate: [
         { path: "vendor", select: "name email" },
-        { path: "storeId", select: "storeName" },
+        { path: "storeId", select: "storeName location storeCategory" },
       ],
     });
 
@@ -107,6 +107,72 @@ const getProductDiscount = (product, quantity) => {
   const subtotal = Number(product.price || 0) * quantity;
   const discountPercent = Math.min(Math.max(Number(product.discount || 0), 0), 100);
   return Math.round((subtotal * discountPercent) / 100);
+};
+
+const cityCoordinates = {
+  bengaluru: [12.9716, 77.5946],
+  bangalore: [12.9716, 77.5946],
+  chennai: [13.0827, 80.2707],
+  delhi: [28.6139, 77.209],
+  hyderabad: [17.385, 78.4867],
+  jaipur: [26.9124, 75.7873],
+  kochi: [9.9312, 76.2673],
+  mumbai: [19.076, 72.8777],
+  pune: [18.5204, 73.8567],
+};
+
+const toRadians = (value) => (value * Math.PI) / 180;
+
+const getDistanceKm = (from, to) => {
+  if (!from || !to) return 650;
+
+  const earthRadiusKm = 6371;
+  const latDistance = toRadians(to[0] - from[0]);
+  const lngDistance = toRadians(to[1] - from[1]);
+  const a =
+    Math.sin(latDistance / 2) * Math.sin(latDistance / 2) +
+    Math.cos(toRadians(from[0])) *
+      Math.cos(toRadians(to[0])) *
+      Math.sin(lngDistance / 2) *
+      Math.sin(lngDistance / 2);
+
+  return Math.round(earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+};
+
+const findKnownCity = (value = "") => {
+  const normalizedValue = value.toLowerCase();
+  return Object.keys(cityCoordinates).find((city) => normalizedValue.includes(city));
+};
+
+const estimateDelivery = (products, deliveryAddress = "") => {
+  const destinationCity = findKnownCity(deliveryAddress);
+  const destination = cityCoordinates[destinationCity] || cityCoordinates.hyderabad;
+  const vendorCities = products
+    .map((product) => findKnownCity(product.storeId?.location || product.storeId?.storeName || ""))
+    .filter(Boolean);
+  const uniqueVendorCities = [...new Set(vendorCities)];
+  const distances = uniqueVendorCities.length
+    ? uniqueVendorCities.map((city) => getDistanceKm(cityCoordinates[city], destination))
+    : [650];
+  const distanceKm = Math.max(...distances);
+  const vendorDelay = Math.max(uniqueVendorCities.length - 1, 0);
+  const days =
+    distanceKm <= 80
+      ? 2
+      : distanceKm <= 500
+      ? 4
+      : distanceKm <= 1200
+      ? 6
+      : 8;
+  const deliveryEstimateDays = Math.min(10, days + vendorDelay);
+  const estimatedDeliveryDate = new Date();
+  estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + deliveryEstimateDays);
+
+  return {
+    deliveryEstimateDays,
+    deliveryDistanceKm: distanceKm,
+    estimatedDeliveryDate,
+  };
 };
 
 const getOrderFilters = async (req) => {
@@ -159,7 +225,7 @@ const exportOrders = async (req, res) => {
         select: "name vendor storeId",
         populate: [
           { path: "vendor", select: "name email" },
-          { path: "storeId", select: "storeName" },
+          { path: "storeId", select: "storeName location storeCategory" },
         ],
       })
       .sort({ createdAt: -1 });
@@ -216,7 +282,7 @@ const createOrder = async (req, res) => {
     const productIds = requestedProducts.map((item) => item.productId).filter(Boolean);
     const products = await Product.find({ _id: { $in: productIds } })
       .populate("vendor", "name email")
-      .populate("storeId", "storeName");
+      .populate("storeId", "storeName location storeCategory");
     const productMap = new Map(products.map((product) => [product._id.toString(), product]));
 
     if (productMap.size !== productIds.length) {
@@ -241,6 +307,7 @@ const createOrder = async (req, res) => {
     const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
     const deliveryCharge = discountedSubtotal > 0 && discountedSubtotal < 999 ? 99 : 0;
     const totalAmount = discountedSubtotal + deliveryCharge;
+    const deliveryEstimate = estimateDelivery(products, req.body.deliveryAddress);
 
     const order = await Order.create({
       ...req.body,
@@ -250,6 +317,15 @@ const createOrder = async (req, res) => {
       discountAmount,
       deliveryCharge,
       totalAmount,
+      ...deliveryEstimate,
+      trackingUpdatedAt: new Date(),
+      statusHistory: [
+        {
+          status: "PROCESSING",
+          note: `Estimated ${deliveryEstimate.deliveryEstimateDays} day delivery based on vendor and delivery address distance.`,
+          updatedByRole: "system",
+        },
+      ],
     });
 
     await Notification.create({
@@ -341,14 +417,90 @@ const getOrderById = async (req, res) => {
 
 const updateOrder = async (req, res) => {
   try {
-    const updatedOrder = await Order.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const order = await populateOrderQuery(Order.findById(req.params.id));
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found.",
+      });
+    }
+
+    const nextStatus = req.body.status;
+    const allowedStatuses = ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"];
+
+    if (nextStatus && !allowedStatuses.includes(nextStatus)) {
+      return res.status(400).json({ message: "Invalid order status." });
+    }
+
+    if (req.user?.role === "customer") {
+      if (order.userId?._id?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Access denied." });
+      }
+
+      if (nextStatus !== "CANCELLED") {
+        return res.status(403).json({ message: "Customers can only cancel orders." });
+      }
+
+      if (["SHIPPED", "DELIVERED", "CANCELLED"].includes(order.status)) {
+        return res.status(400).json({
+          message: `Order cannot be cancelled after it is ${order.status.toLowerCase()}.`,
+        });
+      }
+    }
+
+    if (req.user?.role === "vendor") {
+      const ownsProduct = order.products.some(
+        (item) => item.productId?.vendor?._id?.toString() === req.user._id.toString()
+      );
+
+      if (!ownsProduct) {
+        return res.status(403).json({ message: "Access denied." });
+      }
+
+      if (!nextStatus || nextStatus === "CANCELLED") {
+        return res.status(403).json({ message: "Vendors can update fulfillment status only." });
+      }
+
+      if (order.status === "CANCELLED") {
+        return res.status(400).json({ message: "Cancelled orders cannot be updated." });
+      }
+    }
+
+    const updates = {
+      status: nextStatus || order.status,
+      paymentStatus: req.user?.role === "admin" && req.body.paymentStatus ? req.body.paymentStatus : order.paymentStatus,
+      trackingUpdatedAt: new Date(),
+      $push: {
+        statusHistory: {
+          status: nextStatus || order.status,
+          note: req.body.note || "",
+          updatedByRole: req.user?.role || "system",
+        },
+      },
+    };
+
+    const updatedOrder = await populateOrderQuery(
+      Order.findByIdAndUpdate(req.params.id, updates, {
+        new: true,
+        runValidators: true,
+      })
+    );
 
     if (!updatedOrder) {
       return res.status(404).json({
         message: "Order not found.",
+      });
+    }
+
+    if (nextStatus) {
+      await Notification.create({
+        title: nextStatus === "CANCELLED" ? "Order cancelled" : "Order status updated",
+        message: `Order ${updatedOrder._id} is now ${nextStatus}.`,
+        type: "order",
+        targetRole: "customer",
+        userId: updatedOrder.userId?._id || updatedOrder.userId,
+        sender: req.user?.role === "vendor" ? "Vendor fulfillment" : "V SHOP",
+        preview: `Order ${nextStatus.toLowerCase()}`,
       });
     }
 

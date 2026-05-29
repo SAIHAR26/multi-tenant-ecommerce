@@ -1,10 +1,35 @@
-const reviews = [
-  { name: "Ira Kapoor", rating: "5.0", product: "Crimson Luxe Jacket", text: "Beautiful finish, premium packaging, and fast shipping." },
-  { name: "Dev Rao", rating: "4.8", product: "Matte Steel Watch", text: "Looks excellent in person. Strap adjustment was simple." },
-  { name: "Sara Khan", rating: "4.6", product: "Signature Leather Tote", text: "Elegant build and rich texture. Would love more color options." },
-];
+import { useEffect, useState } from "react";
+import ErrorState from "../../components/ErrorState";
+import LoadingState from "../../components/LoadingState";
+import { getVendorReviews } from "../../services/vendorService";
 
 function VendorReviewsPage() {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getVendorReviews()
+      .then((data) => {
+        if (isMounted) {
+          setReviews(Array.isArray(data?.reviews) ? data.reviews : []);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) setError(err.message || "Reviews could not be loaded.");
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <>
       <section className="vendor-page-header">
@@ -15,25 +40,33 @@ function VendorReviewsPage() {
         </div>
       </section>
 
-      <section className="vendor-review-grid">
-        {reviews.map((review) => (
-          <article className="vendor-panel vendor-review-card" key={review.name}>
-            <div className="vendor-section-heading">
-              <div>
-                <p>{review.product}</p>
-                <h2>{review.name}</h2>
+      {loading ? <LoadingState message="Loading reviews..." /> : null}
+      {!loading && error ? <ErrorState title="Unable to load reviews" message={error} /> : null}
+      {!loading && !error && reviews.length === 0 ? (
+        <ErrorState title="No reviews" message="No reviews exist for your products yet." />
+      ) : null}
+
+      {!loading && !error && reviews.length > 0 ? (
+        <section className="vendor-review-grid">
+          {reviews.map((review) => (
+            <article className="vendor-panel vendor-review-card" key={review._id}>
+              <div className="vendor-section-heading">
+                <div>
+                  <p>{review.productId?.name || "Product"}</p>
+                  <h2>{review.userId?.name || "Customer"}</h2>
+                </div>
+                <span>{Number(review.rating || 0).toFixed(1)}</span>
               </div>
-              <span>{review.rating}</span>
-            </div>
-            <p>{review.text}</p>
-            <label className="vendor-field">
-              <span>Vendor reply</span>
-              <textarea placeholder="Write a thoughtful public reply" />
-            </label>
-            <button type="button" className="table-action">Send Reply</button>
-          </article>
-        ))}
-      </section>
+              <p>{review.comment}</p>
+              <label className="vendor-field">
+                <span>Vendor reply</span>
+                <textarea placeholder="Write a thoughtful public reply" />
+              </label>
+              <button type="button" className="table-action">Send Reply</button>
+            </article>
+          ))}
+        </section>
+      ) : null}
     </>
   );
 }

@@ -29,6 +29,21 @@ export const createOrder = async (payload) => {
   );
 };
 
+export const updateOrderStatus = async (orderId, status, note = "") => {
+  return apiRequest(
+    `/api/orders/${orderId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status, note }),
+    },
+    "Order status could not be updated."
+  );
+};
+
+export const cancelOrder = async (orderId) => {
+  return updateOrderStatus(orderId, "CANCELLED", "Cancelled by customer");
+};
+
 export const getOrderTracking = async (orderId) => {
   try {
     if (!orderId || orderId === "current-order") {

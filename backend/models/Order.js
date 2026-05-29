@@ -48,6 +48,22 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
 
+    deliveryEstimateDays: {
+      type: Number,
+      default: 3,
+      min: 1,
+    },
+
+    deliveryDistanceKm: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    estimatedDeliveryDate: {
+      type: Date,
+    },
+
     status: {
       type: String,
       enum: ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"],
@@ -71,6 +87,33 @@ const orderSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
+    trackingUpdatedAt: {
+      type: Date,
+    },
+
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "CANCELLED"],
+        },
+        note: {
+          type: String,
+          trim: true,
+          default: "",
+        },
+        updatedByRole: {
+          type: String,
+          enum: ["customer", "vendor", "admin", "system"],
+          default: "system",
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

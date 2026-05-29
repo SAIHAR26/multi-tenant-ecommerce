@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
+const connectDB = require("../config/db");
 const Product = require("../models/Product");
 const Store = require("../models/Store");
 
@@ -145,9 +146,7 @@ const getStoreNumber = (storeName) => {
 };
 
 const run = async () => {
-  await mongoose.connect(process.env.MONGO_URI, {
-    dbName: process.env.MONGO_DB_NAME || "vshop",
-  });
+  await connectDB();
 
   const stores = await Store.find().sort({ createdAt: 1 });
   const storeNameById = new Map();

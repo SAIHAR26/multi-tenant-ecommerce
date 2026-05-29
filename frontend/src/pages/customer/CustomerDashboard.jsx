@@ -4,22 +4,17 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "../../components/customer/ProductCard";
 import { getProducts } from "../../services/productService";
 import { getProductImage } from "../../utils/productImages";
-import { categoryTabs, priceRanges } from "./customerData";
+import { priceRanges } from "./customerData";
 
 const ratingFilters = [1, 2, 3, 4, 5];
 
-const discountFilters = [
-  10,
-  20,
-  30,
-  40,
-  50,
-];
+const discountFilters = [10, 20, 30, 40, 50];
 
-const normalizeText = (value) => value?.toString().toLowerCase().trim() || "";
+const normalizeText = (value) =>
+  value?.toString().toLowerCase().trim() || "";
 
 const categoryAliases = {
-  shoes: ["shoes", "shoe", "footwear", "sneaker", "sneakers", "runner", "running"],
+  shoes: ["shoes", "shoe", "footwear", "sneaker", "sneakers"],
 };
 
 const exactCategoryTabs = new Set([
@@ -35,9 +30,7 @@ const exactCategoryTabs = new Set([
 
 const normalizeProduct = (product) => ({
   ...product,
-
   id: product.id || product._id,
-
   _id: product._id || product.id,
   image: getProductImage(product),
   discount: product.discount || 0,
@@ -53,7 +46,7 @@ function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [activeCategory, setActiveCategory] =
+  const [activeCategory] =
     useState("Trending");
 
   const [priceFilter, setPriceFilter] =
@@ -74,7 +67,6 @@ function CustomerDashboard() {
   const searchTerm =
     searchParams.get("search") || "";
 
-  // FETCH PRODUCTS
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -82,9 +74,7 @@ function CustomerDashboard() {
 
         const data = await getProducts();
 
-        const productsArray = Array.isArray(
-          data?.products
-        )
+        const productsArray = Array.isArray(data?.products)
           ? data.products
           : Array.isArray(data)
           ? data
@@ -107,7 +97,6 @@ function CustomerDashboard() {
     fetchProducts();
   }, []);
 
-  // SCROLL TO PRODUCTS
   useEffect(() => {
     if (searchTerm) {
       productBrowsingRef.current?.scrollIntoView({
@@ -117,7 +106,6 @@ function CustomerDashboard() {
     }
   }, [searchTerm]);
 
-  // CLEAR SEARCH
   const clearSearch = () => {
     const nextSearchParams =
       new URLSearchParams(searchParams);
@@ -129,44 +117,45 @@ function CustomerDashboard() {
     });
   };
 
-  // DYNAMIC BRANDS
   const brands = useMemo(() => {
     return [
       ...new Set(
         products
-          .map(
-            (product) => product?.brand
-          )
+          .map((product) => product?.brand)
           .filter(Boolean)
       ),
     ];
   }, [products]);
 
-  // FILTER PRODUCTS
   const filteredProducts = useMemo(() => {
     const selectedPriceRange =
       priceRanges.find(
-        (range) =>
-          range.label === priceFilter
+        (range) => range.label === priceFilter
       );
 
     return products
       .filter((product) => {
         const productName = normalizeText(product?.name);
+
         const productBrand = normalizeText(product?.brand);
+
         const productCategory = normalizeText(product?.category);
-        const productDescription = normalizeText(product?.description);
-        const productStore = normalizeText(
-          product?.storeId?.storeName || product?.storeId?.storeCategory || product?.vendor
+
+        const productDescription = normalizeText(
+          product?.description
         );
-        const normalizedSearch = normalizeText(searchTerm);
-        const normalizedCategory = normalizeText(activeCategory);
+
+        const normalizedSearch =
+          normalizeText(searchTerm);
+
+        const normalizedCategory =
+          normalizeText(activeCategory);
+
         const searchableText = [
           productName,
           productBrand,
           productCategory,
           productDescription,
-          productStore,
         ].join(" ");
 
         const productPrice =
@@ -178,24 +167,29 @@ function CustomerDashboard() {
         const productDiscount =
           Number(product?.discount) || 0;
 
-        const categoryTerms = categoryAliases[normalizedCategory] || [normalizedCategory];
+        const categoryTerms =
+          categoryAliases[normalizedCategory] || [
+            normalizedCategory,
+          ];
+
         const matchesCategory =
-          activeCategory === "Trending" || activeCategory === "New Arrivals"
+          activeCategory === "Trending"
             ? true
             : exactCategoryTabs.has(normalizedCategory)
             ? productCategory === normalizedCategory ||
               categoryTerms.includes(productCategory)
-            : categoryTerms.some((term) => searchableText.includes(term));
+            : categoryTerms.some((term) =>
+                searchableText.includes(term)
+              );
 
         const matchesSearch =
-          !normalizedSearch || searchableText.includes(normalizedSearch);
+          !normalizedSearch ||
+          searchableText.includes(normalizedSearch);
 
         const matchesPrice =
           selectedPriceRange
-            ? productPrice >=
-                selectedPriceRange.min &&
-              productPrice <=
-                selectedPriceRange.max
+            ? productPrice >= selectedPriceRange.min &&
+              productPrice <= selectedPriceRange.max
             : true;
 
         const matchesRating =
@@ -204,8 +198,7 @@ function CustomerDashboard() {
 
         const matchesDiscount =
           discountFilter === 0 ||
-          productDiscount >=
-            discountFilter;
+          productDiscount >= discountFilter;
 
         const matchesBrand =
           brandFilter === "All"
@@ -222,23 +215,15 @@ function CustomerDashboard() {
         );
       })
       .sort((a, b) => {
-        const priceA =
-          Number(a?.price) || 0;
+        const priceA = Number(a?.price) || 0;
 
-        const priceB =
-          Number(b?.price) || 0;
+        const priceB = Number(b?.price) || 0;
 
-        if (
-          sortBy ===
-          "Price Low to High"
-        ) {
+        if (sortBy === "Price Low to High") {
           return priceA - priceB;
         }
 
-        if (
-          sortBy ===
-          "Price High to Low"
-        ) {
+        if (sortBy === "Price High to Low") {
           return priceB - priceA;
         }
 
@@ -258,113 +243,17 @@ function CustomerDashboard() {
     sortBy,
   ]);
 
+  const visibleProducts = filteredProducts;
+
   return (
     <div className="customer-page">
-      {/* HERO */}
-      <section className="marketplace-hero">
-        <div className="marketplace-hero__content">
-          <p className="customer-eyebrow">
-            Festival Sale live now
-          </p>
-
-          <h1>
-            Luxury marketplace drops,
-            curated for every cart.
-          </h1>
-
-          <p>
-            Explore premium fashion,
-            electronics, books,
-            shoes, accessories, and
-            daily deals from verified
-            V SHOP vendors.
-          </p>
-
-          <div className="marketplace-hero__actions">
-            <button
-              className="customer-primary-button"
-              type="button"
-            >
-              Shop Now
-            </button>
-
-            <span>
-              Up to 50% off on flash
-              picks
-            </span>
-          </div>
-        </div>
-
-        <div className="marketplace-hero__deal">
-          <span>Featured Offer</span>
-
-          <strong>
-            Premium Collection
-          </strong>
-
-          <p>
-            Extra 15% off on luxe
-            accessories and red-tag
-            sneakers tonight.
-          </p>
-        </div>
-      </section>
-
-      {/* OFFER BANNERS */}
-      <section className="offer-banner-grid">
-        {[
-          "Festival Sale",
-          "Limited Offer",
-          "Premium Collection",
-          "Flash Sale",
-        ].map((offer, index) => (
-          <article
-            className="offer-banner"
-            key={offer}
-          >
-            <span>
-              0{index + 1}
-            </span>
-
-            <h2>{offer}</h2>
-
-            <p>
-              {index % 2 === 0
-                ? "Red hot vendor deals"
-                : "Members-only luxury prices"}
-            </p>
-          </article>
-        ))}
-      </section>
-
-      {/* CATEGORY */}
-      <section className="category-strip">
-        {categoryTabs.map((category) => (
-          <button
-            key={category}
-            type="button"
-            className={`category-pill ${
-              activeCategory === category
-                ? "category-pill--active"
-                : ""
-            }`}
-            onClick={() =>
-              setActiveCategory(category)
-            }
-          >
-            {category}
-          </button>
-        ))}
-      </section>
-
-      {/* MAIN LAYOUT */}
       <section className="marketplace-layout">
-        {/* FILTER PANEL */}
-        <aside className="filter-panel" aria-label="Product filters">
+        <aside
+          className="filter-panel"
+          aria-label="Product filters"
+        >
           <div className="filter-panel__header">
-            <p className="customer-eyebrow">
-              Filters
-            </p>
+            <p>Filters</p>
 
             <button
               onClick={() => {
@@ -378,7 +267,6 @@ function CustomerDashboard() {
             </button>
           </div>
 
-          {/* PRICE */}
           <div className="filter-group">
             <h3>Price Range</h3>
 
@@ -404,72 +292,56 @@ function CustomerDashboard() {
             ))}
           </div>
 
-          {/* RATING */}
           <div className="filter-group">
             <h3>Rating</h3>
 
-            {ratingFilters.map(
-              (rating) => (
-                <button
-                  key={rating}
-                  type="button"
-                  className={
-                    ratingFilter ===
-                    rating
-                      ? "filter-choice filter-choice--active"
-                      : "filter-choice"
-                  }
-                  onClick={() =>
-                    setRatingFilter(rating)
-                  }
-                >
-                  {rating} star and above
-                </button>
-              )
-            )}
+            {ratingFilters.map((rating) => (
+              <button
+                key={rating}
+                className={
+                  ratingFilter === rating
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setRatingFilter(rating)
+                }
+              >
+                {rating} star and above
+              </button>
+            ))}
           </div>
 
-          {/* DISCOUNT */}
           <div className="filter-group">
             <h3>Discount</h3>
 
-            {discountFilters.map(
-              (discount) => (
-                <button
-                  key={discount}
-                  className={
-                    discountFilter ===
-                    discount
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    setDiscountFilter(
-                      discount
-                    )
-                  }
-                >
-                  {discount}%+
-                </button>
-              )
-            )}
+            {discountFilters.map((discount) => (
+              <button
+                key={discount}
+                className={
+                  discountFilter === discount
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setDiscountFilter(discount)
+                }
+              >
+                {discount}%+
+              </button>
+            ))}
           </div>
 
-          {/* BRAND */}
           <div className="filter-group">
             <h3>Brand</h3>
 
             <select
               value={brandFilter}
               onChange={(e) =>
-                setBrandFilter(
-                  e.target.value
-                )
+                setBrandFilter(e.target.value)
               }
             >
-              <option value="All">
-                All
-              </option>
+              <option value="All">All</option>
 
               {brands.map((brand) => (
                 <option
@@ -483,12 +355,10 @@ function CustomerDashboard() {
           </div>
         </aside>
 
-        {/* PRODUCTS */}
         <div
           className="product-browsing"
           ref={productBrowsingRef}
         >
-          {/* TOOLBAR */}
           <div className="browse-toolbar">
             <div>
               <strong>
@@ -498,15 +368,12 @@ function CustomerDashboard() {
               </strong>
 
               <p>
-                {filteredProducts.length}{" "}
-                products
+                {filteredProducts.length} products
               </p>
             </div>
 
             {searchTerm && (
-              <button
-                onClick={clearSearch}
-              >
+              <button onClick={clearSearch}>
                 Clear
               </button>
             )}
@@ -514,9 +381,7 @@ function CustomerDashboard() {
             <select
               value={sortBy}
               onChange={(e) =>
-                setSortBy(
-                  e.target.value
-                )
+                setSortBy(e.target.value)
               }
             >
               <option>
@@ -533,23 +398,15 @@ function CustomerDashboard() {
             </select>
           </div>
 
-          {/* LOADING */}
-          {loading && (
-            <p>Loading products...</p>
-          )}
+          {loading && <p>Loading products...</p>}
 
-          {/* ERROR */}
-          {!loading && error && (
-            <p>{error}</p>
-          )}
+          {!loading && error && <p>{error}</p>}
 
-          {/* PRODUCT GRID */}
-          {/* PRODUCTS */}
           {!loading &&
             !error &&
-            (filteredProducts.length > 0 ? (
+            (visibleProducts.length > 0 ? (
               <div className="marketplace-product-grid">
-                {filteredProducts.map(
+                {visibleProducts.map(
                   (product) => (
                     <ProductCard
                       key={
@@ -557,18 +414,14 @@ function CustomerDashboard() {
                         product.id
                       }
                       product={product}
-                      allProducts={
-                        products
-                      }
+                      allProducts={products}
                     />
                   )
                 )}
               </div>
             ) : (
               <div className="empty-products">
-                <h3>
-                  No products found
-                </h3>
+                <h3>No products found</h3>
 
                 <p>
                   Try changing filters.

@@ -7,7 +7,7 @@ function OrderCard({ order }) {
   const products = order?.products || [];
   const firstProduct = products[0]?.productId || {};
   const productNames = products
-    .map((item) => item.productId?.name)
+    .map((item) => `${item.productId?.name || "Product"} x${item.quantity || 1}`)
     .filter(Boolean)
     .join(", ");
   const vendors = [
@@ -20,6 +20,9 @@ function OrderCard({ order }) {
   const orderDate = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-IN")
     : "Date pending";
+  const eta = order.estimatedDeliveryDate
+    ? new Date(order.estimatedDeliveryDate).toLocaleDateString("en-IN")
+    : "ETA pending";
 
   return (
     <article className="customer-order-card">
@@ -28,7 +31,8 @@ function OrderCard({ order }) {
       <div>
         <p className="customer-eyebrow">{order.status}</p>
         <h3>{productNames || `Order ${order._id?.slice(-6) || ""}`}</h3>
-        <span>{vendors || "V SHOP"} - {formatPrice(order.totalAmount)}</span>
+        <span>{vendors || "V SHOP"} - {products.length} product groups - {formatPrice(order.totalAmount)}</span>
+        <small>Estimated delivery: {eta}</small>
       </div>
 
       <div className="customer-order-card__side">

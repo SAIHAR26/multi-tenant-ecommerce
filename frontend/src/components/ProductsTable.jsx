@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ErrorState from "./ErrorState";
 import LoadingState from "./LoadingState";
-import { getSavedUser } from "../api/auth";
-import { getProducts } from "../services/productService";
+import { getVendorProducts } from "../services/vendorService";
 
 const formatPrice = (price = 0) => `Rs ${Number(price || 0).toLocaleString("en-IN")}`;
+
 const getStatus = (product) => {
   if (!product.isActive) return "Paused";
   if (Number(product.stock || 0) <= 0) return "Paused";
@@ -21,11 +21,10 @@ function ProductsTable() {
 
   useEffect(() => {
     let isMounted = true;
-    const user = getSavedUser();
 
-    getProducts(user?.role === "vendor" ? { vendor: user.id } : {})
+    getVendorProducts()
       .then((data) => {
-        const productsArray = Array.isArray(data?.products) ? data.products : Array.isArray(data) ? data : [];
+        const productsArray = Array.isArray(data?.products) ? data.products : [];
         if (isMounted) {
           setProducts(productsArray.slice(0, 5));
           setError("");
@@ -80,7 +79,13 @@ function ProductsTable() {
                 return (
                   <tr key={product._id || product.id}>
                     <td>
-                      <div className="product-image">{product.name?.slice(0, 2).toUpperCase()}</div>
+                      <div className="product-image">
+                        {product.images?.[0] ? (
+                          <img src={product.images[0]} alt={product.name} />
+                        ) : (
+                          product.name?.slice(0, 2).toUpperCase()
+                        )}
+                      </div>
                     </td>
                     <td>{product.name}</td>
                     <td>{product.category}</td>
