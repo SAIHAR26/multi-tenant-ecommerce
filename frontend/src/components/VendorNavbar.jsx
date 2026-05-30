@@ -31,6 +31,7 @@ function VendorNavbar() {
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
   const [store, setStore] = useState(null);
+  const [profile, setProfile] = useState(user);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -43,6 +44,7 @@ function VendorNavbar() {
       .then(([storeData, notificationData]) => {
         if (!isMounted) return;
         setStore(storeData?.store || null);
+        setProfile(storeData?.user || user);
         setNotifications(notificationData?.notifications || []);
         setUnreadCount(notificationData?.unreadCount || 0);
       })
@@ -147,7 +149,9 @@ function VendorNavbar() {
             aria-expanded={profileOpen}
             onClick={() => setProfileOpen((current) => !current)}
           >
-            <span className="vendor-avatar">{getInitials(storeName)}</span>
+            <span className="vendor-avatar">
+              {profile?.avatar ? <img src={profile.avatar} alt={storeName} /> : getInitials(storeName)}
+            </span>
             <span>
               <strong>Vendor Profile</strong>
               <small>{storeName}</small>

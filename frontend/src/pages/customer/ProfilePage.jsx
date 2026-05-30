@@ -3,9 +3,17 @@ import toast from "react-hot-toast";
 import { getUserProfile, updateUserProfile } from "../../services/userService";
 import { getSavedUser } from "../../api/auth";
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 function ProfilePage() {
   const [profile, setProfile] = useState(null);
-  const [form, setForm] = useState({ name: "", phone: "", location: "", age: "" });
+  const [form, setForm] = useState({ name: "", phone: "", location: "", age: "", avatar: "" });
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -21,6 +29,7 @@ function ProfilePage() {
           phone: data?.phone || "",
           location: data?.location || "",
           age: data?.age || "",
+          avatar: data?.avatar || "",
         });
         setLoading(false);
       } catch (err) {
@@ -32,6 +41,7 @@ function ProfilePage() {
             phone: backupUser.phone || "",
             location: backupUser.location || "",
             age: backupUser.age || "",
+            avatar: backupUser.avatar || "",
           });
         } else {
           setError("Failed to fetch user registration identities. " + (err.message || ""));
@@ -48,6 +58,17 @@ function ProfilePage() {
       ...currentForm,
       [name]: value,
     }));
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file.");
+      return;
+    }
+    const avatar = await fileToDataUrl(file);
+    setForm((currentForm) => ({ ...currentForm, avatar }));
   };
 
   const handleSave = async (event) => {
@@ -105,13 +126,20 @@ function ProfilePage() {
               <Field label="Phone" name="phone" value={form.phone} onChange={handleChange} />
               <Field label="Location" name="location" value={form.location} onChange={handleChange} />
               <Field label="Age" name="age" type="number" value={form.age} onChange={handleChange} />
+              <label className="checkout-field checkout-field--wide">
+                <span>Upload Profile Image</span>
+                <input accept="image/*" type="file" onChange={handleImageUpload} />
+              </label>
+              {form.avatar ? <img className="customer-profile-preview" src={form.avatar} alt="Profile preview" /> : null}
               <button className="customer-primary-button" type="submit" disabled={saving}>
                 {saving ? "Saving..." : "Save Profile"}
               </button>
             </form>
           ) : (
             <div className="customer-profile-large">
-              <span className="customer-profile-large__avatar">{initials}</span>
+              <span className="customer-profile-large__avatar">
+                {profile?.avatar ? <img src={profile.avatar} alt={customerName} /> : initials}
+              </span>
               <div>
                 <p className="customer-eyebrow">{profile?.tier || "Gold member"}</p>
                 <h2>{customerName}</h2>

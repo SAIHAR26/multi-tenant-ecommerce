@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   createSegment,
@@ -19,22 +19,16 @@ const segmentTypes = [
 
 const conditionFields = [
   { value: "totalOrders", label: "Total Orders", operators: [">", "<"], placeholder: "10" },
+  { value: "completedOrders", label: "Completed Orders", operators: [">", "<"], placeholder: "3" },
   { value: "spentAmount", label: "Spent Amount", operators: [">", "<"], placeholder: "50000" },
-  { value: "lastLoginDays", label: "Last Login", operators: [">", "<"], placeholder: "30 days" },
+  { value: "lastPurchaseDays", label: "Last Purchase", operators: [">", "<"], placeholder: "30 days" },
+  { value: "lastPurchaseDate", label: "Last Purchase Date", operators: ["before", "after"], placeholder: "" },
+  { value: "reviewCount", label: "Reviews", operators: [">", "<"], placeholder: "3" },
   { value: "ordersPerMonth", label: "Orders per month", operators: [">", "<"], placeholder: "3" },
   { value: "joinedBefore", label: "Joined before date", operators: ["before"], placeholder: "" },
   { value: "purchasedCategory", label: "Purchased category", operators: ["contains"], placeholder: "Fashion" },
   { value: "location", label: "Location", operators: ["contains"], placeholder: "Mumbai" },
   { value: "age", label: "Age", operators: [">", "<"], placeholder: "25" },
-];
-
-const previewCustomers = [
-  { name: "Anaya Rao", orders: 18, spentAmount: 240000, status: "Live", location: "Mumbai", age: 31, daysSinceLogin: 2, ordersPerMonth: 4.2, joinedAt: "2024-02-12", categories: ["Fashion", "Luxury"] },
-  { name: "Rohan Mehta", orders: 11, spentAmount: 98000, status: "Live", location: "Delhi", age: 28, daysSinceLogin: 8, ordersPerMonth: 2.8, joinedAt: "2024-06-18", categories: ["Electronics"] },
-  { name: "Maya Sen", orders: 2, spentAmount: 26000, status: "Review", location: "Kolkata", age: 24, daysSinceLogin: 48, ordersPerMonth: 0.8, joinedAt: "2025-01-08", categories: ["Beauty"] },
-  { name: "Neil Kapoor", orders: 9, spentAmount: 72000, status: "Live", location: "Bengaluru", age: 35, daysSinceLogin: 14, ordersPerMonth: 2.2, joinedAt: "2023-11-24", categories: ["Home", "Fashion"] },
-  { name: "Isha Nair", orders: 21, spentAmount: 310000, status: "Live", location: "Chennai", age: 39, daysSinceLogin: 3, ordersPerMonth: 4.8, joinedAt: "2023-08-02", categories: ["Luxury", "Beauty"] },
-  { name: "Dev Shah", orders: 5, spentAmount: 44000, status: "Inactive", location: "Pune", age: 42, daysSinceLogin: 96, ordersPerMonth: 1.1, joinedAt: "2022-12-14", categories: ["Electronics"] },
 ];
 
 const emptyCondition = {
@@ -53,64 +47,7 @@ const initialForm = {
 
 const getFieldMeta = (field) => conditionFields.find((item) => item.value === field) || conditionFields[0];
 
-const estimateScale = 2148;
-
 const formatNumber = (value) => new Intl.NumberFormat("en-IN").format(value);
-
-const evaluatePreviewCondition = (customer, condition) => {
-  const numericValue = Number(condition.value || 0);
-  const textValue = String(condition.value || "").toLowerCase();
-
-  if (condition.field === "totalOrders") {
-    return condition.operator === ">" ? customer.orders > numericValue : customer.orders < numericValue;
-  }
-
-  if (condition.field === "spentAmount") {
-    return condition.operator === ">" ? customer.spentAmount > numericValue : customer.spentAmount < numericValue;
-  }
-
-  if (condition.field === "lastLoginDays") {
-    return condition.operator === ">" ? customer.daysSinceLogin > numericValue : customer.daysSinceLogin < numericValue;
-  }
-
-  if (condition.field === "ordersPerMonth") {
-    return condition.operator === ">" ? customer.ordersPerMonth > numericValue : customer.ordersPerMonth < numericValue;
-  }
-
-  if (condition.field === "joinedBefore") {
-    return condition.value ? new Date(customer.joinedAt) < new Date(condition.value) : true;
-  }
-
-  if (condition.field === "purchasedCategory") {
-    return customer.categories.some((category) => category.toLowerCase().includes(textValue));
-  }
-
-  if (condition.field === "location") {
-    return customer.location.toLowerCase().includes(textValue);
-  }
-
-  if (condition.field === "age") {
-    return condition.operator === ">" ? customer.age > numericValue : customer.age < numericValue;
-  }
-
-  return true;
-};
-
-const getPreviewMatches = (conditions) => {
-  const activeConditions = conditions.filter((condition) => String(condition.value).trim() !== "");
-
-  if (!activeConditions.length) {
-    return previewCustomers.slice(0, 4);
-  }
-
-  return previewCustomers.filter((customer) =>
-    activeConditions.reduce((result, condition, index) => {
-      const passes = evaluatePreviewCondition(customer, condition);
-      if (index === 0) return passes;
-      return condition.connector === "OR" ? result || passes : result && passes;
-    }, true)
-  );
-};
 
 function CreateSegmentPage() {
   const navigate = useNavigate();
@@ -126,8 +63,8 @@ function CreateSegmentPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const previewMatches = useMemo(() => getPreviewMatches(form.conditions), [form.conditions]);
-  const estimatedCustomers = Math.max(214, previewMatches.length * estimateScale);
+  const getSegmentCount = (type) =>
+    segments.find((segment) => segment.segmentType === type || segment.name === type)?.customerCount || 0;
 
   const loadSegments = async () => {
     setLoading(true);
@@ -314,22 +251,22 @@ function CreateSegmentPage() {
       <section className="stats-grid">
         <article className="dashboard-card dashboard-card--purple">
           <div className="dashboard-card__top"><span>Total Segments</span><strong>Live</strong></div>
-          <h2>{segments.length || 14}</h2>
+          <h2>{formatNumber(segments.length)}</h2>
           <p>Reusable customer groups</p>
         </article>
         <article className="dashboard-card dashboard-card--cyan">
           <div className="dashboard-card__top"><span>VIP Customers</span><strong>High</strong></div>
-          <h2>2,148</h2>
+          <h2>{formatNumber(getSegmentCount("VIP Customers"))}</h2>
           <p>Premium value segment</p>
         </article>
         <article className="dashboard-card dashboard-card--blue">
           <div className="dashboard-card__top"><span>Inactive Users</span><strong>Watch</strong></div>
-          <h2>534</h2>
+          <h2>{formatNumber(getSegmentCount("Inactive Users"))}</h2>
           <p>Need reactivation campaigns</p>
         </article>
         <article className="dashboard-card dashboard-card--violet">
-          <div className="dashboard-card__top"><span>Repeat Buyers</span><strong>+12.4%</strong></div>
-          <h2>18.2K</h2>
+          <div className="dashboard-card__top"><span>Repeat Buyers</span><strong>Live</strong></div>
+          <h2>{formatNumber(getSegmentCount("Repeat Buyers"))}</h2>
           <p>Purchased more than once</p>
         </article>
       </section>
@@ -347,7 +284,7 @@ function CreateSegmentPage() {
               <p className="admin-eyebrow">Builder</p>
               <h2>Create Segment</h2>
             </div>
-            <span className="panel-pill">{formatNumber(estimatedCustomers)} customers match</span>
+            <span className="panel-pill">MongoDB rules</span>
           </div>
 
           <form className="segment-form" onSubmit={handleSubmit}>
@@ -409,7 +346,7 @@ function CreateSegmentPage() {
                         ))}
                       </select>
                       <input
-                        type={condition.field === "joinedBefore" ? "date" : "text"}
+                        type={["joinedBefore", "lastPurchaseDate"].includes(condition.field) ? "date" : "text"}
                         value={condition.value}
                         onChange={(event) => updateCondition(index, "value", event.target.value)}
                         placeholder={meta.placeholder}
@@ -440,22 +377,22 @@ function CreateSegmentPage() {
         <article className="glass-panel">
           <div className="panel-header">
             <div>
-              <p className="admin-eyebrow">Live preview</p>
-              <h2>Estimated customers</h2>
+              <p className="admin-eyebrow">Live logic</p>
+              <h2>Segment rules</h2>
             </div>
-            <span className="panel-pill panel-pill--blue">{formatNumber(estimatedCustomers)}</span>
+            <span className="panel-pill panel-pill--blue">
+              {form.conditions.filter((condition) => String(condition.value).trim() !== "").length} active
+            </span>
           </div>
 
           <div className="segment-preview-list">
-            {previewMatches.slice(0, 4).map((customer) => (
-              <div className="segment-preview-card" key={customer.name}>
+            {form.conditions.map((condition, index) => (
+              <div className="segment-preview-card" key={`${condition.field}-${index}`}>
                 <div>
-                  <h3>{customer.name}</h3>
-                  <p>{customer.location} · {customer.categories.join(", ")}</p>
+                  <h3>{getFieldMeta(condition.field).label}</h3>
+                  <p>{index > 0 ? `${condition.connector} ` : ""}{condition.operator} {condition.value || "value required"}</p>
                 </div>
-                <strong>{customer.orders} orders</strong>
-                <span>Rs {formatNumber(customer.spentAmount)}</span>
-                <span className={`status-badge status-badge--${customer.status.toLowerCase()}`}>{customer.status}</span>
+                <strong>{condition.value ? "Active" : "Draft"}</strong>
               </div>
             ))}
           </div>
@@ -515,7 +452,7 @@ function CreateSegmentPage() {
               <dl className="vendor-detail-list">
                 <div><dt>Type</dt><dd>{selectedSegment.segmentType}</dd></div>
                 <div><dt>Customers</dt><dd>{formatNumber(selectedSegment.customerCount)}</dd></div>
-                <div><dt>Created</dt><dd>{new Date(selectedSegment.createdAt).toLocaleDateString()}</dd></div>
+                <div><dt>Created</dt><dd>{selectedSegment.createdAt ? new Date(selectedSegment.createdAt).toLocaleDateString() : "System segment"}</dd></div>
                 <div><dt>Filters</dt><dd>{selectedSegment.conditions.length}</dd></div>
               </dl>
               <div className="segment-filter-list">
@@ -539,7 +476,9 @@ function CreateSegmentPage() {
               <div className="segment-actions segment-actions--details">
                 <button className="text-button" type="button" onClick={() => handleDuplicate(selectedSegment)}>Duplicate Segment</button>
                 <button className="text-button" type="button" onClick={() => handleExport(selectedSegment)}>Export Segment</button>
-                <button className="vendor-danger-button" type="button" onClick={() => handleDelete(selectedSegment._id)}>Delete Segment</button>
+                {String(selectedSegment._id || "").startsWith("system-") ? null : (
+                  <button className="vendor-danger-button" type="button" onClick={() => handleDelete(selectedSegment._id)}>Delete Segment</button>
+                )}
               </div>
             </div>
           ) : (

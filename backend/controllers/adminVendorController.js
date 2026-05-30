@@ -48,6 +48,7 @@ const formatVendor = async (vendor) => {
     email: vendor.email,
     phone: vendor.phone || "",
     location: vendor.location || store?.location || "",
+    avatar: vendor.avatar || "",
     joinedDate: vendor.createdAt,
     isApproved: vendor.isApproved,
     approvalStatus: vendor.approvalStatus || "pending",

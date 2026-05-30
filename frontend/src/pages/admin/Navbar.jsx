@@ -139,7 +139,9 @@ function Navbar() {
             aria-label="Admin profile"
             onClick={() => setIsProfileOpen((current) => !current)}
           >
-          <div className="profile-avatar">{initials}</div>
+          <div className="profile-avatar">
+            {savedUser?.avatar ? <img src={savedUser.avatar} alt={savedUser?.name || "Admin"} /> : initials}
+          </div>
           <div>
             <strong>{savedUser?.name || "V SHOP Admin"}</strong>
             <span>Founder workspace</span>

@@ -90,6 +90,3 @@ const segmentSchema = new mongoose.Schema(
 
 
 module.exports = mongoose.model("Segment", segmentSchema);
-
-module.exports = mongoose.model("Segment", segmentSchema);
-

@@ -304,7 +304,9 @@ function VendorRequestCard({ vendor, onApprove, onProfile, onReject }) {
   return (
     <article className="vendor-request-card">
       <div className="vendor-request-card__top">
-        <div className="vendor-avatar">{getInitials(vendor.store?.name || vendor.name)}</div>
+        <div className="vendor-avatar">
+          {vendor.avatar ? <img src={vendor.avatar} alt={vendor.name} /> : getInitials(vendor.store?.name || vendor.name)}
+        </div>
         <div>
           <h2>{vendor.store?.name || vendor.name}</h2>
           <p>{vendor.email}</p>
@@ -316,10 +318,10 @@ function VendorRequestCard({ vendor, onApprove, onProfile, onReject }) {
 
       <dl className="vendor-detail-list">
         <div><dt>Vendor Name</dt><dd>{vendor.name}</dd></div>
-        <div><dt>Phone Number</dt><dd>{vendor.phone || "Not provided"}</dd></div>
-        <div><dt>Store Name</dt><dd>{vendor.store?.name || "Not provided"}</dd></div>
-        <div><dt>Store Category</dt><dd>{vendor.store?.category || "Not provided"}</dd></div>
-        <div><dt>Location</dt><dd>{vendor.location || "Not provided"}</dd></div>
+        <div><dt>Phone Number</dt><dd>{vendor.phone || "Pending vendor update"}</dd></div>
+        <div><dt>Store Name</dt><dd>{vendor.store?.name || "Pending vendor update"}</dd></div>
+        <div><dt>Store Category</dt><dd>{vendor.store?.category || "Pending vendor update"}</dd></div>
+        <div><dt>Location</dt><dd>{vendor.location || "Pending vendor update"}</dd></div>
         <div><dt>Joined Date</dt><dd>{formatDate(vendor.joinedDate)}</dd></div>
         <div><dt>Products count</dt><dd>{vendor.analytics?.products || 0}</dd></div>
       </dl>
@@ -367,27 +369,27 @@ function ProfileModal({ onClose, vendor }) {
           items={[
             ["Name", vendor.name],
             ["Email", vendor.email],
-            ["Phone", vendor.phone || "Not provided"],
-            ["Location", vendor.location || "Not provided"],
+            ["Phone", vendor.phone || "Pending vendor update"],
+            ["Location", vendor.location || "Pending vendor update"],
           ]}
         />
         <ProfileSection
           title="Store details"
           items={[
-            ["Store Name", vendor.store?.name || "Not provided"],
-            ["Description", vendor.store?.description || "Not provided"],
-            ["Category", vendor.store?.category || "Not provided"],
+            ["Store Name", vendor.store?.name || "Pending vendor update"],
+            ["Description", vendor.store?.description || "Pending vendor update"],
+            ["Category", vendor.store?.category || "Pending vendor update"],
           ]}
         />
         <ProfileSection
           title="Business information"
           items={[
-            ["GST", vendor.store?.gst || "Not provided"],
-            ["Business ID", vendor.store?.businessId || "Not provided"],
-            ["Business Type", vendor.store?.businessType || "Not provided"],
-            ["Business Address", vendor.store?.businessAddress || "Not provided"],
-            ["PAN", vendor.store?.panNumber || "Not provided"],
-            ["Documents", vendor.store?.documents?.length ? vendor.store.documents.join(", ") : "Not uploaded"],
+            ["GST", vendor.store?.gst || "Pending vendor update"],
+            ["Business ID", vendor.store?.businessId || "Pending vendor update"],
+            ["Business Type", vendor.store?.businessType || "Pending vendor update"],
+            ["Business Address", vendor.store?.businessAddress || "Pending vendor update"],
+            ["PAN", vendor.store?.panNumber || "Pending vendor update"],
+            ["Documents", vendor.store?.documents?.length ? vendor.store.documents.map((document) => String(document).split(":")[0]).join(", ") : "Pending vendor update"],
           ]}
         />
         <ProfileSection

@@ -223,8 +223,6 @@ const addProduct = async (req, res) => {
         });
       }
     }
-    const payload = await normalizeProductPayload(req.body);
-
     const product = await Product.create(payload);
 
     res.status(201).json({
