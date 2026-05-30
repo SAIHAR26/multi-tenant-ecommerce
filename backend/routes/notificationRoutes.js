@@ -9,10 +9,7 @@ const {
   markAllNotificationsRead,
   markNotificationRead,
 } = require("../controllers/notificationController");
-const { authorizeRoles } = require("../middlewares/authMiddleware");
-
-const router = express.Router();
-const { protect } = require("../middlewares/authMiddleware");
+const { authorizeRoles, protect } = require("../middlewares/authMiddleware");
 
 router.use(protect);
 

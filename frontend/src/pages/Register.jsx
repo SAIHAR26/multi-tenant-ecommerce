@@ -16,6 +16,19 @@ const categories = [
   "Other",
 ];
 
+const filesToDataUrls = async (files) =>
+  Promise.all(
+    Array.from(files || []).map(
+      (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ name: file.name, data: reader.result });
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        })
+    )
+  );
+
 function Register() {
   const navigate = useNavigate();
   const [role, setRole] = useState("customer");
@@ -31,6 +44,11 @@ function Register() {
       ...Object.fromEntries(formData.entries()),
       role,
     };
+
+    if (role === "vendor") {
+      const documentFiles = await filesToDataUrls(event.currentTarget.businessDocuments?.files);
+      payload.businessDocuments = documentFiles.map((file) => `${file.name}:${file.data}`);
+    }
 
     setIsSubmitting(true);
     setStatus({ type: "", message: "" });
@@ -231,7 +249,7 @@ function VendorFields() {
 
       <label className="auth-field auth-field--wide">
         <span>Business Documents</span>
-        <input name="businessDocuments" type="text" placeholder="Document URLs or names, comma separated" required />
+        <input accept=".pdf,image/*" multiple name="businessDocuments" type="file" required />
       </label>
 
       <label className="auth-field auth-field--wide">

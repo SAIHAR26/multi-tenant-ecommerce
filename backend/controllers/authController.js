@@ -33,6 +33,7 @@ const sendAuthResponse = (res, statusCode, user) => {
       phone: user.phone,
       location: user.location,
       age: user.age,
+      avatar: user.avatar,
       store: user.store,
     },
   });

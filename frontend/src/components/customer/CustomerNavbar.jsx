@@ -113,7 +113,9 @@ function CustomerNavbar() {
           title="Profile"
           onClick={() => navigate("/customer/profile")}
         >
-          <span className="customer-profile-chip__avatar">{initials}</span>
+          <span className="customer-profile-chip__avatar">
+            {user?.avatar ? <img src={user.avatar} alt={customerName} /> : initials}
+          </span>
           <div>
             <strong>{customerName}</strong>
             <span>Gold member</span>

@@ -12,6 +12,14 @@ const formatDate = (date) =>
       }).format(new Date(date))
     : "Not available";
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 function AdminProfilePage() {
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ name: "", phone: "", location: "", avatar: "" });
@@ -45,6 +53,19 @@ function AdminProfilePage() {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setStatus({ type: "error", message: "Please upload an image file." });
+      return;
+    }
+
+    const avatar = await fileToDataUrl(file);
+    setForm((current) => ({ ...current, avatar }));
   };
 
   const handleCancel = () => {
@@ -120,12 +141,24 @@ function AdminProfilePage() {
       <section className="profile-grid">
         <article className="glass-panel">
           <div className="panel-header"><div><p className="admin-eyebrow">Personal information</p><h2>Profile</h2></div></div>
+          <div className="profile-image-editor">
+            {form.avatar ? (
+              <img src={form.avatar} alt={profile?.name || "Admin profile"} />
+            ) : (
+              <span>{(profile?.name || "VA").slice(0, 2).toUpperCase()}</span>
+            )}
+            {isEditing ? (
+              <label className="text-button">
+                Upload Profile Image
+                <input accept="image/*" type="file" onChange={handleImageUpload} />
+              </label>
+            ) : null}
+          </div>
           <div className="settings-list">
             <ProfileField editable={isEditing} label="Full Name" name="name" value={form.name} onChange={handleChange} />
             <ProfileField label="Email" value={profile?.email || ""} />
             <ProfileField editable={isEditing} label="Phone" name="phone" value={form.phone} onChange={handleChange} />
             <ProfileField editable={isEditing} label="Location" name="location" value={form.location} onChange={handleChange} />
-            <ProfileField editable={isEditing} label="Profile Picture URL" name="avatar" value={form.avatar} onChange={handleChange} />
           </div>
         </article>
 
@@ -133,6 +166,7 @@ function AdminProfilePage() {
           <div className="panel-header"><div><p className="admin-eyebrow">Account information</p><h2>Access</h2></div></div>
           <dl className="vendor-detail-list">
             <div><dt>Role</dt><dd>{profile?.role || "admin"}</dd></div>
+            <div><dt>Account ID</dt><dd>{profile?.id || profile?._id || "Not available"}</dd></div>
             <div><dt>Created</dt><dd>{formatDate(profile?.createdAt)}</dd></div>
             <div><dt>Last Login</dt><dd>{formatDate(profile?.lastLogin)}</dd></div>
           </dl>
