@@ -74,7 +74,14 @@ function VendorStoreProfilePage() {
               <li><span>Business ID</span><strong>{store?.business?.businessRegistrationNumber || user?.business?.businessRegistrationNumber || "Pending update"}</strong></li>
               <li><span>PAN</span><strong>{store?.business?.panNumber || user?.business?.panNumber || "Pending update"}</strong></li>
               <li><span>Business Address</span><strong>{store?.business?.businessAddress || user?.business?.businessAddress || "Pending update"}</strong></li>
-              <li><span>Documents</span><strong>{(store?.business?.businessDocuments || user?.business?.businessDocuments || []).length}</strong></li>
+              <li>
+                <span>Documents</span>
+                <strong>
+                  {(store?.business?.businessDocuments || user?.business?.businessDocuments || [])
+                    .map(getDocumentName)
+                    .join(", ") || "Pending update"}
+                </strong>
+              </li>
             </ul>
           </article>
 
@@ -104,5 +111,7 @@ function VendorStoreProfilePage() {
     </>
   );
 }
+
+const getDocumentName = (document) => String(document || "").split(":")[0];
 
 export default VendorStoreProfilePage;

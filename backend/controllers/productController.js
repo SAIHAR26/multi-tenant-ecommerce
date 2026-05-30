@@ -305,7 +305,7 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const existingProduct = await Product.findById(req.params.id);
 
     if (!existingProduct) {
       return res.status(404).json({
@@ -324,6 +324,7 @@ const deleteProduct = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      productId: req.params.id,
       message: "Product deleted successfully.",
     });
   } catch (error) {

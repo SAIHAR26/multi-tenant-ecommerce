@@ -1,18 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { deleteProduct, getProducts, updateProduct } from "../../services/productService";
-
-const getEditForm = (product) => ({
-  name: product.name || "",
-  description: product.description || "",
-  category: product.category || "",
-  brand: product.brand || "",
-  price: String(product.price || 0),
-  stock: String(product.stock || 0),
-  discount: String(product.discount || 0),
-  status: product.status || (product.isActive === false ? "Hidden" : "Live"),
-  sku: product.sku || "",
-});
+import { deleteProduct, getProducts } from "../../services/productService";
 
 function ProductsPage() {
   const navigate = useNavigate();
@@ -20,11 +8,8 @@ function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [editForm, setEditForm] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -82,55 +67,6 @@ function ProductsPage() {
       setStatusMessage("Product deleted successfully.");
     } catch (deleteError) {
       setError(deleteError.message || "Product could not be deleted.");
-    }
-  };
-
-  const startEdit = (product) => {
-    setEditingProduct(product);
-    setEditForm(getEditForm(product));
-    setStatusMessage("");
-    setError("");
-  };
-
-  const updateEditField = (field, value) => {
-    setEditForm((currentForm) => ({ ...currentForm, [field]: value }));
-  };
-
-  const handleUpdate = async (event) => {
-    event.preventDefault();
-    if (!editingProduct || !editForm) return;
-
-    setSaving(true);
-    setStatusMessage("");
-    setError("");
-
-    try {
-      const payload = {
-        ...editingProduct,
-        ...editForm,
-        price: Number(editForm.price || 0),
-        stock: Number(editForm.stock || 0),
-        discount: Number(editForm.discount || 0),
-        isActive: editForm.status === "Live",
-        storeId: editingProduct.storeId?._id || editingProduct.storeId,
-        vendor: editingProduct.vendor?._id || editingProduct.vendor,
-      };
-      const updatedProduct = await updateProduct(editingProduct._id, payload);
-
-      setProducts((currentProducts) =>
-        currentProducts.map((product) =>
-          product._id === editingProduct._id
-            ? { ...product, ...updatedProduct, storeId: product.storeId, vendor: product.vendor }
-            : product
-        )
-      );
-      setEditingProduct(null);
-      setEditForm(null);
-      setStatusMessage("Product updated successfully.");
-    } catch (updateError) {
-      setError(updateError.message || "Product could not be updated.");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -216,13 +152,6 @@ function ProductsPage() {
 
                     <td>
                       <button
-                        className="text-button"
-                        type="button"
-                        onClick={() => startEdit(product)}
-                      >
-                        Edit
-                      </button>
-                      <button
                         className="vendor-danger-button"
                         type="button"
                         onClick={() => handleDelete(product._id)}
@@ -276,47 +205,6 @@ function ProductsPage() {
         </article>
       </section>
 
-      {editingProduct && editForm ? (
-        <section className="glass-panel">
-          <div className="panel-header">
-            <div>
-              <p className="admin-eyebrow">Edit product</p>
-              <h2>{editingProduct.name}</h2>
-            </div>
-            <button className="text-button" type="button" onClick={() => setEditingProduct(null)}>
-              Cancel
-            </button>
-          </div>
-
-          <form className="segment-form product-center-form" onSubmit={handleUpdate}>
-            <label><span>Product Name</span><input required value={editForm.name} onChange={(event) => updateEditField("name", event.target.value)} /></label>
-            <label><span>Description</span><textarea required value={editForm.description} onChange={(event) => updateEditField("description", event.target.value)} /></label>
-            <div className="product-form-row">
-              <label><span>Category</span><input required value={editForm.category} onChange={(event) => updateEditField("category", event.target.value)} /></label>
-              <label><span>Brand</span><input required value={editForm.brand} onChange={(event) => updateEditField("brand", event.target.value)} /></label>
-              <label><span>SKU</span><input value={editForm.sku} onChange={(event) => updateEditField("sku", event.target.value)} /></label>
-            </div>
-            <div className="product-form-row">
-              <label><span>Price</span><input required type="number" min="0" value={editForm.price} onChange={(event) => updateEditField("price", event.target.value)} /></label>
-              <label><span>Stock</span><input type="number" min="0" value={editForm.stock} onChange={(event) => updateEditField("stock", event.target.value)} /></label>
-              <label><span>Discount</span><input type="number" min="0" max="100" value={editForm.discount} onChange={(event) => updateEditField("discount", event.target.value)} /></label>
-              <label>
-                <span>Status</span>
-                <select value={editForm.status} onChange={(event) => updateEditField("status", event.target.value)}>
-                  <option value="Live">Live</option>
-                  <option value="Draft">Draft</option>
-                  <option value="Hidden">Hidden</option>
-                </select>
-              </label>
-            </div>
-            <div className="segment-actions">
-              <button className="hero-action" type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save Product"}
-              </button>
-            </div>
-          </form>
-        </section>
-      ) : null}
     </div>
   );
 }
