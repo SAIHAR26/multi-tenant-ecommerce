@@ -48,6 +48,16 @@ export const updateVendorOrderStatus = async (orderId, status) =>
 export const getVendorReviews = async () =>
   apiRequest("/api/vendor/reviews", {}, "Vendor reviews could not be loaded.");
 
+export const replyToVendorReview = async (id, reply) =>
+  apiRequest(
+    `/api/vendor/reviews/${id}/reply`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ reply }),
+    },
+    "Vendor reply could not be saved."
+  );
+
 export const getVendorRevenue = async () =>
   apiRequest("/api/vendor/revenue", {}, "Vendor revenue could not be loaded.");
 

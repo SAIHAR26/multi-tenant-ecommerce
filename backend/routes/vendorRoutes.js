@@ -11,6 +11,7 @@ const {
   getReviews,
   getStats,
   getStore,
+  replyToReview,
   markNotificationRead,
   deleteProduct,
   updateProduct,
@@ -30,6 +31,7 @@ router.patch("/products/:id", requireApprovedVendor, updateProduct);
 router.delete("/products/:id", requireApprovedVendor, deleteProduct);
 router.get("/orders", requireApprovedVendor, getOrders);
 router.get("/reviews", requireApprovedVendor, getReviews);
+router.patch("/reviews/:id/reply", requireApprovedVendor, replyToReview);
 router.get("/revenue", requireApprovedVendor, getRevenue);
 router.get("/analytics", requireApprovedVendor, getAnalytics);
 router.get("/store", getStore);

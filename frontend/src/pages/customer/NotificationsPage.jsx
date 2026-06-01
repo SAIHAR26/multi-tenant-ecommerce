@@ -23,7 +23,6 @@ function NotificationsPage() {
   useEffect(() => {
     let isMounted = true;
 
-    setLoading(true);
     getNotifications(activeFilter)
       .then((data) => {
         if (isMounted) {
@@ -42,6 +41,11 @@ function NotificationsPage() {
       isMounted = false;
     };
   }, [activeFilter]);
+
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
+    setLoading(true);
+  };
 
   const unreadCount = notifications.filter((item) => !item.isRead).length;
   const visibleNotifications = useMemo(() => {
@@ -134,7 +138,7 @@ function NotificationsPage() {
                 className={activeFilter === filter ? "filter-chip filter-chip--active" : "filter-chip"}
                 key={filter}
                 type="button"
-                onClick={() => setActiveFilter(filter)}
+                onClick={() => handleFilterChange(filter)}
               >
                 {filter === "all" ? "All" : filter === "unread" ? "Unread" : filter}
               </button>

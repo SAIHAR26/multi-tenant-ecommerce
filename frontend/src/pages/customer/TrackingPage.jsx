@@ -74,9 +74,6 @@ function TrackingPage() {
   const activeStep = statusStepMap[order.status] ?? 0;
   const progressPercent = Math.round(((activeStep + 1) / trackingSteps.length) * 100);
   const canCancel = !["SHIPPED", "DELIVERED", "CANCELLED"].includes(order.status);
-  const eta = order.estimatedDeliveryDate
-    ? new Date(order.estimatedDeliveryDate).toLocaleDateString("en-IN")
-    : "ETA pending";
 
   const handleCancelOrder = async () => {
     const shouldCancel = window.confirm("Cancel this order?");
@@ -126,7 +123,6 @@ function TrackingPage() {
           <div>
             <strong>{formatPrice(order.totalAmount)}</strong>
             <span>{products.length} item groups - Payment {order.paymentStatus}</span>
-            <span>Estimated delivery: {eta}</span>
           </div>
         </div>
 
@@ -161,7 +157,6 @@ function TrackingPage() {
           <div className="offer-stack">
             <div><strong>Status</strong><span>Current status verified as {order.status || "PROCESSING"}.</span></div>
             <div><strong>Products</strong><span>{productNames || "Order products"}</span></div>
-            <div><strong>Delivery ETA</strong><span>{eta}</span></div>
             <div><strong>Updates</strong><span>Latest fulfillment status is synced from vendor updates in MongoDB.</span></div>
           </div>
         </article>

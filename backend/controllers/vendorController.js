@@ -287,6 +287,55 @@ exports.getReviews = async (req, res) => {
   }
 };
 
+exports.replyToReview = async (req, res) => {
+  try {
+    const vendorId = getVendorId(req);
+    const replyText = String(req.body.reply || req.body.text || "").trim();
+
+    if (!replyText) {
+      return res.status(400).json({
+        success: false,
+        message: "Reply text is required.",
+      });
+    }
+
+    const productIds = await getVendorProductIds(vendorId);
+    const review = productIds.length
+      ? await Review.findOne({
+          _id: req.params.id,
+          productId: { $in: productIds },
+        })
+      : null;
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found for this vendor.",
+      });
+    }
+
+    review.vendorReply = {
+      text: replyText,
+      repliedAt: new Date(),
+      repliedBy: vendorId,
+    };
+
+    await review.save();
+
+    const updatedReview = await Review.findById(review._id)
+      .populate("userId", "name email")
+      .populate("productId", "name");
+
+    res.json({
+      success: true,
+      message: "Reply saved.",
+      review: updatedReview,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 exports.getRevenue = async (req, res) => {
   try {
     const data = await getVendorDashboardData(getVendorId(req));
