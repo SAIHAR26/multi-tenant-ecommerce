@@ -13,21 +13,6 @@ const discountFilters = [10, 20, 30, 40, 50];
 const normalizeText = (value) =>
   value?.toString().toLowerCase().trim() || "";
 
-const categoryAliases = {
-  shoes: ["shoes", "shoe", "footwear", "sneaker", "sneakers"],
-};
-
-const exactCategoryTabs = new Set([
-  "men",
-  "women",
-  "dresses",
-  "kids",
-  "electronics",
-  "shoes",
-  "accessories",
-  "books",
-]);
-
 const normalizeProduct = (product) => ({
   ...product,
   id: product.id || product._id,
@@ -36,6 +21,15 @@ const normalizeProduct = (product) => ({
   discount: product.discount || 0,
   popularity: product.popularity || product.rating || 0,
 });
+
+const formatCategoryTitle = (category) =>
+  category
+    .toString()
+    .trim()
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 
 function CustomerDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -46,7 +40,7 @@ function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [activeCategory] =
+  const [activeCategory, setActiveCategory] =
     useState("Trending");
 
   const [priceFilter, setPriceFilter] =
@@ -127,6 +121,22 @@ function CustomerDashboard() {
     ];
   }, [products]);
 
+  const categoryTabs = useMemo(() => {
+    const categoriesByKey = new Map();
+
+    products.forEach((product) => {
+      const category = product?.category?.toString().trim();
+
+      if (!category) return;
+
+      categoriesByKey.set(category.toLowerCase(), category);
+    });
+
+    return Array.from(categoriesByKey.values()).sort((a, b) =>
+      formatCategoryTitle(a).localeCompare(formatCategoryTitle(b))
+    );
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     const selectedPriceRange =
       priceRanges.find(
@@ -167,20 +177,10 @@ function CustomerDashboard() {
         const productDiscount =
           Number(product?.discount) || 0;
 
-        const categoryTerms =
-          categoryAliases[normalizedCategory] || [
-            normalizedCategory,
-          ];
-
         const matchesCategory =
           activeCategory === "Trending"
             ? true
-            : exactCategoryTabs.has(normalizedCategory)
-            ? productCategory === normalizedCategory ||
-              categoryTerms.includes(productCategory)
-            : categoryTerms.some((term) =>
-                searchableText.includes(term)
-              );
+            : productCategory === normalizedCategory;
 
         const matchesSearch =
           !normalizedSearch ||
@@ -247,6 +247,21 @@ function CustomerDashboard() {
 
   return (
     <div className="customer-page">
+      <nav className="category-strip" aria-label="Product categories">
+        {["Trending", ...categoryTabs].map((category) => (
+          <button
+            className={`category-pill ${
+              activeCategory === category ? "category-pill--active" : ""
+            }`}
+            key={category}
+            type="button"
+            onClick={() => setActiveCategory(category)}
+          >
+            {category === "Trending" ? "Trending" : formatCategoryTitle(category)}
+          </button>
+        ))}
+      </nav>
+
       <section className="marketplace-layout">
         <aside
           className="filter-panel"
@@ -364,7 +379,9 @@ function CustomerDashboard() {
               <strong>
                 {searchTerm
                   ? searchTerm
-                  : activeCategory}
+                  : activeCategory === "Trending"
+                  ? "Trending"
+                  : formatCategoryTitle(activeCategory)}
               </strong>
 
               <p>
@@ -428,6 +445,7 @@ function CustomerDashboard() {
                 </p>
               </div>
             ))}
+
         </div>
       </section>
     </div>
