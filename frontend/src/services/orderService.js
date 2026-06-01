@@ -41,7 +41,13 @@ export const updateOrderStatus = async (orderId, status, note = "") => {
 };
 
 export const cancelOrder = async (orderId) => {
-  return updateOrderStatus(orderId, "CANCELLED", "Cancelled by customer");
+  return apiRequest(
+    `/api/orders/${orderId}`,
+    {
+      method: "DELETE",
+    },
+    "Order could not be cancelled."
+  );
 };
 
 export const getOrderTracking = async (orderId) => {

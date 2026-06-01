@@ -1,5 +1,6 @@
-const Notification = require("../models/Notification");
+const Product = require("../models/Product");
 const Review = require("../models/Review");
+const { notifyAdmins, notifyVendor } = require("../services/notificationService");
 
 const canManageReview = (review, user) =>
   user?.role === "admin" || review.userId?.toString() === user?._id?.toString();
@@ -55,16 +56,28 @@ const createReview = async (req, res) => {
       userId: req.user._id,
     });
 
-    await Notification.create({
-      title:
-        review.rating <= 2
-          ? "Low rating review alert"
-          : "New product review",
+    const product = await Product.findById(review.productId).select("name vendor").lean();
 
-      message: `A ${review.rating}-star review was added.`,
-
-      type: "review",
-    });
+    await Promise.all([
+      notifyAdmins({
+        title: review.rating <= 2 ? "Low rating review alert" : "New review added",
+        message: `A ${review.rating}-star review was added for ${product?.name || "a product"}.`,
+        type: "REVIEW",
+        relatedEntity: review._id,
+        relatedEntityModel: "Review",
+        actionUrl: "/admin/reviews",
+        preview: "Product review received",
+      }),
+      notifyVendor(product?.vendor, {
+        title: "Product review added",
+        message: `${product?.name || "Your product"} received a ${review.rating}-star review.`,
+        type: "REVIEW",
+        relatedEntity: review._id,
+        relatedEntityModel: "Review",
+        actionUrl: "/vendor/reviews",
+        preview: "New product review",
+      }),
+    ]);
 
     res.status(201).json(review);
   } catch (error) {

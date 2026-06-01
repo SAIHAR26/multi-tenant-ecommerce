@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const Notification = require("../models/Notification");
 const Store = require("../models/Store");
 const User = require("../models/User");
+const { notifyAdmins, notifyCustomer } = require("../services/notificationService");
 
 const createToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -178,11 +178,36 @@ const registerUser = async (req, res) => {
       user.store.storeId = store._id;
       await user.save();
 
-      await Notification.create({
+      await notifyAdmins({
         title: "New vendor registration",
-        message: `${storeName} registered and is ready for admin review.`,
-        type: "vendor",
+        message: `${storeName} registered and is awaiting approval.`,
+        type: "INFO",
+        relatedEntity: user._id,
+        relatedEntityModel: "User",
+        actionUrl: "/admin/vendor-approvals",
+        preview: "Vendor application requires review",
       });
+    } else {
+      await Promise.all([
+        notifyCustomer(user._id, {
+          title: "Welcome to V SHOP",
+          message: "Your account has been created successfully.",
+          type: "SUCCESS",
+          relatedEntity: user._id,
+          relatedEntityModel: "User",
+          actionUrl: "/customer/profile",
+          preview: "Account created",
+        }),
+        notifyAdmins({
+          title: "New customer registration",
+          message: `${user.name} joined the platform.`,
+          type: "INFO",
+          relatedEntity: user._id,
+          relatedEntityModel: "User",
+          actionUrl: "/admin/customers",
+          preview: "New customer joined",
+        }),
+      ]);
     }
 
     sendAuthResponse(res, 201, user);

@@ -2,8 +2,11 @@ const mongoose = require("mongoose");
 const Product = require("../models/Product");
 require("../models/Store");
 
+const Order = require("../models/Order");
 const Store = require("../models/Store");
 const User = require("../models/User");
+const Wishlist = require("../models/Wishlist");
+const { notifyAdmins, notifyCustomer, notifyVendor } = require("../services/notificationService");
 
 const isDatabaseConnected = () => mongoose.connection.readyState === 1;
 
@@ -71,6 +74,93 @@ const applyVendorWriteScope = (payload, user) => {
     ...payload,
     vendor: user._id,
   };
+};
+
+const getProductActionUrl = (role, product) => {
+  if (role === "admin") return `/admin/products?search=${encodeURIComponent(product.name)}`;
+  if (role === "vendor") return "/vendor/products";
+  return `/customer/product/${product._id}`;
+};
+
+const notifyInterestedCustomers = async (product) => {
+  const [wishlistMatches, orderMatches] = await Promise.all([
+    Wishlist.find({ savedProducts: product._id }).select("userId").lean(),
+    Order.find()
+      .populate("products.productId", "category")
+      .select("userId products")
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .lean(),
+  ]);
+
+  const customerIds = new Set(wishlistMatches.map((item) => String(item.userId)));
+
+  orderMatches.forEach((order) => {
+    const matchesCategory = order.products.some((item) => item.productId?.category === product.category);
+    if (matchesCategory) customerIds.add(String(order.userId));
+  });
+
+  return Promise.all(
+    Array.from(customerIds)
+      .slice(0, 25)
+      .map((customerId) =>
+        notifyCustomer(
+          customerId,
+          {
+            title: `New ${product.category} product`,
+            message: `${product.name} is now available in ${product.category}.`,
+            type: "PRODUCT",
+            relatedEntity: product._id,
+            relatedEntityModel: "Product",
+            actionUrl: getProductActionUrl("customer", product),
+            preview: "New product available",
+          },
+          { dedupeMinutes: 60 }
+        )
+      )
+  );
+};
+
+const notifyStockState = async (product) => {
+  const stock = Number(product.stock || 0);
+  const threshold = Number(product.lowStockThreshold || 0);
+
+  if (stock > threshold) return;
+
+  const title = stock <= 0 ? "Product out of stock" : "Low stock product detected";
+  const message =
+    stock <= 0
+      ? `${product.name} is out of stock.`
+      : `${product.name} has ${stock} item${stock === 1 ? "" : "s"} left.`;
+  const type = stock <= 0 ? "WARNING" : "PRODUCT";
+
+  await Promise.all([
+    notifyVendor(
+      product.vendor?._id || product.vendor,
+      {
+        title,
+        message,
+        type,
+        relatedEntity: product._id,
+        relatedEntityModel: "Product",
+        actionUrl: getProductActionUrl("vendor", product),
+        preview: stock <= 0 ? "Out of stock" : "Low stock",
+      },
+      { dedupeMinutes: 60 }
+    ),
+    notifyAdmins(
+      {
+        title,
+        message,
+        type,
+        relatedEntity: product._id,
+        relatedEntityModel: "Product",
+        actionUrl: getProductActionUrl("admin", product),
+        preview: stock <= 0 ? "Out of stock" : "Low stock",
+      },
+      { dedupeMinutes: 60 }
+    ),
+  ]);
 };
 
 const getCategoryImage = (category) => {
@@ -224,11 +314,26 @@ const addProduct = async (req, res) => {
       }
     }
     const product = await Product.create(payload);
+    const populatedProduct = await Product.findById(product._id).populate("vendor", "name email").populate("storeId");
+
+    await Promise.all([
+      notifyAdmins({
+        title: "New product added",
+        message: `${populatedProduct.vendor?.name || "A vendor"} added ${populatedProduct.name}.`,
+        type: "PRODUCT",
+        relatedEntity: populatedProduct._id,
+        relatedEntityModel: "Product",
+        actionUrl: getProductActionUrl("admin", populatedProduct),
+        preview: "New product listed",
+      }),
+      notifyInterestedCustomers(populatedProduct),
+      notifyStockState(populatedProduct),
+    ]);
 
     res.status(201).json({
       success: true,
       message: "Product created successfully",
-      product,
+      product: populatedProduct,
     });
   } catch (error) {
     res.status(400).json({
@@ -274,7 +379,7 @@ const updateProduct = async (req, res) => {
         new: true,
         runValidators: true,
       }
-    );
+    ).populate("vendor", "name email");
 
     if (!product) {
       return res.status(404).json({
@@ -282,6 +387,19 @@ const updateProduct = async (req, res) => {
         message: "Product not found.",
       });
     }
+
+    await Promise.all([
+      notifyAdmins({
+        title: "Product updated",
+        message: `${product.vendor?.name || "A vendor"} updated ${product.name}.`,
+        type: "PRODUCT",
+        relatedEntity: product._id,
+        relatedEntityModel: "Product",
+        actionUrl: getProductActionUrl("admin", product),
+        preview: "Product details changed",
+      }),
+      notifyStockState(product),
+    ]);
 
     res.status(200).json({
       success: true,
@@ -321,6 +439,16 @@ const deleteProduct = async (req, res) => {
     }
 
     await Product.findByIdAndDelete(req.params.id);
+
+    await notifyAdmins({
+      title: "Product deleted",
+      message: `${existingProduct.name} was deleted.`,
+      type: "PRODUCT",
+      relatedEntity: existingProduct._id,
+      relatedEntityModel: "Product",
+      actionUrl: "/admin/products",
+      preview: "Product removed",
+    });
 
     res.status(200).json({
       success: true,

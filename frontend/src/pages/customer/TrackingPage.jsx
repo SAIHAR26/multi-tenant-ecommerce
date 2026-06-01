@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getSavedUser } from "../../api/auth";
 import { cancelOrder, getOrderTracking } from "../../services/orderService";
 import { formatPrice } from "../../utils/orderTotals";
@@ -16,6 +16,7 @@ const statusStepMap = {
 
 function TrackingPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const user = getSavedUser();
   const customerName = user?.name || "Customer";
 
@@ -83,7 +84,8 @@ function TrackingPage() {
 
     try {
       setCancelling(true);
-      setOrder(await cancelOrder(order._id || order.id));
+      await cancelOrder(order._id || order.id);
+      navigate("/customer/orders", { replace: true });
     } catch (err) {
       setError(err.message || "Order could not be cancelled.");
     } finally {

@@ -75,6 +75,7 @@ function VendorNavbar() {
   }, []);
 
   const markAsRead = async (notificationId) => {
+    const notification = notifications.find((item) => item._id === notificationId);
     await markVendorNotificationRead(notificationId);
     setNotifications((current) =>
       current.map((notification) =>
@@ -82,6 +83,10 @@ function VendorNavbar() {
       )
     );
     setUnreadCount((current) => Math.max(current - 1, 0));
+
+    if (notification?.actionUrl) {
+      navigate(notification.actionUrl);
+    }
   };
 
   const storeName = store?.storeName || savedUser?.store?.name || savedUser?.name || "Vendor Store";

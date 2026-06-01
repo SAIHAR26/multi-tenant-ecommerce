@@ -4,6 +4,7 @@ const Product = require("../models/Product");
 const Review = require("../models/Review");
 const Store = require("../models/Store");
 const User = require("../models/User");
+const { notifyAdmins } = require("../services/notificationService");
 
 const getDateRange = (daysAgo = 0) => {
   const date = new Date();
@@ -181,7 +182,7 @@ const getAdminReport = async (req, res) => {
             .select("name category rating price stock")
             .lean();
 
-    res.status(200).json({
+    const response = {
       generatedAt: new Date().toISOString(),
       summary: {
         totalRevenue: revenueResult[0]?.totalRevenue || 0,
@@ -255,7 +256,20 @@ const getAdminReport = async (req, res) => {
           rating: store.averageRating || 0,
         })),
       },
-    });
+    };
+
+    await notifyAdmins(
+      {
+        title: "Report generated",
+        message: "The admin performance report was generated.",
+        type: "SYSTEM",
+        actionUrl: "/admin/analytics",
+        preview: "Admin report ready",
+      },
+      { dedupeMinutes: 30 }
+    );
+
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({
       message: error.message || "Failed to generate report.",

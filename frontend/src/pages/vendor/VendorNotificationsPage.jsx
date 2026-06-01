@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ErrorState from "../../components/ErrorState";
 import LoadingState from "../../components/LoadingState";
 import {
@@ -7,6 +8,7 @@ import {
 } from "../../services/vendorService";
 
 function VendorNotificationsPage() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,12 +33,17 @@ function VendorNotificationsPage() {
   }, []);
 
   const markAsRead = async (id) => {
+    const target = notifications.find((notification) => notification._id === id);
     await markVendorNotificationRead(id);
     setNotifications((current) =>
       current.map((notification) =>
         notification._id === id ? { ...notification, isRead: true } : notification
       )
     );
+
+    if (target?.actionUrl) {
+      navigate(target.actionUrl);
+    }
   };
 
   return (

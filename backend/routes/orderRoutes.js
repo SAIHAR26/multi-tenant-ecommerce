@@ -23,6 +23,6 @@ router
   .route("/:id")
   .get(protect, requireApprovedVendor, getOrderById)
   .patch(protect, requireApprovedVendor, updateOrder)
-  .delete(protect, authorizeRoles("admin"), deleteOrder);
+  .delete(protect, authorizeRoles("admin", "customer"), deleteOrder);
 
 module.exports = router;

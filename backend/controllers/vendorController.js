@@ -400,9 +400,9 @@ exports.updateStore = async (req, res) => {
 exports.getNotifications = async (req, res) => {
   try {
     const query = {
-      $or: [
-        { userId: getVendorId(req) },
-        { targetRole: { $in: ["vendor", "all"] } },
+      $and: [
+        { $or: [{ userId: getVendorId(req) }, { userId: null }] },
+        { $or: [{ role: "vendor" }, { targetRole: "vendor" }, { role: "all", targetRole: "all" }] },
       ],
     };
     const notifications = await Notification.find(query).sort({ createdAt: -1 }).limit(20);
@@ -423,12 +423,12 @@ exports.markNotificationRead = async (req, res) => {
     const notification = await Notification.findOneAndUpdate(
       {
         _id: req.params.id,
-        $or: [
-          { userId: getVendorId(req) },
-          { targetRole: { $in: ["vendor", "all"] } },
+        $and: [
+          { $or: [{ userId: getVendorId(req) }, { userId: null }] },
+          { $or: [{ role: "vendor" }, { targetRole: "vendor" }, { role: "all", targetRole: "all" }] },
         ],
       },
-      { isRead: true },
+      { isRead: true, read: true },
       { new: true }
     );
 
