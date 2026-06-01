@@ -1,0 +1,3 @@
+◇ injected env (4) from .env // tip: ⌘ override existing { override: true }
+MongoDB Connected: vshop
+Server running on port 5000

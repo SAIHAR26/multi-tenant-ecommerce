@@ -290,22 +290,22 @@ exports.getReviews = async (req, res) => {
 exports.replyToReview = async (req, res) => {
   try {
     const vendorId = getVendorId(req);
-    const replyText = String(req.body.reply || req.body.text || "").trim();
+    const { message } = req.body;
 
-    if (!replyText) {
+    if (!message || !message.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Reply text is required.",
+        message: "Reply message is required.",
       });
     }
 
     const productIds = await getVendorProductIds(vendorId);
-    const review = productIds.length
-      ? await Review.findOne({
-          _id: req.params.id,
-          productId: { $in: productIds },
-        })
-      : null;
+    const review = await Review.findOne({
+      _id: req.params.id,
+      productId: { $in: productIds },
+    })
+      .populate("userId", "name email")
+      .populate("productId", "name");
 
     if (!review) {
       return res.status(404).json({
@@ -315,21 +315,26 @@ exports.replyToReview = async (req, res) => {
     }
 
     review.vendorReply = {
-      text: replyText,
+      message: message.trim(),
+      vendorId,
       repliedAt: new Date(),
-      repliedBy: vendorId,
     };
-
     await review.save();
 
-    const updatedReview = await Review.findById(review._id)
-      .populate("userId", "name email")
-      .populate("productId", "name");
+    await Notification.create({
+      userId: review.userId?._id || review.userId,
+      targetRole: "customer",
+      type: "review",
+      notificationCategory: "review",
+      title: "Vendor replied to your review",
+      message: `A vendor replied to your review for ${review.productId?.name || "a product"}.`,
+      sender: req.user?.name || "Vendor",
+      preview: message.trim().slice(0, 120),
+    });
 
     res.json({
       success: true,
-      message: "Reply saved.",
-      review: updatedReview,
+      review,
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

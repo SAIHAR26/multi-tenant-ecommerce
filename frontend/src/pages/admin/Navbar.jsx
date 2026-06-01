@@ -42,6 +42,7 @@ function Navbar() {
     }
 
     const timer = window.setTimeout(() => {
+      setIsSearching(true);
       searchAdmin(query)
         .then((data) => {
           setSearchResults(data.results || []);
@@ -74,6 +75,18 @@ function Navbar() {
     localStorage.clear();
     sessionStorage.clear();
     navigate("/login", { replace: true });
+  };
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+
+    setSearchTerm(value);
+
+    if (value.trim().length < 2) {
+      setSearchResults([]);
+      setSearchError("");
+      setIsSearching(false);
+    }
   };
 
   const initials =
