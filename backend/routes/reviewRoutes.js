@@ -1,6 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
+const { authorizeRoles, protect } = require("../middlewares/authMiddleware");
 
 const {
   getReviews,
@@ -16,7 +17,7 @@ const {
 
 router.route("/")
   .get(getReviews)
-  .post(createReview);
+  .post(protect, authorizeRoles("customer"), createReview);
 
 
 // GET SINGLE REVIEW + UPDATE + DELETE
@@ -25,8 +26,8 @@ router.get("/product/:productId", getReviewsByProduct);
 
 router.route("/:id")
   .get(getReviewById)
-  .patch(updateReview)
-  .delete(deleteReview);
+  .patch(protect, updateReview)
+  .delete(protect, deleteReview);
 
 
 module.exports = router;

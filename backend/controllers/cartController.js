@@ -115,13 +115,12 @@ const updateCart = async (req, res) => {
 
   try {
 
-    const updatedCart = await Cart.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
+    const userId = getUserId(req);
+    const quantity = Math.max(1, Number(req.body.quantity) || 1);
+    const updatedCart = await Cart.findOneAndUpdate(
+      { userId, "items.productId": req.params.id },
+      { $set: { "items.$.quantity": quantity } },
+      { new: true, runValidators: true }
     );
 
     if (!updatedCart) {
@@ -133,10 +132,7 @@ const updateCart = async (req, res) => {
 
     }
 
-    res.status(200).json({
-      success: true,
-      data: updatedCart,
-    });
+    await sendCartItems(res, userId);
 
   } catch (error) {
 

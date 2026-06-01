@@ -38,13 +38,9 @@ function Navbar() {
     const query = searchTerm.trim();
 
     if (query.length < 2) {
-      setSearchResults([]);
-      setSearchError("");
-      setIsSearching(false);
       return undefined;
     }
 
-    setIsSearching(true);
     const timer = window.setTimeout(() => {
       searchAdmin(query)
         .then((data) => {
@@ -60,6 +56,19 @@ function Navbar() {
 
     return () => window.clearTimeout(timer);
   }, [searchTerm]);
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+
+    if (value.trim().length < 2) {
+      setSearchResults([]);
+      setSearchError("");
+      setIsSearching(false);
+    } else {
+      setIsSearching(true);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -95,7 +104,7 @@ function Navbar() {
           type="search"
           placeholder="Search orders, vendors, products..."
           value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
+          onChange={handleSearchChange}
         />
         {searchTerm.trim().length >= 2 ? (
           <div className="admin-search-results">

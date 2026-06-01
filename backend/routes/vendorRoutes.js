@@ -1,5 +1,5 @@
 const express = require("express");
-const protect = require("../middlewares/authMiddleware");
+const { authorizeRoles, protect, requireApprovedVendor } = require("../middlewares/authMiddleware");
 const {
   createProduct,
   getAnalytics,
@@ -19,21 +19,21 @@ const {
 
 const router = express.Router();
 
-router.use(protect);
+router.use(protect, authorizeRoles("vendor"));
 
-router.get("/dashboard", getDashboard);
-router.get("/stats", getStats);
-router.get("/products", getProducts);
-router.post("/products", createProduct);
-router.put("/products/:id", updateProduct);
-router.patch("/products/:id", updateProduct);
-router.delete("/products/:id", deleteProduct);
-router.get("/orders", getOrders);
-router.get("/reviews", getReviews);
-router.get("/revenue", getRevenue);
-router.get("/analytics", getAnalytics);
+router.get("/dashboard", requireApprovedVendor, getDashboard);
+router.get("/stats", requireApprovedVendor, getStats);
+router.get("/products", requireApprovedVendor, getProducts);
+router.post("/products", requireApprovedVendor, createProduct);
+router.put("/products/:id", requireApprovedVendor, updateProduct);
+router.patch("/products/:id", requireApprovedVendor, updateProduct);
+router.delete("/products/:id", requireApprovedVendor, deleteProduct);
+router.get("/orders", requireApprovedVendor, getOrders);
+router.get("/reviews", requireApprovedVendor, getReviews);
+router.get("/revenue", requireApprovedVendor, getRevenue);
+router.get("/analytics", requireApprovedVendor, getAnalytics);
 router.get("/store", getStore);
-router.put("/store", updateStore);
+router.put("/store", requireApprovedVendor, updateStore);
 router.get("/notifications", getNotifications);
 router.patch("/notifications/:id/read", markNotificationRead);
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login, logout, saveSession } from "../api/auth";
+import { getDashboardPath, login, logout, saveSession } from "../api/auth";
 import AuthPasswordField from "../components/AuthPasswordField";
 import "./Auth.css";
 
@@ -22,14 +22,7 @@ function Login() {
     try {
       const session = await login(payload);
       saveSession(session);
-
-      const destinationByRole = {
-        admin: "/admin",
-        customer: "/customer",
-        vendor: "/vendor",
-      };
-
-      navigate(destinationByRole[session.user.role] || "/");
+      navigate(getDashboardPath(session.user.role));
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -85,7 +78,7 @@ function Login() {
               <input type="checkbox" />
               <span>Remember me</span>
             </label>
-            <a href="#forgot">Forgot password?</a>
+            <a href="/forgot-password">Forgot password?</a>
           </div>
 
           {status.message ? (

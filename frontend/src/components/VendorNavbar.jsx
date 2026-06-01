@@ -27,11 +27,11 @@ const formatNotificationTime = (value) => {
 
 function VendorNavbar() {
   const navigate = useNavigate();
-  const user = getSavedUser();
+  const [savedUser] = useState(() => getSavedUser());
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
   const [store, setStore] = useState(null);
-  const [profile, setProfile] = useState(user);
+  const [profile, setProfile] = useState(savedUser);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -44,7 +44,7 @@ function VendorNavbar() {
       .then(([storeData, notificationData]) => {
         if (!isMounted) return;
         setStore(storeData?.store || null);
-        setProfile(storeData?.user || user);
+        setProfile(storeData?.user || savedUser);
         setNotifications(notificationData?.notifications || []);
         setUnreadCount(notificationData?.unreadCount || 0);
       })
@@ -58,7 +58,7 @@ function VendorNavbar() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [savedUser]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -84,7 +84,7 @@ function VendorNavbar() {
     setUnreadCount((current) => Math.max(current - 1, 0));
   };
 
-  const storeName = store?.storeName || user?.store?.name || user?.name || "Vendor Store";
+  const storeName = store?.storeName || savedUser?.store?.name || savedUser?.name || "Vendor Store";
   const handleLogout = () => {
     logout();
     navigate("/login", { replace: true });

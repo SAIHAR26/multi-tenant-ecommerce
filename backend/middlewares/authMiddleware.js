@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+const isApprovedVendor = (user) =>
+  user?.role === "vendor" && user.isApproved === true && user.approvalStatus === "approved";
+
 const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization || "";
@@ -20,6 +23,13 @@ const protect = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: "Not authorized. User not found.",
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Account is inactive. Contact support.",
       });
     }
 
@@ -44,6 +54,23 @@ const authorizeRoles = (...roles) => (req, res, next) => {
   next();
 };
 
+const requireApprovedVendor = (req, res, next) => {
+  if (req.user?.role !== "vendor") {
+    return next();
+  }
+
+  if (!isApprovedVendor(req.user)) {
+    return res.status(403).json({
+      success: false,
+      code: "VENDOR_APPROVAL_REQUIRED",
+      message: "Your vendor account is pending admin approval.",
+    });
+  }
+
+  next();
+};
+
 module.exports = protect;
 module.exports.protect = protect;
 module.exports.authorizeRoles = authorizeRoles;
+module.exports.requireApprovedVendor = requireApprovedVendor;

@@ -172,6 +172,11 @@ const updateProfile = async (req, res) => {
 const getUserById = async (req, res) => {
 
   try {
+    if (!canAccessUser(req, req.params.id)) {
+      return res.status(403).json({
+        message: "Access denied.",
+      });
+    }
 
     const user = await User.findById(req.params.id)
       .select("-password");

@@ -153,6 +153,8 @@ const approveVendor = async (req, res) => {
       title: "Store approved",
       message: "Your store has been approved.",
       type: "vendor",
+      targetRole: "vendor",
+      userId: vendor._id,
     });
 
     res.status(200).json(await formatVendor(vendor));
@@ -191,6 +193,8 @@ const rejectVendor = async (req, res) => {
       title: "Application rejected",
       message: "Your application has been rejected.",
       type: "vendor",
+      targetRole: "vendor",
+      userId: vendor._id,
     });
 
     res.status(200).json(await formatVendor(vendor));

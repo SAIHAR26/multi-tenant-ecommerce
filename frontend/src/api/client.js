@@ -3,6 +3,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:50
 const clearSavedSession = () => {
   localStorage.removeItem("vshopToken");
   localStorage.removeItem("vshopUser");
+  sessionStorage.clear();
 };
 
 const getErrorMessage = async (response, fallbackMessage) => {
@@ -40,6 +41,7 @@ export const apiRequest = async (path, options = {}, fallbackMessage = "Request 
       if (response.status === 401 && !isAuthRequest && !skipAuthRedirect) {
         clearSavedSession();
         window.dispatchEvent(new Event("vshop:session-expired"));
+        window.location.assign("/login");
       }
 
       throw new Error(

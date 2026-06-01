@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { register, saveSession } from "../api/auth";
+import { getDashboardPath, register, saveSession } from "../api/auth";
 import AuthPasswordField from "../components/AuthPasswordField";
 import "./Auth.css";
 
@@ -56,7 +56,7 @@ function Register() {
     try {
       const session = await register(payload);
       saveSession(session);
-      navigate(session.user.role === "vendor" ? "/vendor" : "/customer");
+      navigate(getDashboardPath(session.user.role));
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -159,7 +159,7 @@ function CustomerFields() {
       <AuthPasswordField
         autoComplete="new-password"
         label="Password"
-        minLength="6"
+        minLength="8"
         name="password"
         placeholder="Create password"
       />
@@ -167,7 +167,7 @@ function CustomerFields() {
       <AuthPasswordField
         autoComplete="new-password"
         label="Confirm Password"
-        minLength="6"
+        minLength="8"
         name="confirmPassword"
         placeholder="Confirm password"
       />
@@ -260,7 +260,7 @@ function VendorFields() {
       <AuthPasswordField
         autoComplete="new-password"
         label="Password"
-        minLength="6"
+        minLength="8"
         name="password"
         placeholder="Create password"
       />
@@ -268,7 +268,7 @@ function VendorFields() {
       <AuthPasswordField
         autoComplete="new-password"
         label="Confirm Password"
-        minLength="6"
+        minLength="8"
         name="confirmPassword"
         placeholder="Confirm password"
       />

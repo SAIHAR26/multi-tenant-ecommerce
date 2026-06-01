@@ -1,6 +1,9 @@
 const Notification = require("../models/Notification");
 const Review = require("../models/Review");
 
+const canManageReview = (review, user) =>
+  user?.role === "admin" || review.userId?.toString() === user?._id?.toString();
+
 const getReviews = async (req, res) => {
   try {
     const reviews = await Review.find()
@@ -47,7 +50,10 @@ const getReviewsByProduct = async (req, res) => {
 
 const createReview = async (req, res) => {
   try {
-    const review = await Review.create(req.body);
+    const review = await Review.create({
+      ...req.body,
+      userId: req.user._id,
+    });
 
     await Notification.create({
       title:
@@ -96,9 +102,27 @@ const getReviewById = async (req, res) => {
 
 const updateReview = async (req, res) => {
   try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(404).json({
+        message: "Review not found.",
+      });
+    }
+
+    if (!canManageReview(review, req.user)) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    const allowedFields = ["rating", "comment", "images"];
+    const updates = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    });
+
     const updatedReview = await Review.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updates,
       {
         new: true,
         runValidators: true,
@@ -121,13 +145,19 @@ const updateReview = async (req, res) => {
 
 const deleteReview = async (req, res) => {
   try {
-    const deletedReview = await Review.findByIdAndDelete(req.params.id);
+    const review = await Review.findById(req.params.id);
 
-    if (!deletedReview) {
+    if (!review) {
       return res.status(404).json({
         message: "Review not found.",
       });
     }
+
+    if (!canManageReview(review, req.user)) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
+    await Review.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       message: "Review deleted successfully.",
