@@ -5,8 +5,9 @@ import { getVendorReviews, replyToVendorReview } from "../../services/vendorServ
 
 function VendorReviewsPage() {
   const [reviews, setReviews] = useState([]);
-  const [replyDrafts, setReplyDrafts] = useState({});
+  const [draftReplies, setDraftReplies] = useState({});
   const [savingReplyId, setSavingReplyId] = useState("");
+  const [replyStatus, setReplyStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
@@ -18,6 +19,14 @@ function VendorReviewsPage() {
       .then((data) => {
         if (isMounted) {
           setReviews(Array.isArray(data?.reviews) ? data.reviews : []);
+          setDraftReplies(
+            Object.fromEntries(
+              (Array.isArray(data?.reviews) ? data.reviews : []).map((review) => [
+                review._id,
+                review.vendorReply?.text || "",
+              ])
+            )
+          );
           setError("");
         }
       })
@@ -34,34 +43,31 @@ function VendorReviewsPage() {
   }, []);
 
   const handleReplyChange = (reviewId, value) => {
-    setReplyDrafts((current) => ({
-      ...current,
-      [reviewId]: value,
-    }));
+    setDraftReplies((current) => ({ ...current, [reviewId]: value }));
+    setReplyStatus((current) => ({ ...current, [reviewId]: "" }));
   };
 
-  const handleSendReply = async (review) => {
-    const message = (replyDrafts[review._id] ?? review.vendorReply?.message ?? "").trim();
+  const handleReplySubmit = async (reviewId) => {
+    const reply = String(draftReplies[reviewId] || "").trim();
 
-    if (!message) {
-      setStatus("Write a reply before sending.");
+    if (!reply) {
+      setReplyStatus((current) => ({ ...current, [reviewId]: "Write a reply before sending." }));
       return;
     }
 
     try {
-      setSavingReplyId(review._id);
-      setStatus("");
-      const data = await replyToVendorReview(review._id, message);
+      setSavingReplyId(reviewId);
+      const data = await replyToVendorReview(reviewId, reply);
       setReviews((current) =>
-        current.map((item) => (item._id === review._id ? data.review : item))
+        current.map((review) => (review._id === reviewId ? data.review || review : review))
       );
-      setReplyDrafts((current) => ({
-        ...current,
-        [review._id]: data.review?.vendorReply?.message || message,
-      }));
-      setStatus("Reply sent and customer notified.");
+      setDraftReplies((current) => ({ ...current, [reviewId]: data.review?.vendorReply?.text || reply }));
+      setReplyStatus((current) => ({ ...current, [reviewId]: "Reply saved." }));
     } catch (err) {
-      setStatus(err.message || "Reply could not be sent.");
+      setReplyStatus((current) => ({
+        ...current,
+        [reviewId]: err.message || "Reply could not be saved.",
+      }));
     } finally {
       setSavingReplyId("");
     }
@@ -100,15 +106,21 @@ function VendorReviewsPage() {
                 <span>Vendor reply</span>
                 <textarea
                   placeholder="Write a thoughtful public reply"
-                  value={replyDrafts[review._id] ?? review.vendorReply?.message ?? ""}
+                  value={draftReplies[review._id] || ""}
                   onChange={(event) => handleReplyChange(review._id, event.target.value)}
                 />
               </label>
+              {review.vendorReply?.repliedAt ? (
+                <span className="vendor-muted">
+                  Last replied {new Date(review.vendorReply.repliedAt).toLocaleDateString("en-IN")}
+                </span>
+              ) : null}
+              {replyStatus[review._id] ? <span className="vendor-muted">{replyStatus[review._id]}</span> : null}
               <button
                 type="button"
                 className="table-action"
                 disabled={savingReplyId === review._id}
-                onClick={() => handleSendReply(review)}
+                onClick={() => handleReplySubmit(review._id)}
               >
                 {savingReplyId === review._id ? "Sending..." : "Send Reply"}
               </button>

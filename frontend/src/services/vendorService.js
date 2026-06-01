@@ -48,14 +48,14 @@ export const updateVendorOrderStatus = async (orderId, status) =>
 export const getVendorReviews = async () =>
   apiRequest("/api/vendor/reviews", {}, "Vendor reviews could not be loaded.");
 
-export const replyToVendorReview = async (id, message) =>
+export const replyToVendorReview = async (id, reply) =>
   apiRequest(
     `/api/vendor/reviews/${id}/reply`,
     {
       method: "PATCH",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ reply }),
     },
-    "Vendor reply could not be sent."
+    "Vendor reply could not be saved."
   );
 
 export const getVendorRevenue = async () =>

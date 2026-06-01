@@ -27,10 +27,11 @@ const formatNotificationTime = (value) => {
 
 function VendorNavbar() {
   const navigate = useNavigate();
+  const [savedUser] = useState(() => getSavedUser());
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
   const [store, setStore] = useState(null);
-  const [profile, setProfile] = useState(() => getSavedUser());
+  const [profile, setProfile] = useState(savedUser);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -43,7 +44,7 @@ function VendorNavbar() {
       .then(([storeData, notificationData]) => {
         if (!isMounted) return;
         setStore(storeData?.store || null);
-        setProfile((current) => storeData?.user || current);
+        setProfile(storeData?.user || savedUser);
         setNotifications(notificationData?.notifications || []);
         setUnreadCount(notificationData?.unreadCount || 0);
       })
@@ -57,7 +58,7 @@ function VendorNavbar() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [savedUser]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -74,6 +75,7 @@ function VendorNavbar() {
   }, []);
 
   const markAsRead = async (notificationId) => {
+    const notification = notifications.find((item) => item._id === notificationId);
     await markVendorNotificationRead(notificationId);
     setNotifications((current) =>
       current.map((notification) =>
@@ -81,9 +83,13 @@ function VendorNavbar() {
       )
     );
     setUnreadCount((current) => Math.max(current - 1, 0));
+
+    if (notification?.actionUrl) {
+      navigate(notification.actionUrl);
+    }
   };
 
-  const storeName = store?.storeName || profile?.store?.name || profile?.name || "Vendor Store";
+  const storeName = store?.storeName || savedUser?.store?.name || savedUser?.name || "Vendor Store";
   const handleLogout = () => {
     logout();
     navigate("/login", { replace: true });

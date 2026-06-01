@@ -58,6 +58,19 @@ function Navbar() {
     return () => window.clearTimeout(timer);
   }, [searchTerm]);
 
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+
+    if (value.trim().length < 2) {
+      setSearchResults([]);
+      setSearchError("");
+      setIsSearching(false);
+    } else {
+      setIsSearching(true);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     sessionStorage.clear();

@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import { getDashboardPath, getSavedToken, getSavedUser, logout } from "../api/auth";
 
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 
 /* ================= ADMIN ================= */
 import AdminLayout from "../layouts/AdminLayout";
@@ -38,6 +41,7 @@ import VendorAnalyticsPage from "../pages/vendor/VendorAnalyticsPage";
 import VendorSettingsPage from "../pages/vendor/VendorSettingsPage";
 import VendorStoreProfilePage from "../pages/vendor/VendorStoreProfilePage";
 import VendorNotificationsPage from "../pages/vendor/VendorNotificationsPage";
+import VendorPendingApprovalPage from "../pages/vendor/VendorPendingApprovalPage";
 
 /* ================= CUSTOMER ================= */
 import CustomerLayout from "../layouts/CustomerLayout";
@@ -55,25 +59,27 @@ import CheckoutPage from "../pages/customer/CheckoutPage";
 import OrderSuccessPage from "../pages/customer/OrderSuccessPage";
 import ProductDetails from "../pages/customer/ProductDetails";
 
-const parseSavedUser = (savedUser) => {
-  try {
-    return JSON.parse(savedUser);
-  } catch {
-    return null;
-  }
-};
+const isApprovedVendor = (user) =>
+  user?.role === "vendor" && user?.isApproved === true && user?.approvalStatus === "approved";
 
-function AdminProtectedRoute({ children }) {
-  const savedUser = localStorage.getItem("vshopUser");
-  const token = localStorage.getItem("vshopToken");
+function ProtectedRoute({ allowPendingVendor = false, children, roles }) {
+  const token = getSavedToken();
+  const user = getSavedUser();
 
-  if (!token || !savedUser) {
+  if (!token || !user) {
+    logout();
     return <Navigate replace to="/login" />;
   }
 
-  const user = parseSavedUser(savedUser);
+  if (!roles.includes(user.role)) {
+    return <Navigate replace to={getDashboardPath(user.role)} />;
+  }
 
-  return user?.role === "admin" ? children : <Navigate replace to="/login" />;
+  if (user.role === "vendor" && !allowPendingVendor && !isApprovedVendor(user)) {
+    return <Navigate replace to="/vendor/pending-approval" />;
+  }
+
+  return children;
 }
 
 function AppRoutes() {
@@ -85,14 +91,16 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* ================= ADMIN ROUTES ================= */}
         <Route
           path="/admin"
           element={
-            <AdminProtectedRoute>
+            <ProtectedRoute roles={["admin"]}>
               <AdminLayout />
-            </AdminProtectedRoute>
+            </ProtectedRoute>
           }
         >
           <Route index element={<AdminOverview />} />
@@ -115,21 +123,106 @@ function AppRoutes() {
         </Route>
 
         {/* ================= VENDOR ROUTES ================= */}
-        <Route path="/vendor" element={<VendorLayout />}>
-          <Route index element={<VendorDashboard />} />
-          <Route path="products" element={<VendorProductsPage />} />
-          <Route path="add-product" element={<VendorAddProductPage />} />
-          <Route path="orders" element={<VendorOrdersPage />} />
-          <Route path="reviews" element={<VendorReviewsPage />} />
-          <Route path="revenue" element={<VendorRevenuePage />} />
-          <Route path="analytics" element={<VendorAnalyticsPage />} />
-          <Route path="notifications" element={<VendorNotificationsPage />} />
-          <Route path="settings" element={<VendorSettingsPage />} />
-          <Route path="store-profile" element={<VendorStoreProfilePage />} />
+        <Route
+          path="/vendor"
+          element={
+            <ProtectedRoute allowPendingVendor roles={["vendor"]}>
+              <VendorLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route
+            index
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="pending-approval" element={<VendorPendingApprovalPage />} />
+          <Route
+            path="products"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorProductsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="add-product"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorAddProductPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorOrdersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="reviews"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorReviewsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="revenue"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorRevenuePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="analytics"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorAnalyticsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="notifications"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorNotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="store-profile"
+            element={
+              <ProtectedRoute roles={["vendor"]}>
+                <VendorStoreProfilePage />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* ================= CUSTOMER ROUTES ================= */}
-        <Route path="/customer" element={<CustomerLayout />}>
+        <Route
+          path="/customer"
+          element={
+            <ProtectedRoute roles={["customer"]}>
+              <CustomerLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<CustomerDashboard />} />
           <Route path="wishlist" element={<WishlistPage />} />
           <Route path="cart" element={<CartPage />} />

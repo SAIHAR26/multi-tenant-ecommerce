@@ -8,10 +8,10 @@ const {
   removeFromCart,
 } = require("../controllers/cartController");
 
-const protect = require("../middlewares/authMiddleware");
+const { authorizeRoles, protect } = require("../middlewares/authMiddleware");
 
 // Protect all routes
-router.use(protect);
+router.use(protect, authorizeRoles("customer"));
 
 // Routes
 router.get("/", getCart);

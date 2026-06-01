@@ -2,6 +2,7 @@ const Segment = require("../models/Segment");
 const User = require("../models/User");
 const Order = require("../models/Order");
 const Review = require("../models/Review");
+const { notifyAdmins } = require("../services/notificationService");
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
@@ -268,6 +269,16 @@ const createSegment = async (req, res) => {
       conditions: req.body.conditions || [],
       createdBy: req.user?._id || null,
       customerCount: matchingCustomers.length,
+    });
+
+    await notifyAdmins({
+      title: "New customer segment created",
+      message: `${segment.name} was created with ${matchingCustomers.length} matching customer${matchingCustomers.length === 1 ? "" : "s"}.`,
+      type: "INFO",
+      relatedEntity: segment._id,
+      relatedEntityModel: "Segment",
+      actionUrl: "/admin/segments",
+      preview: "Customer segment created",
     });
 
     res.status(201).json({

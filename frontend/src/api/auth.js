@@ -11,10 +11,16 @@ export const login = (payload) => requestAuth("login", payload);
 
 export const register = (payload) => requestAuth("register", payload);
 
+export const forgotPassword = (payload) => requestAuth("forgot-password", payload);
+
+export const resetPassword = (payload) => requestAuth("reset-password", payload);
+
 export const saveSession = ({ token, user }) => {
   localStorage.setItem("vshopToken", token);
   localStorage.setItem("vshopUser", JSON.stringify(user));
 };
+
+export const getSavedToken = () => localStorage.getItem("vshopToken");
 
 export const getSavedUser = () => {
   const savedUser = localStorage.getItem("vshopUser");
@@ -34,4 +40,15 @@ export const getSavedUser = () => {
 export const logout = () => {
   localStorage.removeItem("vshopToken");
   localStorage.removeItem("vshopUser");
+  sessionStorage.clear();
+};
+
+export const getDashboardPath = (role) => {
+  const destinationByRole = {
+    admin: "/admin",
+    customer: "/customer",
+    vendor: "/vendor",
+  };
+
+  return destinationByRole[role] || "/login";
 };

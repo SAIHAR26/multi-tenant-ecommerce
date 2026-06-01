@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { generateReport } from "../../services/reportService";
+import { downloadAdminReportPdf } from "../../utils/reportPdf";
 
 const currency = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
@@ -101,7 +102,7 @@ const toCsv = (report) => {
 };
 
 function ReportsPage() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
 
@@ -125,6 +126,28 @@ function ReportsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    generateReport()
+      .then((data) => {
+        if (isMounted) {
+          setReport(data);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (isMounted) setError(err.message || "Failed to generate report");
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleCsvExport = () => {
     if (!report) return;
@@ -150,6 +173,9 @@ function ReportsPage() {
           {report ? (
             <>
               <button className="text-button" type="button" onClick={() => window.print()}>
+                Print Page
+              </button>
+              <button className="text-button" type="button" onClick={() => downloadAdminReportPdf(report)}>
                 Download PDF
               </button>
               <button className="text-button" type="button" onClick={handleCsvExport}>

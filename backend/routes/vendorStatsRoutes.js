@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 
 const { getVendorStats } = require("../controllers/vendorStatsController");
-const protect = require("../middlewares/authMiddleware");
+const { authorizeRoles, protect, requireApprovedVendor } = require("../middlewares/authMiddleware");
 
 // 🔥 MUST be BEFORE controller
-router.get("/", protect, getVendorStats);
+router.get("/", protect, authorizeRoles("vendor"), requireApprovedVendor, getVendorStats);
 
 module.exports = router;

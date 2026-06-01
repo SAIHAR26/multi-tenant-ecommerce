@@ -6,12 +6,12 @@ const {
   removeFromWishlist,
 } = require("../controllers/wishlistController");
 
-const protect = require("../middlewares/authMiddleware");
+const { authorizeRoles, protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
 // Protect all wishlist routes
-router.use(protect);
+router.use(protect, authorizeRoles("customer"));
 
 // Routes
 router.get("/", getWishlist);

@@ -20,8 +20,14 @@ const createStore = async (req, res) => {
       location,
     } = req.body;
 
+    const targetVendorId = req.user?.role === "vendor" ? req.user._id : vendorId;
+
+    if (!targetVendorId) {
+      return res.status(400).json({ message: "Vendor id is required." });
+    }
+
     const store = await Store.create({
-      vendorId,
+      vendorId: targetVendorId,
       storeName,
       storeDescription,
       storeCategory,
@@ -56,11 +62,18 @@ const getStores = async (req, res) => {
 
 const updateStore = async (req, res) => {
   try {
-    const updatedStore = await Store.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const query =
+      req.user?.role === "vendor"
+        ? { _id: req.params.id, vendorId: req.user._id }
+        : { _id: req.params.id };
+    const updatedStore = await Store.findOneAndUpdate(query, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedStore) {
+      return res.status(404).json({ message: "Store not found." });
+    }
 
     res.status(200).json(updatedStore);
   } catch (error) {

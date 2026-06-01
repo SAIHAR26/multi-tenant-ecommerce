@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   deleteNotification,
   getNotifications,
@@ -9,16 +10,17 @@ import {
 const filters = [
   { label: "All", value: "all" },
   { label: "Unread", value: "unread" },
-  { label: "Orders", value: "order" },
-  { label: "Vendors", value: "vendor" },
-  { label: "Customers", value: "customer" },
-  { label: "Reviews", value: "review" },
-  { label: "Payments", value: "payment" },
-  { label: "System", value: "system" },
+  { label: "Orders", value: "ORDER" },
+  { label: "Products", value: "PRODUCT" },
+  { label: "Reviews", value: "REVIEW" },
+  { label: "Payments", value: "PAYMENT" },
+  { label: "System", value: "SYSTEM" },
 ];
 
 function NotificationsPage() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -83,6 +85,31 @@ function NotificationsPage() {
     await loadNotifications();
   };
 
+  const visibleNotifications = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return notifications;
+
+    return notifications.filter((notification) =>
+      [notification.title, notification.message, notification.type]
+        .join(" ")
+        .toLowerCase()
+        .includes(query)
+    );
+  }, [notifications, searchTerm]);
+
+  const handleOpenNotification = async (notification) => {
+    if (!notification.isRead) {
+      await markNotificationRead(notification._id);
+    }
+
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+      return;
+    }
+
+    await loadNotifications();
+  };
+
   return (
     <div className="admin-page">
       <section className="dashboard-hero dashboard-hero--compact">
@@ -105,6 +132,13 @@ function NotificationsPage() {
           </div>
 
           <div className="notification-filters" aria-label="Notification filters">
+            <input
+              className="filter-chip"
+              type="search"
+              placeholder="Search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
             {filters.map((filter) => (
               <button
                 className={activeFilter === filter.value ? "filter-chip filter-chip--active" : "filter-chip"}
@@ -123,13 +157,13 @@ function NotificationsPage() {
 
         {loading ? <div className="notification-state">Loading notifications...</div> : null}
         {error ? <div className="notification-state notification-state--error">{error}</div> : null}
-        {!loading && !error && notifications.length === 0 ? (
+        {!loading && !error && visibleNotifications.length === 0 ? (
           <div className="notification-state">No notifications</div>
         ) : null}
 
-        {!loading && !error && notifications.length > 0 ? (
+        {!loading && !error && visibleNotifications.length > 0 ? (
           <div className="notification-list">
-            {notifications.map((notification) => (
+            {visibleNotifications.map((notification) => (
               <article
                 className={`notification-card${notification.isRead ? "" : " notification-card--unread"}`}
                 key={notification._id}
@@ -151,6 +185,11 @@ function NotificationsPage() {
                   {!notification.isRead ? (
                     <button type="button" onClick={() => handleMarkRead(notification._id)}>
                       Mark read
+                    </button>
+                  ) : null}
+                  {notification.actionUrl ? (
+                    <button type="button" onClick={() => handleOpenNotification(notification)}>
+                      Open
                     </button>
                   ) : null}
                   <button type="button" onClick={() => handleDelete(notification._id)}>

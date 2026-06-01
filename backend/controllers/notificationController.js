@@ -1,20 +1,33 @@
 const Notification = require("../models/Notification");
+const { createNotification: createScopedNotification, normalizeType } = require("../services/notificationService");
 
 const allowedRoles = ["admin", "vendor", "customer"];
-const allowedTypes = ["vendor", "order", "review", "payment", "customer", "system"];
+const allowedTypes = ["INFO", "SUCCESS", "WARNING", "ERROR", "ORDER", "PAYMENT", "REVIEW", "PRODUCT", "SYSTEM", "PROMOTION"];
+const legacyTypeMap = {
+  vendor: "INFO",
+  customer: "INFO",
+  order: "ORDER",
+  payment: "PAYMENT",
+  review: "REVIEW",
+  product: "PRODUCT",
+  system: "SYSTEM",
+};
 
 const getAudienceQuery = (role, userId) => {
-  const query = {};
+  const roleQuery = allowedRoles.includes(role) ? role : "";
+  const query = { $and: [] };
 
-  if (allowedRoles.includes(role)) {
-    query.targetRole = { $in: [role, "all"] };
+  if (roleQuery) {
+    query.$and.push({
+      $or: [{ role: roleQuery }, { targetRole: roleQuery }, { role: "all", targetRole: "all" }],
+    });
   }
 
   if (userId) {
-    query.$or = [{ userId }, { userId: null }];
+    query.$and.push({ $or: [{ userId }, { userId: null }] });
   }
 
-  return query;
+  return query.$and.length ? query : {};
 };
 
 const getNotifications = async (req, res) => {
@@ -24,10 +37,12 @@ const getNotifications = async (req, res) => {
     const userId = req.user?._id || "";
     const query = getAudienceQuery(role, userId);
 
+    const normalizedFilter = legacyTypeMap[filter] || String(filter).toUpperCase();
+
     if (filter === "unread") {
       query.isRead = false;
-    } else if (allowedTypes.includes(filter)) {
-      query.type = filter;
+    } else if (allowedTypes.includes(normalizedFilter)) {
+      query.type = normalizedFilter;
     }
 
     const notifications = await Notification.find(query)
@@ -51,28 +66,24 @@ const getNotifications = async (req, res) => {
 
 const createNotification = async (req, res) => {
   try {
-    const {
-      title,
-      message,
-      type = "system",
-      userId = null,
-      targetRole = "all",
-      sender = "V SHOP",
-      preview = "",
-    } = req.body;
+    const { title, message, type = "INFO", userId = null, targetRole = "all", role, sender = "V SHOP", preview = "" } = req.body;
 
     if (!title || !message) {
       return res.status(400).json({ message: "Title and message are required." });
     }
 
-    const notification = await Notification.create({
+    const notification = await createScopedNotification({
       title,
       message,
-      type,
+      type: normalizeType(type),
       userId,
-      targetRole,
+      role: role || targetRole,
+      targetRole: role || targetRole,
       sender,
       preview,
+      relatedEntity: req.body.relatedEntity || null,
+      relatedEntityModel: req.body.relatedEntityModel || "",
+      actionUrl: req.body.actionUrl || "",
     });
 
     res.status(201).json(notification);
@@ -92,7 +103,7 @@ const markNotificationRead = async (req, res) => {
         _id: req.params.id,
         ...getAudienceQuery(role, userId),
       },
-      { isRead: true },
+      { isRead: true, read: true },
       { new: true }
     );
 
@@ -118,7 +129,7 @@ const markAllNotificationsRead = async (req, res) => {
         ...getAudienceQuery(role, userId),
         isRead: false,
       },
-      { isRead: true }
+      { isRead: true, read: true }
     );
 
     res.status(200).json({ message: "All notifications marked as read." });

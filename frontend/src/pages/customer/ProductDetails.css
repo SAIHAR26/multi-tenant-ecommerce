@@ -227,6 +227,19 @@
   font-weight: 900;
 }
 
+.product-review-reply {
+  border-left: 2px solid rgba(255, 59, 70, 0.7);
+  display: block;
+  margin-top: 12px;
+  padding-left: 12px;
+}
+
+.product-review-reply strong {
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+}
+
 .product-size-options,
 .product-quantity-control {
   display: flex;

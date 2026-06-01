@@ -1,9 +1,9 @@
-const Notification = require("../models/Notification");
 const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 require("../models/User");
 const Product = require("../models/Product");
 require("../models/Store");
+const { notifyAdmins, notifyCustomer, notifyVendor } = require("../services/notificationService");
 
 const escapeCsv = (value) => {
   const stringValue = String(value ?? "");
@@ -102,6 +102,28 @@ const populateOrderQuery = (query) =>
         { path: "storeId", select: "storeName location storeCategory" },
       ],
     });
+
+const getOrderVendorGroups = (orderProducts, productMap) => {
+  const vendorGroups = new Map();
+
+  for (const item of orderProducts) {
+    const product = productMap.get(item.productId.toString());
+    const vendorId = product?.vendor?._id?.toString() || product?.vendor?.toString();
+
+    if (!vendorId) continue;
+
+    const current = vendorGroups.get(vendorId) || {
+      vendorId,
+      storeName: product.storeId?.storeName || product.vendor?.name || "Your store",
+      productNames: [],
+    };
+
+    current.productNames.push(product.name);
+    vendorGroups.set(vendorId, current);
+  }
+
+  return [...vendorGroups.values()];
+};
 
 const getProductDiscount = (product, quantity) => {
   const subtotal = Number(product.price || 0) * quantity;
@@ -328,45 +350,42 @@ const createOrder = async (req, res) => {
       ],
     });
 
-    await Notification.create({
+    await notifyCustomer(req.user?._id || req.body.userId, {
       title: "Order placed",
       message: `Your order ${order._id} was created for Rs ${order.totalAmount}.`,
-      type: "order",
-      targetRole: "customer",
-      userId: req.user?._id || req.body.userId,
+      type: "ORDER",
       sender: "V SHOP",
       preview: "Order confirmation",
+      relatedEntity: order._id,
+      relatedEntityModel: "Order",
+      actionUrl: "/customer/orders",
     });
 
-    const vendorGroups = new Map();
+    const vendorGroups = getOrderVendorGroups(orderProducts, productMap);
 
-    for (const item of orderProducts) {
-      const product = productMap.get(item.productId.toString());
-      const vendorId = product.vendor?._id?.toString() || product.vendor?.toString();
-
-      if (!vendorId) continue;
-
-      const current = vendorGroups.get(vendorId) || {
-        vendorId,
-        storeName: product.storeId?.storeName || product.vendor?.name || "Your store",
-        productNames: [],
-      };
-
-      current.productNames.push(product.name);
-      vendorGroups.set(vendorId, current);
-    }
-
-    await Notification.insertMany(
-      [...vendorGroups.values()].map((group) => ({
-        title: "New product purchase",
-        message: `${req.user?.name || "A customer"} bought ${group.productNames.join(", ")}. Order ${order._id}.`,
-        type: "order",
-        targetRole: "vendor",
-        userId: group.vendorId,
-        sender: "V SHOP",
-        preview: `${group.storeName} received a new order`,
-      }))
-    );
+    await Promise.all([
+      notifyAdmins({
+        title: "New order created",
+        message: `${req.user?.name || "A customer"} placed order ${order._id} for Rs ${order.totalAmount}.`,
+        type: "ORDER",
+        relatedEntity: order._id,
+        relatedEntityModel: "Order",
+        actionUrl: "/admin/orders",
+        preview: "New marketplace order",
+      }),
+      ...vendorGroups.map((group) =>
+        notifyVendor(group.vendorId, {
+          title: "New order received",
+          message: `${req.user?.name || "A customer"} bought ${group.productNames.join(", ")}. Order ${order._id}.`,
+          type: "ORDER",
+          sender: "V SHOP",
+          preview: `${group.storeName} received a new order`,
+          relatedEntity: order._id,
+          relatedEntityModel: "Order",
+          actionUrl: "/vendor/orders",
+        })
+      ),
+    ]);
 
     await Cart.findOneAndUpdate(
       { userId: req.user?._id || req.body.userId },
@@ -493,15 +512,69 @@ const updateOrder = async (req, res) => {
     }
 
     if (nextStatus) {
-      await Notification.create({
-        title: nextStatus === "CANCELLED" ? "Order cancelled" : "Order status updated",
-        message: `Order ${updatedOrder._id} is now ${nextStatus}.`,
-        type: "order",
-        targetRole: "customer",
-        userId: updatedOrder.userId?._id || updatedOrder.userId,
-        sender: req.user?.role === "vendor" ? "Vendor fulfillment" : "V SHOP",
-        preview: `Order ${nextStatus.toLowerCase()}`,
-      });
+      const vendorIds = [
+        ...new Set(
+          updatedOrder.products
+            .map((item) => item.productId?.vendor?._id?.toString() || item.productId?.vendor?.toString())
+            .filter(Boolean)
+        ),
+      ];
+
+      await Promise.all([
+        notifyCustomer(updatedOrder.userId?._id || updatedOrder.userId, {
+          title: nextStatus === "CANCELLED" ? "Order cancelled" : "Order status updated",
+          message: `Order ${updatedOrder._id} is now ${nextStatus}.`,
+          type: "ORDER",
+          sender: req.user?.role === "vendor" ? "Vendor fulfillment" : "V SHOP",
+          preview: `Order ${nextStatus.toLowerCase()}`,
+          relatedEntity: updatedOrder._id,
+          relatedEntityModel: "Order",
+          actionUrl: "/customer/orders",
+        }),
+        notifyAdmins({
+          title: nextStatus === "CANCELLED" ? "Order cancelled" : "Order status changed",
+          message: `Order ${updatedOrder._id} is now ${nextStatus}.`,
+          type: "ORDER",
+          relatedEntity: updatedOrder._id,
+          relatedEntityModel: "Order",
+          actionUrl: "/admin/orders",
+          preview: `Order ${nextStatus.toLowerCase()}`,
+        }),
+        ...vendorIds.map((vendorId) =>
+          notifyVendor(vendorId, {
+            title: nextStatus === "CANCELLED" ? "Order cancelled" : "Order status changed",
+            message: `Order ${updatedOrder._id} is now ${nextStatus}.`,
+            type: "ORDER",
+            relatedEntity: updatedOrder._id,
+            relatedEntityModel: "Order",
+            actionUrl: "/vendor/orders",
+            preview: `Order ${nextStatus.toLowerCase()}`,
+          })
+        ),
+      ]);
+    }
+
+    if (req.user?.role === "admin" && req.body.paymentStatus === "PAID" && order.paymentStatus !== "PAID") {
+      await Promise.all([
+        notifyCustomer(updatedOrder.userId?._id || updatedOrder.userId, {
+          title: "Payment successful",
+          message: `Payment for order ${updatedOrder._id} was successful.`,
+          type: "PAYMENT",
+          relatedEntity: updatedOrder._id,
+          relatedEntityModel: "Order",
+          actionUrl: "/customer/orders",
+          preview: "Payment confirmed",
+        }),
+        notifyAdmins({
+          title: "Payment successful",
+          message: `Payment was completed for order ${updatedOrder._id}.`,
+          type: "PAYMENT",
+          relatedEntity: updatedOrder._id,
+          relatedEntityModel: "Order",
+          actionUrl: "/admin/orders",
+          preview: "Payment received",
+        }),
+      ]);
     }
 
     res.status(200).json(updatedOrder);
@@ -514,16 +587,54 @@ const updateOrder = async (req, res) => {
 
 const deleteOrder = async (req, res) => {
   try {
-    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+    const order = await Order.findById(req.params.id);
 
-    if (!deletedOrder) {
+    if (!order) {
       return res.status(404).json({
         message: "Order not found.",
       });
     }
 
+    if (req.user?.role === "customer") {
+      if (order.userId?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "Access denied." });
+      }
+
+      if (["SHIPPED", "DELIVERED", "CANCELLED"].includes(order.status)) {
+        return res.status(400).json({
+          message: `Order cannot be cancelled after it is ${order.status.toLowerCase()}.`,
+        });
+      }
+    }
+
+    await Order.findByIdAndDelete(req.params.id);
+
+    if (req.user?.role === "customer") {
+      await Promise.all([
+        notifyCustomer(req.user._id, {
+          title: "Order cancelled",
+          message: `Order ${order._id} was cancelled and removed from your orders.`,
+          type: "ORDER",
+          sender: "V SHOP",
+          preview: "Order removed",
+          relatedEntity: order._id,
+          relatedEntityModel: "Order",
+          actionUrl: "/customer/orders",
+        }),
+        notifyAdmins({
+          title: "Order cancelled",
+          message: `Customer cancelled order ${order._id}.`,
+          type: "ORDER",
+          relatedEntity: order._id,
+          relatedEntityModel: "Order",
+          actionUrl: "/admin/orders",
+          preview: "Customer cancellation",
+        }),
+      ]);
+    }
+
     res.status(200).json({
-      message: "Order deleted successfully.",
+      message: req.user?.role === "customer" ? "Order cancelled and deleted successfully." : "Order deleted successfully.",
     });
   } catch (error) {
     res.status(500).json({

@@ -1,9 +1,9 @@
-const Notification = require("../models/Notification");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const Review = require("../models/Review");
 const Store = require("../models/Store");
 const User = require("../models/User");
+const { notifyAdmins, notifyVendor } = require("../services/notificationService");
 
 const vendorSelect = "-password";
 
@@ -149,11 +149,26 @@ const approveVendor = async (req, res) => {
       return res.status(404).json({ message: "Vendor not found." });
     }
 
-    await Notification.create({
-      title: "Store approved",
-      message: "Your store has been approved.",
-      type: "vendor",
-    });
+    await Promise.all([
+      notifyVendor(vendor._id, {
+        title: "Store approved",
+        message: "Your vendor account has been approved.",
+        type: "SUCCESS",
+        relatedEntity: vendor._id,
+        relatedEntityModel: "User",
+        actionUrl: "/vendor/dashboard",
+        preview: "Vendor account approved",
+      }),
+      notifyAdmins({
+        title: "Vendor account approved",
+        message: `${vendor.name} has been approved as a vendor.`,
+        type: "SUCCESS",
+        relatedEntity: vendor._id,
+        relatedEntityModel: "User",
+        actionUrl: "/admin/vendor-approvals",
+        preview: "Vendor approval completed",
+      }),
+    ]);
 
     res.status(200).json(await formatVendor(vendor));
   } catch (error) {
@@ -187,10 +202,14 @@ const rejectVendor = async (req, res) => {
       return res.status(404).json({ message: "Vendor not found." });
     }
 
-    await Notification.create({
+    await notifyVendor(vendor._id, {
       title: "Application rejected",
-      message: "Your application has been rejected.",
-      type: "vendor",
+      message: "Your vendor application was rejected.",
+      type: "WARNING",
+      relatedEntity: vendor._id,
+      relatedEntityModel: "User",
+      actionUrl: "/vendor/settings",
+      preview: "Vendor application rejected",
     });
 
     res.status(200).json(await formatVendor(vendor));

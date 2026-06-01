@@ -335,6 +335,12 @@ function ProductDetails() {
                   <span>{review.rating} stars</span>
                 </div>
                 <p>{review.comment}</p>
+                {review.vendorReply?.text ? (
+                  <div className="product-review-reply">
+                    <strong>Vendor reply</strong>
+                    <p>{review.vendorReply.text}</p>
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>
