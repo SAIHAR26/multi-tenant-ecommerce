@@ -33,6 +33,23 @@ const reviewSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+
+    vendorReply: {
+      message: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      vendorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      repliedAt: {
+        type: Date,
+        default: null,
+      },
+    },
   },
   {
     timestamps: true,

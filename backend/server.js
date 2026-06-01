@@ -105,19 +105,18 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    await connectDB();
+    await connectDB({ exitOnFailure: false });
     databaseStatus = "connected";
     databaseMessage = "";
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
   } catch (error) {
     databaseStatus = "disconnected";
     databaseMessage = error.message;
-    console.error("Server not started because MongoDB is not connected.");
-    process.exit(1);
+    console.error("MongoDB is not connected. Starting server with limited database access.");
   }
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 };
 
 startServer();

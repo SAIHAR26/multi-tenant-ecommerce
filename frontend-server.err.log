@@ -1,0 +1,32 @@
+[2m6:04:23 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mError: Backend is not reachable at http://localhost:5000. Start the backend with "cd backend" then "npm run dev".
+    at apiRequest (http://127.0.0.1:5173/src/api/client.js:41:10)
+    at async Promise.all (index 0)
+    at async fetchData (http://127.0.0.1:5173/src/pages/Home.jsx:26:40)
+[2m6:04:23 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mError: Backend is not reachable at http://localhost:5000. Start the backend with "cd backend" then "npm run dev".
+    at apiRequest (http://127.0.0.1:5173/src/api/client.js:41:10)
+    at async Promise.all (index 0)
+    at async fetchData (http://127.0.0.1:5173/src/pages/Home.jsx:26:40)
+[2m6:04:31 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mError: Backend is not reachable at http://localhost:5000. Start the backend with "cd backend" then "npm run dev".
+    at apiRequest (http://127.0.0.1:5173/src/api/client.js:41:10)
+    at async Promise.all (index 0)
+    at async fetchData (http://127.0.0.1:5173/src/pages/Home.jsx:26:40)
+[2m6:04:31 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mError: Backend is not reachable at http://localhost:5000. Start the backend with "cd backend" then "npm run dev".
+    at apiRequest (http://127.0.0.1:5173/src/api/client.js:41:10)
+    at async Promise.all (index 0)
+    at async fetchData (http://127.0.0.1:5173/src/pages/Home.jsx:26:40)
+[2m6:13:08 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mRecommendation fallback activated: Error: Unauthorized - user missing
+    at apiRequest (http://127.0.0.1:5173/src/api/client.js:33:10)
+    at async getRecommendations (http://127.0.0.1:5173/src/services/recommendationService.js:17:16)
+    at async Promise.all (index 0)
+    at async loadRecommendations (http://127.0.0.1:5173/src/pages/customer/RecommendationsPage.jsx:64:34)
+[2m6:13:08 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mRecommendation fallback activated: Error: Unauthorized - user missing
+    at apiRequest (http://127.0.0.1:5173/src/api/client.js:33:10)
+    at async getRecommendations (http://127.0.0.1:5173/src/services/recommendationService.js:17:16)
+    at async Promise.all (index 0)
+    at async loadRecommendations (http://127.0.0.1:5173/src/pages/customer/RecommendationsPage.jsx:64:34)
+[2m6:23:03 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mOrder tracking fetch error: Error: No orders are available for tracking.
+    at getOrderTracking (http://127.0.0.1:5173/src/services/orderService.js:34:11)
+    at async fetchTracking (http://127.0.0.1:5173/src/pages/customer/TrackingPage.jsx:36:18)
+[2m6:23:03 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m [2m[console.error] [22mOrder tracking fetch error: Error: No orders are available for tracking.
+    at getOrderTracking (http://127.0.0.1:5173/src/services/orderService.js:34:11)
+    at async fetchTracking (http://127.0.0.1:5173/src/pages/customer/TrackingPage.jsx:36:18)

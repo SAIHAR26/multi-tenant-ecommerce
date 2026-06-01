@@ -287,6 +287,60 @@ exports.getReviews = async (req, res) => {
   }
 };
 
+exports.replyToReview = async (req, res) => {
+  try {
+    const vendorId = getVendorId(req);
+    const { message } = req.body;
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Reply message is required.",
+      });
+    }
+
+    const productIds = await getVendorProductIds(vendorId);
+    const review = await Review.findOne({
+      _id: req.params.id,
+      productId: { $in: productIds },
+    })
+      .populate("userId", "name email")
+      .populate("productId", "name");
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found for this vendor.",
+      });
+    }
+
+    review.vendorReply = {
+      message: message.trim(),
+      vendorId,
+      repliedAt: new Date(),
+    };
+    await review.save();
+
+    await Notification.create({
+      userId: review.userId?._id || review.userId,
+      targetRole: "customer",
+      type: "review",
+      notificationCategory: "review",
+      title: "Vendor replied to your review",
+      message: `A vendor replied to your review for ${review.productId?.name || "a product"}.`,
+      sender: req.user?.name || "Vendor",
+      preview: message.trim().slice(0, 120),
+    });
+
+    res.json({
+      success: true,
+      review,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 exports.getRevenue = async (req, res) => {
   try {
     const data = await getVendorDashboardData(getVendorId(req));

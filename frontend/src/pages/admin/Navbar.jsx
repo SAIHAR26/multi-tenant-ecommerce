@@ -38,14 +38,11 @@ function Navbar() {
     const query = searchTerm.trim();
 
     if (query.length < 2) {
-      setSearchResults([]);
-      setSearchError("");
-      setIsSearching(false);
       return undefined;
     }
 
-    setIsSearching(true);
     const timer = window.setTimeout(() => {
+      setIsSearching(true);
       searchAdmin(query)
         .then((data) => {
           setSearchResults(data.results || []);
@@ -65,6 +62,18 @@ function Navbar() {
     localStorage.clear();
     sessionStorage.clear();
     navigate("/login", { replace: true });
+  };
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+
+    setSearchTerm(value);
+
+    if (value.trim().length < 2) {
+      setSearchResults([]);
+      setSearchError("");
+      setIsSearching(false);
+    }
   };
 
   const initials =
@@ -95,7 +104,7 @@ function Navbar() {
           type="search"
           placeholder="Search orders, vendors, products..."
           value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
+          onChange={handleSearchChange}
         />
         {searchTerm.trim().length >= 2 ? (
           <div className="admin-search-results">

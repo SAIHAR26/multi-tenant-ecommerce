@@ -27,11 +27,10 @@ const formatNotificationTime = (value) => {
 
 function VendorNavbar() {
   const navigate = useNavigate();
-  const user = getSavedUser();
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
   const [store, setStore] = useState(null);
-  const [profile, setProfile] = useState(user);
+  const [profile, setProfile] = useState(() => getSavedUser());
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -44,7 +43,7 @@ function VendorNavbar() {
       .then(([storeData, notificationData]) => {
         if (!isMounted) return;
         setStore(storeData?.store || null);
-        setProfile(storeData?.user || user);
+        setProfile((current) => storeData?.user || current);
         setNotifications(notificationData?.notifications || []);
         setUnreadCount(notificationData?.unreadCount || 0);
       })
@@ -84,7 +83,7 @@ function VendorNavbar() {
     setUnreadCount((current) => Math.max(current - 1, 0));
   };
 
-  const storeName = store?.storeName || user?.store?.name || user?.name || "Vendor Store";
+  const storeName = store?.storeName || profile?.store?.name || profile?.name || "Vendor Store";
   const handleLogout = () => {
     logout();
     navigate("/login", { replace: true });

@@ -12,6 +12,7 @@ const {
   getStats,
   getStore,
   markNotificationRead,
+  replyToReview,
   deleteProduct,
   updateProduct,
   updateStore,
@@ -30,6 +31,7 @@ router.patch("/products/:id", updateProduct);
 router.delete("/products/:id", deleteProduct);
 router.get("/orders", getOrders);
 router.get("/reviews", getReviews);
+router.patch("/reviews/:id/reply", replyToReview);
 router.get("/revenue", getRevenue);
 router.get("/analytics", getAnalytics);
 router.get("/store", getStore);
