@@ -75,6 +75,17 @@ const searchAdmin = async (req, res) => {
 
     const regex = new RegExp(escapeRegex(query), "i");
     const objectIdQuery = query.match(/^[a-f\d]{24}$/i) ? query : null;
+    const orderQuery = objectIdQuery
+      ? { _id: objectIdQuery }
+      : {
+          $expr: {
+            $regexMatch: {
+              input: { $toString: "$_id" },
+              regex: escapeRegex(query),
+              options: "i",
+            },
+          },
+        };
 
     const [vendors, customers, products, orders, reviews, stores] = await Promise.all([
       User.find({ role: "vendor", $or: [{ name: regex }, { email: regex }, { "store.name": regex }] })
@@ -89,7 +100,7 @@ const searchAdmin = async (req, res) => {
         .select("name category price stock")
         .limit(6)
         .lean(),
-      Order.find({ ...(objectIdQuery ? { _id: objectIdQuery } : {}) })
+      Order.find(orderQuery)
         .populate("userId", "name email")
         .select("userId totalAmount status paymentStatus createdAt")
         .limit(6)
@@ -100,7 +111,18 @@ const searchAdmin = async (req, res) => {
         .select("rating comment")
         .limit(6)
         .lean(),
-      Store.find({ storeName: regex }).select("storeName vendorId storeCategory").limit(6).lean(),
+      Store.find({
+        $or: [
+          { storeName: regex },
+          { storeCategory: regex },
+          { location: regex },
+          { "business.gstNumber": regex },
+          { "business.businessRegistrationNumber": regex },
+        ],
+      })
+        .select("storeName vendorId storeCategory location")
+        .limit(6)
+        .lean(),
     ]);
 
     const results = [
@@ -143,7 +165,7 @@ const searchAdmin = async (req, res) => {
         id: store._id,
         type: "vendor",
         title: store.storeName,
-        subtitle: store.storeCategory || "Store",
+        subtitle: [store.storeCategory, store.location].filter(Boolean).join(" - ") || "Store",
         url: "/admin/vendor-approvals",
       })),
     ];

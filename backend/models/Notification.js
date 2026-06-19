@@ -130,7 +130,7 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
-notificationSchema.pre("validate", function syncNotificationAliases(next) {
+notificationSchema.pre("validate", function syncNotificationAliases() {
   if (this.role === "all" && this.targetRole && this.targetRole !== "all") {
     this.role = this.targetRole;
   }
@@ -148,8 +148,6 @@ notificationSchema.pre("validate", function syncNotificationAliases(next) {
   if (!this.notificationCategory) {
     this.notificationCategory = this.type;
   }
-
-  next();
 });
 
 notificationSchema.index({ userId: 1, role: 1, isRead: 1, createdAt: -1 });

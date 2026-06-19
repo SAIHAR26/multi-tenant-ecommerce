@@ -10,7 +10,6 @@ function VendorReviewsPage() {
   const [replyStatus, setReplyStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -85,7 +84,6 @@ function VendorReviewsPage() {
 
       {loading ? <LoadingState message="Loading reviews..." /> : null}
       {!loading && error ? <ErrorState title="Unable to load reviews" message={error} /> : null}
-      {status ? <p className="admin-action-status">{status}</p> : null}
       {!loading && !error && reviews.length === 0 ? (
         <ErrorState title="No reviews" message="No reviews exist for your products yet." />
       ) : null}

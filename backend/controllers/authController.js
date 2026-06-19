@@ -220,11 +220,11 @@ const loginUser = async (req, res) => {
   try {
     if (!requireDatabaseConnection(res)) return;
 
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
     const normalizedEmail = normalizeEmail(email);
 
-    if (!normalizedEmail || !password || !role) {
-      return res.status(400).json({ message: "Email, password, and role are required." });
+    if (!normalizedEmail || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
     }
 
     const user = await User.findOne({ email: normalizedEmail }).select("+password");
@@ -244,10 +244,6 @@ const loginUser = async (req, res) => {
     if (!isBcryptHash(user.password)) {
       user.password = password;
       await user.save();
-    }
-
-    if (user.role !== role) {
-      return res.status(403).json({ message: `This account is registered as ${user.role}.` });
     }
 
     if (!user.isActive) {

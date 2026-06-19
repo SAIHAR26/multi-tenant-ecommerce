@@ -41,21 +41,31 @@ function Navbar() {
       return undefined;
     }
 
+    let ignoreResult = false;
+
     const timer = window.setTimeout(() => {
-      setIsSearching(true);
       searchAdmin(query)
         .then((data) => {
+          if (ignoreResult) return;
           setSearchResults(data.results || []);
           setSearchError("");
         })
         .catch((error) => {
+          if (ignoreResult) return;
           setSearchResults([]);
           setSearchError(error.message || "Search failed.");
         })
-        .finally(() => setIsSearching(false));
+        .finally(() => {
+          if (!ignoreResult) {
+            setIsSearching(false);
+          }
+        });
     }, 250);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      ignoreResult = true;
+      window.clearTimeout(timer);
+    };
   }, [searchTerm]);
 
   const handleSearchChange = (event) => {
@@ -75,18 +85,6 @@ function Navbar() {
     localStorage.clear();
     sessionStorage.clear();
     navigate("/login", { replace: true });
-  };
-
-  const handleSearchChange = (event) => {
-    const value = event.target.value;
-
-    setSearchTerm(value);
-
-    if (value.trim().length < 2) {
-      setSearchResults([]);
-      setSearchError("");
-      setIsSearching(false);
-    }
   };
 
   const initials =

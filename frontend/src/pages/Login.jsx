@@ -64,15 +64,6 @@ function Login() {
             placeholder="Enter your password"
           />
 
-          <label className="auth-field">
-            <span>Role</span>
-            <select defaultValue="customer" name="role">
-              <option value="customer">Customer</option>
-              <option value="vendor">Vendor</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-
           <div className="auth-row">
             <label className="auth-check">
               <input type="checkbox" />

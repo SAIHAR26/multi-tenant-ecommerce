@@ -13,7 +13,6 @@ const {
   getStore,
   replyToReview,
   markNotificationRead,
-  replyToReview,
   deleteProduct,
   updateProduct,
   updateStore,

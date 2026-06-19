@@ -93,7 +93,10 @@ const getAdminReport = async (req, res) => {
       Product.countDocuments({ stock: { $lte: 0 } }),
       Product.countDocuments({ $expr: { $and: [{ $gt: ["$stock", 0] }, { $lte: ["$stock", "$lowStockThreshold"] }] } }),
       Payment.countDocuments(),
-      require("../models/Notification").countDocuments({ isRead: false }),
+      require("../models/Notification").countDocuments({
+        isRead: false,
+        $or: [{ role: "admin" }, { targetRole: "admin" }, { role: "all", targetRole: "all" }],
+      }),
       Order.aggregate([
         { $unwind: "$products" },
         {
