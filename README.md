@@ -430,3 +430,11 @@ To build a scalable, role-based, multi-tenant ecommerce platform that demonstrat
 ## License
 
 This project was developed as part of an internship-based academic learning initiative.
+
+## 🚀 Live Demo
+
+Frontend:
+https://multi-tenant-ecommerce-ochre.vercel.app
+
+Backend:
+https://vshop-y49r.onrender.com
